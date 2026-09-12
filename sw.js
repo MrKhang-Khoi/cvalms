@@ -1,22 +1,15 @@
-﻿/* ==========================================================
+/* ==========================================================
  * SERVICE WORKER - LMS PHÒNG MÁY TƯƠNG TÁC (PWA)
  * Quản lý Cache cục bộ để chống giật lag và nạp bài tức thì
  * ========================================================== */
 
-const CACHE_NAME = 'lms-18may-v2.0.1';
+const CACHE_NAME = 'lms-18may-v2.1.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './style.css',
   './manifest.json',
-  './js/app.js',
-  './js/core/firebase-config.js',
-  './js/core/store.js',
-  './js/core/pwa-manager.js',
-  './js/modules/poll.js',
-  './js/modules/teacher.js',
-  './js/modules/student.js',
-  './js/modules/quiz.js',
+  './js/bundle.js',
   './data/classes.json',
   './data/default-lessons.json'
 ];

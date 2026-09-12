@@ -425,6 +425,8 @@
           STORE.setState({ classId: STORE.getState().classId });
         }
       } else if (data.type === 'OLD_LESSON_START') {
+        const modal = document.getElementById('modal-lucky-draw');
+        if (modal) modal.style.display = 'none';
         const payload = data.payload || {};
         const oldL = Object.assign({}, STORE.getState().oldLesson, {
           timerSeconds: payload.timerSeconds || 120,
@@ -439,6 +441,9 @@
         });
         STORE.setState({ currentPhase: 'old_lesson', teacherPhase: 'old_lesson', oldLesson: oldL });
         APP.startOldLessonCountdown();
+      } else if (data.type === 'LUCKY_DRAW_CLOSE') {
+        const modal = document.getElementById('modal-lucky-draw');
+        if (modal) modal.style.display = 'none';
       } else if (data.type === 'OLD_LESSON_SUBMIT') {
         const p = data.payload || {};
         if (p.machineId) {
@@ -1550,24 +1555,36 @@
         const subList = document.getElementById('ol-submissions-list');
         const subCount = document.getElementById('ol-submitted-count');
         if (subList && subCount && state.oldLesson) {
-          const subs = Object.keys(state.oldLesson.submissions || {});
-          subCount.textContent = `Đã nộp: ${subs.length}/18 máy`;
-          if (subs.length === 0) {
-            subList.innerHTML = '<div style="color:#64748b;font-size:11.5px;padding:8px;text-align:center;">Chưa có máy nào nộp câu trả lời...</div>';
-          } else {
-            let html = '';
-            subs.forEach(mId => {
-              const item = state.oldLesson.submissions[mId];
-              html += `<div class="osb-item">
-                <div class="osb-item-left">
-                  <span class="osb-machine-badge">MÁY ${String(mId).padStart(2,'0')}</span>
-                  <span class="osb-ans-content">${item.student || ''}: <em>"${item.answer || ''}"</em></span>
+          const subs = state.oldLesson.submissions || {};
+          const subKeys = Object.keys(subs);
+          subCount.textContent = `Đã nộp: ${subKeys.length}/18 máy`;
+
+          let html = '';
+          for (let i = 1; i <= 18; i++) {
+            const item = subs[i];
+            const pair = classData.seatingPlan[i] || [`Máy ${i}`];
+            const stuNames = pair.join(' • ');
+            if (item) {
+              html += `<div class="osb-card submitted">
+                <div class="osb-card-top">
+                  <span class="osb-badge-m">MÁY ${String(i).padStart(2,'0')}</span>
+                  <span class="osb-badge-status success"><i class="fas fa-check"></i> Đã nộp (${item.time || ''})</span>
                 </div>
-                <span class="osb-time">${item.time || ''}</span>
+                <div class="osb-card-names"><i class="fas fa-user-friends"></i> ${item.student || stuNames}</div>
+                <div class="osb-card-ans"><i class="fas fa-comment-dots"></i> <strong>Đáp án:</strong> "${item.answer || ''}"</div>
               </div>`;
-            });
-            subList.innerHTML = html;
+            } else {
+              html += `<div class="osb-card">
+                <div class="osb-card-top">
+                  <span class="osb-badge-m">MÁY ${String(i).padStart(2,'0')}</span>
+                  <span class="osb-badge-status pending"><i class="fas fa-hourglass-half"></i> Đang làm...</span>
+                </div>
+                <div class="osb-card-names"><i class="fas fa-user-friends"></i> ${stuNames}</div>
+                <div class="osb-card-ans empty">Chưa gửi câu trả lời</div>
+              </div>`;
+            }
           }
+          subList.innerHTML = html;
         }
       }
 
@@ -2011,9 +2028,12 @@
       this.initLuckyDrawViews();
     },
 
-    closeLuckyDrawModal() {
+    closeLuckyDrawModal(broadcast = true) {
       const modal = document.getElementById('modal-lucky-draw');
       if (modal) modal.style.display = 'none';
+      if (broadcast) {
+        SYNC_BUS.broadcast('LUCKY_DRAW_CLOSE', {});
+      }
     },
 
     setLuckyDrawStrategy(strat) {
@@ -2259,6 +2279,13 @@
 
         const spinBtn = document.getElementById('btn-trigger-spin');
         if (spinBtn) spinBtn.disabled = false;
+
+        if (!isInitiator) {
+          setTimeout(() => {
+            const modal = document.getElementById('modal-lucky-draw');
+            if (modal) modal.style.display = 'none';
+          }, 3500);
+        }
       }, duration + 200);
     }
   };
@@ -2281,8 +2308,16 @@
     STORE.setState({ currentPhase: phase, teacherPhase: phase });
     SYNC_BUS.broadcast('PHASE_CHANGE', { phase });
     if (db) {
-      db.ref('activeSession/currentPhase').set(phase).catch(()=>{});
+      db.ref('activeSession').update({
+        currentPhase: phase,
+        sessionStarted: true,
+        lastUpdated: Date.now()
+      }).catch(()=>{});
     }
+  };
+
+  window.teacherStartLesson = function() {
+    window.teacherSetPhase('old_lesson');
   };
 
   window.toggleOldLessonMenu = function() {
