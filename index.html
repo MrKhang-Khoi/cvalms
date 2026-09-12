@@ -18,10 +18,32 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.4.0">
+  <link rel="stylesheet" href="style.css?v=2.5.0">
 
-  <!-- Tinh chỉnh Trực quan Studio Editor & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
+  <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
+    /* Cho phép cuộn mượt mà trong các panel Giáo viên (Tab 1, Tab 2, Tab 3) */
+    .teacher-panel {
+      flex: 1 !important;
+      width: 100% !important;
+      height: 100% !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      scroll-behavior: smooth !important;
+    }
+    .panel-studio-container {
+      padding: 20px 24px 120px 24px !important;
+      min-height: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .studio-sidebar {
+      position: sticky !important;
+      top: 0 !important;
+      align-self: start !important;
+      max-height: calc(100vh - 120px) !important;
+      overflow-y: auto !important;
+    }
+
     /* Layout chung Studio */
     .studio-timeline-area {
       background: rgba(15, 23, 42, 0.95) !important;
@@ -29,6 +51,7 @@
       border-radius: 16px !important;
       padding: 24px !important;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+      min-height: 900px !important;
     }
     .sta-header {
       display: flex !important;
@@ -239,6 +262,27 @@
       background: rgba(15, 23, 42, 0.85) !important;
       border-color: rgba(255, 255, 255, 0.2) !important;
     }
+
+    /* Nút Reset về phòng chờ & Hiệu ứng đếm ngược Master */
+    .tmc-btn-reset {
+      background: linear-gradient(135deg, #d97706, #b45309) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(251, 191, 36, 0.4) !important;
+      font-weight: 800 !important;
+    }
+    .tmc-btn-reset:hover {
+      background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.5) !important;
+    }
+    .tmc-timer-warning {
+      color: #ef4444 !important;
+      animation: pulseTimer 1s infinite alternate !important;
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.7) !important;
+    }
+    @keyframes pulseTimer {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(1.08); opacity: 0.85; }
+    }
   </style>
 
   <!-- Tự động cập nhật Service Worker & giải phóng cache cũ -->
@@ -399,7 +443,7 @@
 
             <div class="kl-instruction-box">
               <i class="fas fa-bolt"></i>
-              <span>Các em hãy hướng mắt lên bảng. Bài học sẽ mở màn với đếm ngược <strong>3... 2... 1... 🚀</strong></span>
+              <span id="waiting-instruction-text">Các em hãy hướng mắt lên bảng. Bài học sẽ mở màn với đếm ngược <strong>3... 2... 1... 🚀</strong></span>
             </div>
           </div>
         </div>
@@ -678,6 +722,9 @@ print(s[4:])</code></pre>
         </div>
       </div>
       <div class="th-right">
+        <button type="button" class="btn-tool btn-tool-warning" id="btn-header-reset-lobby" onclick="window.teacherResetAllToLobby()" title="Đưa toàn bộ 18 máy về phòng chờ ngay lập tức">
+          <i class="fas fa-undo"></i> Reset về phòng chờ
+        </button>
         <button type="button" class="btn-tool btn-tool-danger" id="btn-teacher-logout" title="Đăng xuất khỏi tài khoản Giáo viên">
           <i class="fas fa-sign-out-alt"></i> Đăng xuất
         </button>
@@ -1090,8 +1137,11 @@ print("2. Cắt xâu:", s[10:17])
             </button>
           </div>
 
-          <!-- Phía Phải: Bỏ qua bước & Kết thúc tiết học DUY NHẤT -->
+          <!-- Phía Phải: Reset phòng chờ, Bỏ qua bước & Kết thúc tiết học -->
           <div class="tmc-actions-wrap">
+            <button type="button" class="tmc-btn tmc-btn-reset" id="btn-master-reset-lobby" onclick="window.teacherResetAllToLobby()" title="Đưa toàn bộ 18 máy học sinh về phòng chờ ngay lập tức">
+              <i class="fas fa-undo"></i> RESET VỀ PHÒNG CHỜ
+            </button>
             <button type="button" class="tmc-btn tmc-btn-skip" id="btn-master-skip-step" onclick="window.masterSkipStep()" title="Bỏ qua bước này, chuyển ngay sang bước kế tiếp">
               <i class="fas fa-forward"></i> BƯỚC TIẾP
             </button>

@@ -3,7 +3,7 @@
  * Quản lý Cache cục bộ để chống giật lag và nạp bài tức thì
  * ========================================================== */
 
-const CACHE_NAME = 'lms-18may-v2.4.0';
+const CACHE_NAME = 'lms-18may-v2.5.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
