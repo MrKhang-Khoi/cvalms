@@ -159,7 +159,7 @@
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       }
-    } catch (e) {}
+    } catch {}
     return (message === 'admin123' || message === 'ThayKhang@2026') ? VALID_PASSWORD_HASHES[0] : '';
   }
 
@@ -187,7 +187,7 @@
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.05);
-      } catch(e) {}
+      } catch {}
     },
     playFanfare() {
       try {
@@ -207,7 +207,7 @@
           osc.start(this.ctx.currentTime + idx * 0.09);
           osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
         });
-      } catch(e) {}
+      } catch {}
     }
   };
 
@@ -328,7 +328,7 @@
           this.state.screen = 'teacher';
           return true;
         }
-      } catch (e) {}
+      } catch {}
       return false;
     }
   };
@@ -378,7 +378,7 @@
           try {
             const data = JSON.parse(e.newValue);
             this.handleMessage(data);
-          } catch (err) {}
+          } catch {}
         }
       });
       // Nếu Firebase sẵn sàng, lắng nghe session từ Firebase
@@ -430,7 +430,7 @@
           } else {
             attachSessionListener();
           }
-        } catch (e) {}
+        } catch {}
       }
       // Gửi tín hiệu thông báo máy đang online sau khi tải
       setTimeout(() => {
@@ -443,11 +443,11 @@
     broadcast(type, payload) {
       const msg = { type, payload, senderId: Math.random().toString(36).substring(7), timestamp: Date.now() };
       if (this.channel) {
-        try { this.channel.postMessage(msg); } catch (e) {}
+        try { this.channel.postMessage(msg); } catch {}
       }
       try {
         localStorage.setItem('cvalms_sync_event', JSON.stringify(msg));
-      } catch (e) {}
+      } catch {}
     },
     handleMessage(data) {
       if (!data || !data.type) return;
@@ -535,7 +535,7 @@
             this.classes = Object.assign({}, this.classes, parsed);
           }
         }
-      } catch (e) {}
+      } catch {}
 
       initFirebase();
       STORE.loadSavedDeviceToken();
@@ -565,7 +565,7 @@
             localStorage.removeItem('lms_fixed_machine_id');
             STORE.setState({ fixedMachineId: null });
             alert('Đã xóa lưu nhớ máy trên thiết bị này! Giờ bạn có thể chọn bất kỳ máy nào.');
-          } catch (e) {}
+          } catch {}
         });
       }
 
@@ -587,7 +587,7 @@
 
           try {
             localStorage.setItem('lms_fixed_machine_id', machineId.toString());
-          } catch (e) {}
+          } catch {}
 
           const classData = this.classes[state.classId] || this.classes['10A1'];
           const pair = classData.seatingPlan[machineId] || ["Học sinh 1", "Học sinh 2"];
@@ -642,7 +642,7 @@
             const modal = document.getElementById('modal-token-warning');
             if (modal) modal.style.display = 'none';
             alert('Đã mở khóa thiết bị! Giờ bạn có thể chọn lại vị trí máy.');
-          } catch (e) {}
+          } catch {}
         });
       }
 
@@ -731,7 +731,7 @@
                 spread: 70,
                 origin: { y: 0.6 }
               });
-            } catch (err) {}
+            } catch {}
           }
         });
       });
@@ -902,7 +902,7 @@
       const btnLogout = document.getElementById('btn-teacher-logout');
       if (btnLogout) {
         btnLogout.addEventListener('click', () => {
-          try { sessionStorage.removeItem('lms_admin_logged_in'); } catch(e){}
+          try { sessionStorage.removeItem('lms_admin_logged_in'); } catch {}
           STORE.setState({ role: 'student', screen: 'lobby' });
         });
       }
@@ -1135,7 +1135,7 @@
       if (confirm('Khôi phục lại toàn bộ danh sách lớp và 18 máy về mặc định ban đầu?')) {
         try {
           localStorage.removeItem('lms_custom_classes');
-        } catch (e) {}
+        } catch {}
         this.classes = JSON.parse(JSON.stringify(EMBEDDED_CLASSES));
         this.renderSettingsSeatingGrid();
         alert('Đã khôi phục dữ liệu lớp học mặc định thành công!');
@@ -1383,7 +1383,7 @@
       const isValid = VALID_PASSWORD_HASHES.includes(hash) || (pass === 'admin123') || (pass === 'ThayKhang@2026');
 
       if (isValid) {
-        try { sessionStorage.setItem('lms_admin_logged_in', 'true'); } catch(e){}
+        try { sessionStorage.setItem('lms_admin_logged_in', 'true'); } catch {}
         if (errorMsg) errorMsg.style.display = 'none';
         if (modal) modal.style.display = 'none';
 
@@ -1784,17 +1784,28 @@
 
         const spotlight = document.getElementById('ol-caller-spotlight');
         const callerInfo = document.getElementById('ol-caller-info');
+        const stageContainer = document.querySelector('.old-lesson-container');
         if (spotlight && callerInfo) {
           const isThisMachine = (ol.selectedMachine === machineId);
-          spotlight.classList.toggle('highlighted', isThisMachine);
+          spotlight.classList.toggle('highlighted', !!ol.selectedMachine);
+          spotlight.classList.toggle('winner-gold-spotlight', isThisMachine);
+          if (stageContainer) {
+            stageContainer.classList.toggle('stage-winner-active', isThisMachine);
+          }
           if (ol.selectedStudent) {
             if (isThisMachine) {
-              callerInfo.innerHTML = `🎉 <strong>CHÚC MỪNG MÁY ${String(machineId).padStart(2,'0')}!</strong> Mời bạn <span style="color:#f59e0b;font-weight:800;">${ol.selectedStudent}</span> đứng dậy (hoặc lên bảng) trả lời!`;
+              callerInfo.innerHTML = `
+                <div class="winner-headline"><i class="fas fa-crown"></i> BẠN ĐÃ ĐƯỢC GỌI LÊN SÓNG!</div>
+                <div class="winner-subline">Mời em <strong class="winner-name">${ol.selectedStudent}</strong> tự tin đứng dậy hoặc lên bảng trả lời!</div>
+              `;
             } else {
-              callerInfo.innerHTML = `🎯 <strong>MÁY ${String(ol.selectedMachine).padStart(2,'0')}</strong> — Bạn <span style="color:#38bdf8;font-weight:700;">${ol.selectedStudent}</span> đang trả lời bài cũ... Cả lớp chú ý lắng nghe!`;
+              callerInfo.innerHTML = `
+                <span class="audience-badge"><i class="fas fa-bullhorn"></i> MÁY ${String(ol.selectedMachine).padStart(2,'0')}</span>
+                <span class="audience-text">Bạn <strong>${ol.selectedStudent}</strong> đang trả lời bài cũ... Cả lớp chú ý lắng nghe và nhận xét!</span>
+              `;
             }
           } else {
-            callerInfo.textContent = 'Đang chờ Thầy bốc thăm gọi học sinh...';
+            callerInfo.innerHTML = '<span class="waiting-spin-badge"><i class="fas fa-hourglass-half"></i> Đang chờ Thầy bốc thăm gọi học sinh...</span>';
           }
         }
 
@@ -2058,9 +2069,17 @@
     openLuckyDrawModal() {
       const modal = document.getElementById('modal-lucky-draw');
       if (modal) modal.style.display = 'flex';
+      const state = STORE.getState();
+      const isStudent = (state.role === 'student');
+      const closeBtn = document.getElementById('btn-close-lucky-draw');
+      const spinBtn = document.getElementById('btn-trigger-spin');
+      const stratSelector = document.querySelector('.ld-strategy-selector');
+      if (closeBtn) closeBtn.style.display = isStudent ? 'none' : 'inline-flex';
+      if (spinBtn) spinBtn.style.display = isStudent ? 'none' : 'inline-flex';
+      if (stratSelector) stratSelector.style.display = isStudent ? 'none' : 'flex';
+
       const banner = document.getElementById('ld-result-banner');
       if (banner) banner.style.display = 'none';
-      const spinBtn = document.getElementById('btn-trigger-spin');
       if (spinBtn) spinBtn.disabled = false;
 
       this.initLuckyDrawViews();
@@ -2071,6 +2090,12 @@
       if (modal) modal.style.display = 'none';
       if (broadcast) {
         SYNC_BUS.broadcast('LUCKY_DRAW_CLOSE', {});
+        if (db) {
+          db.ref('activeSession/luckyDraw').update({
+            modalOpen: false,
+            spinning: false
+          }).catch(()=>{});
+        }
       }
     },
 
@@ -2200,7 +2225,9 @@
       SYNC_BUS.broadcast('LUCKY_DRAW_SPIN', payload);
       if (db) {
         db.ref('activeSession/luckyDraw').set({
-          payload,
+          payload: payload,
+          spinning: true,
+          modalOpen: true,
           timestamp: Date.now()
         }).catch(()=>{});
       }
@@ -2259,11 +2286,27 @@
       } else if (strategy === 'wheel_fortune') {
         const canvas = document.getElementById('wheel-canvas');
         if (canvas) {
-          const sliceAngle = 360 / 18;
+          const totalSlices = 18;
+          const sliceAngle = 360 / totalSlices;
+          // Tâm của lát cắt targetMachine (1..18):
+          // Máy 1 (i=0): 10 deg; Máy 13 (i=12): 250 deg; Máy 14 (i=13): 270 deg
           const targetSliceMid = (targetMachine - 1) * sliceAngle + sliceAngle / 2;
-          const rotateDegrees = (360 * 5) + (270 - targetSliceMid);
+          
+          // Kim chỉ cố định ở 12 giờ (270 deg)
+          // Đích đến: góc lát cắt sau khi xoay phải nằm đúng tại 270 deg
+          let targetDeg = (270 - targetSliceMid) % 360;
+          if (targetDeg < 0) targetDeg += 360;
+
+          const currentRotMod = (this.wheelCurrentRotation || 0) % 360;
+          let delta = targetDeg - currentRotMod;
+          if (delta <= 0) delta += 360;
+
+          // Xoay thêm 5 vòng trọn vẹn (1800 deg) để tạo kịch tính
+          const extraRounds = 360 * 5;
+          this.wheelCurrentRotation = (this.wheelCurrentRotation || 0) + extraRounds + delta;
+
           canvas.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.9, 0.2, 1.0)`;
-          canvas.style.transform = `rotate(${rotateDegrees}deg)`;
+          canvas.style.transform = `rotate(${this.wheelCurrentRotation}deg)`;
         }
 
         const subbox = document.getElementById('wheel-student-subbox');
@@ -2293,8 +2336,8 @@
 
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 80,
-            spread: 70,
+            particleCount: 100,
+            spread: 80,
             origin: { y: 0.6 }
           });
         }
@@ -2314,12 +2357,16 @@
           selectedStudent: targetStudent
         });
         STORE.setState({ oldLesson: oldL });
+
         if (db && isInitiator) {
           db.ref('activeSession/oldLesson').update({
             selectedMachine: targetMachine,
             selectedStudent: targetStudent
           }).catch(()=>{});
-          db.ref('activeSession/luckyDraw/spinning').set(false).catch(()=>{});
+          db.ref('activeSession/luckyDraw').update({
+            spinning: false,
+            completed: true
+          }).catch(()=>{});
         }
 
         const spinBtn = document.getElementById('btn-trigger-spin');
@@ -2329,7 +2376,7 @@
           setTimeout(() => {
             const modal = document.getElementById('modal-lucky-draw');
             if (modal) modal.style.display = 'none';
-          }, 3500);
+          }, 3000);
         }
       }, duration + 200);
     }

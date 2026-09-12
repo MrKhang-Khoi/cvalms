@@ -2837,113 +2837,234 @@ body {
 }
 
 /* GIAO DIỆN HỌC SINH: KIỂM TRA BÀI CŨ */
+/* =========================================================
+   SÂN KHẤU ĐẤU TRƯỜNG BÀI CŨ CHUẨN KAHOOT / QUIZIZZ
+========================================================== */
 .old-lesson-container {
-  max-width: 900px;
+  width: 100%;
+  max-width: 1360px;
+  min-height: 82vh;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
+  padding: 16px 24px 32px 24px;
+  box-sizing: border-box;
+  animation: stageEnter 0.25s ease-out;
+}
+
+@keyframes stageEnter {
+  from { transform: translateY(8px); }
+  to { transform: translateY(0); }
 }
 
 .ol-banner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: rgba(15, 23, 42, 0.8);
-  border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 12px 18px;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 15px rgba(56, 189, 248, 0.1);
+  border-radius: 14px;
+  padding: 14px 24px;
 }
 
 .ol-phase-tag {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: #38bdf8;
   display: flex;
+  align-items: center;
+  gap: 10px;
+  text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.ol-timer {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.3));
+  border: 1.5px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+  padding: 6px 18px;
+  border-radius: 9999px;
+  font-family: var(--font-code);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  animation: pulse-border 1.5s infinite;
+}
+
+/* =========================================================
+   SPOTLIGHT CALLER BANNER (KAHOOT STAGE TAKEOVER)
+========================================================== */
+.ol-caller-spotlight {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.9));
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Chế độ Khán giả (Audience Spectator Mode) */
+.ol-caller-spotlight.highlighted {
+  border-color: #38bdf8;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+}
+
+.ol-cs-badge {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f59e0b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ol-cs-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.5;
+  width: 100%;
+}
+
+.audience-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  margin-right: 8px;
+  box-shadow: 0 0 10px rgba(2, 132, 199, 0.5);
+}
+
+.audience-text {
+  font-size: 16px;
+  color: #e2e8f0;
+}
+
+.audience-text strong {
+  color: #38bdf8;
+  font-size: 17px;
+}
+
+.waiting-spin-badge {
+  color: #94a3b8;
+  font-size: 15px;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
-.ol-timer {
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #f87171;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-family: var(--font-code);
-  font-size: 14px;
-  font-weight: 800;
+/* Vinh danh máy học sinh được chọn (Golden Spotlight Stage) */
+.ol-caller-spotlight.winner-gold-spotlight {
+  border: 2.5px solid #f59e0b !important;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.2), rgba(15, 23, 42, 0.95)) !important;
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.2) !important;
+  animation: winnerGlowPulse 1.8s infinite alternate !important;
+  padding: 20px 28px !important;
+}
+
+@keyframes winnerGlowPulse {
+  0% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.4), inset 0 0 15px rgba(245, 158, 11, 0.15); }
+  100% { box-shadow: 0 0 55px rgba(245, 158, 11, 0.7), inset 0 0 30px rgba(245, 158, 11, 0.3); border-color: #fbbf24; }
+}
+
+.winner-headline {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 16px rgba(251, 191, 36, 0.6);
   display: flex;
   align-items: center;
-  gap: 6px;
-  animation: pulse-border 1.5s infinite;
+  gap: 10px;
 }
 
-.ol-caller-spotlight {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  border-radius: 10px;
-  padding: 14px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.ol-caller-spotlight.highlighted {
-  border-color: #f59e0b;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(15, 23, 42, 0.9));
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
-}
-
-.ol-cs-badge {
-  font-size: 12px;
-  font-weight: 800;
-  color: #f59e0b;
-  white-space: nowrap;
-}
-
-.ol-cs-title {
-  font-size: 14px;
+.winner-subline {
+  font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: #f8fafc;
+  margin-top: 4px;
 }
 
+.winner-subline .winner-name {
+  color: #38bdf8;
+  font-size: 18px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* =========================================================
+   CÂU HỎI SÂN KHẤU ĐẤU TRƯỜNG (HERO QUESTION ARENA)
+========================================================== */
 .ol-question-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  padding: 20px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1.5px solid rgba(148, 163, 184, 0.2);
+  border-radius: 16px;
+  padding: 32px 36px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 22px;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .ol-q-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  padding-bottom: 14px;
 }
 
 .ol-q-badge {
-  background-color: rgba(56, 189, 248, 0.15);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(2, 132, 199, 0.25));
   color: #38bdf8;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .ol-q-type-badge {
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .ol-question-text {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   color: #f8fafc;
-  line-height: 1.6;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 1366px) {
+  .ol-question-text {
+    font-size: 22px;
+  }
 }
 
 .ol-text-input {
