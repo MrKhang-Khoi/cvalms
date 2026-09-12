@@ -3,7 +3,7 @@
  * Quản lý Cache cục bộ để chống giật lag và nạp bài tức thì
  * ========================================================== */
 
-const CACHE_NAME = 'lms-18may-v2.1.0';
+const CACHE_NAME = 'lms-18may-v2.3.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -14,23 +14,25 @@ const STATIC_ASSETS = [
   './data/default-lessons.json'
 ];
 
-// 1. Install Event: Cache các tài nguyên tĩnh cơ sở
+// 1. Install Event: Nạp tài nguyên và kích hoạt ngay không chờ
 self.addEventListener('install', event => {
+  console.log('[PWA SW] Cài đặt phiên bản mới:', CACHE_NAME);
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      console.log('[PWA SW] Đang lưu cache tĩnh...');
-      return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+      return cache.addAll(STATIC_ASSETS.map(url => new Request(url, { cache: 'reload' })));
+    }).catch(err => console.warn('[PWA SW] Cache addAll warn:', err))
   );
 });
 
-// 2. Activate Event: Xóa các bản cache cũ khi có phiên bản mới
+// 2. Activate Event: Xóa triệt để TẤT CẢ các bản cache cũ
 self.addEventListener('activate', event => {
+  console.log('[PWA SW] Kích hoạt và dọn dẹp cache cũ...');
   event.waitUntil(
     caches.keys().then(keys => {
       return Promise.all(
         keys.filter(key => key !== CACHE_NAME).map(key => {
-          console.log('[PWA SW] Xóa cache cũ:', key);
+          console.log('[PWA SW] Đã xóa vĩnh viễn cache lỗi thời:', key);
           return caches.delete(key);
         })
       );
@@ -38,32 +40,45 @@ self.addEventListener('activate', event => {
   );
 });
 
-// 3. Fetch Event: Network-First cho dữ liệu động, Cache-First cho tài nguyên tĩnh
+// 3. Fetch Event: NETWORK-FIRST cho mã nguồn (.js, .css, .html) để chống kẹt cache
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
-  // Không cache Firebase Realtime Database và Auth requests
-  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('googleapis.com')) {
+  // Tuyệt đối không can thiệp Firebase, Auth và API động
+  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('googleapis.com') || url.hostname.includes('firebasedatabase.app')) {
     return;
   }
 
+  // Network-First cho tài nguyên code (.js, .css, .html)
+  const isCodeAsset = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.html') || url.pathname === '/';
+
+  if (isCodeAsset) {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          if (networkResponse && networkResponse.status === 200) {
+            const resClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // Chỉ fallback sang cache khi mất mạng hoàn toàn (Offline)
+          return caches.match(event.request);
+        })
+    );
+    return;
+  }
+
+  // Cache-First cho hình ảnh, icons, font
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        // Cập nhật ngầm dưới nền (Stale-While-Revalidate)
-        fetch(event.request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {});
-        return cachedResponse;
-      }
+      if (cachedResponse) return cachedResponse;
       return fetch(event.request).then(networkResponse => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
+        if (networkResponse && networkResponse.status === 200) {
+          const resClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
         }
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
         return networkResponse;
       });
     })

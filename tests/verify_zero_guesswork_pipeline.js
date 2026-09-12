@@ -149,13 +149,34 @@ async function runPipeline() {
 
     console.log('\n--- BƯỚC 2: GIÁO VIÊN ĐĂNG NHẬP & XEM XƯỞNG SOẠN BÀI (STUDIO) ---');
     await teacherPage.goto('http://127.0.0.1:8089/', { waitUntil: 'networkidle' });
+
+    // Kiểm tra toàn diện 100% các hàm onclick trong DOM có tồn tại trên window không
+    const missingHandlers = await teacherPage.evaluate(() => {
+      const missing = [];
+      document.querySelectorAll('[onclick]').forEach(el => {
+        const handler = el.getAttribute('onclick');
+        const match = handler.match(/window\.([a-zA-Z0-9_]+)\s*\(/);
+        if (match && typeof window[match[1]] !== 'function') {
+          missing.push({ id: el.id, fn: match[1], attr: handler });
+        }
+      });
+      return missing;
+    });
+    console.log('   - Audit Window Onclick Handlers:', missingHandlers.length === 0 ? 'PASS (100% Available)' : `FAIL: ${JSON.stringify(missingHandlers)}`);
+    if (missingHandlers.length > 0) throw new Error('Found missing window functions in DOM!');
+
     await teacherPage.click('#btn-open-teacher-login');
     await teacherPage.waitForTimeout(250);
     await teacherPage.fill('#teacher-password-input', 'admin123');
     await teacherPage.click('#modal-teacher-login button[type="submit"]');
     await teacherPage.waitForTimeout(400);
 
-    // Chuyển sang Tab 2: Xưởng Soạn Kịch bản (Studio)
+    // Chuyển tuần tự qua cả 3 Tab Giáo viên để đảm bảo window.teacherSwitchTab hoạt động hoàn hảo
+    console.log('   - Testing Tab 1 (Classes & Seating)...');
+    await teacherPage.click('#btn-tnav-classes');
+    await teacherPage.waitForTimeout(200);
+
+    console.log('   - Testing Tab 2 (Studio & Scripts)...');
     await teacherPage.click('#btn-tnav-studio');
     await teacherPage.waitForTimeout(300);
     const studioActive = await teacherPage.evaluate(() => {
@@ -164,6 +185,10 @@ async function runPipeline() {
     });
     console.log('   - Teacher Studio Tab Displayed:', studioActive ? 'PASS' : 'FAIL');
     if (!studioActive) throw new Error('Studio tab failed to open!');
+
+    console.log('   - Testing Tab 3 (Live Stage)...');
+    await teacherPage.click('#btn-tnav-stage');
+    await teacherPage.waitForTimeout(200);
 
     const shot2 = path.join(artifactsDir, 'v7_02_teacher_studio_preview.png');
     await teacherPage.screenshot({ path: shot2 });

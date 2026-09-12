@@ -7,6 +7,24 @@
 (function() {
   'use strict';
 
+  // SẴN SÀNG GLOBAL HANDLERS NGAY TỪ ĐẦU (Chống lỗi tải trễ hoặc cache không đồng bộ)
+  window.teacherSwitchTab = window.teacherSwitchTab || function(tab) {
+    if (window._impl_teacherSwitchTab) return window._impl_teacherSwitchTab(tab);
+    console.warn('[LMS] teacherSwitchTab được gọi trước khi khởi tạo xong, đang chờ...', tab);
+  };
+  window.teacherStartLesson = window.teacherStartLesson || function() {
+    if (window._impl_teacherStartLesson) return window._impl_teacherStartLesson();
+  };
+  window.teacherEndSession = window.teacherEndSession || function() {
+    if (window._impl_teacherEndSession) return window._impl_teacherEndSession();
+  };
+  window.openLuckyDrawModal = window.openLuckyDrawModal || function() {
+    if (window._impl_openLuckyDrawModal) return window._impl_openLuckyDrawModal();
+  };
+  window.startLuckyDrawSpin = window.startLuckyDrawSpin || function() {
+    if (window._impl_startLuckyDrawSpin) return window._impl_startLuckyDrawSpin();
+  };
+
   // 1. DỮ LIỆU CƠ SỞ (TÍCH HỢP SẴN ĐỂ CHẠY CỰC NHANH KỂ CẢ KHI OFFLINE)
   const EMBEDDED_CLASSES = {
     "10A1": {
@@ -900,8 +918,17 @@
       });
     },
 
-    // BINDING SỰ KIỆN CHO GIÁO VIÊN & ĐĂNG NHẬP SHA-256
     bindTeacherEvents() {
+      // 0. Tabs chuyển đổi phân hệ Giáo viên
+      ['classes', 'studio', 'stage'].forEach(tab => {
+        const btn = document.getElementById(`btn-tnav-${tab}`);
+        if (btn) {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.teacherSwitchTab(tab);
+          });
+        }
+      });
       // 1. Mở modal đăng nhập Giáo viên
       const btnOpenTeacher = document.getElementById('btn-open-teacher-login');
       if (btnOpenTeacher) {
@@ -2539,6 +2566,7 @@
   window.toggleOldLessonMenu = function() { APP.toggleOldLessonMenu(); };
   window.closeAllTpbMenus = function() { APP.closeAllTpbMenus(); };
   window.teacherLockOldLesson = function() { APP.teacherLockOldLesson(); };
+  window.teacherRevealOldLesson = function() { APP.teacherRevealOldLesson(); };
 
   window.teacherSetPhase = function(phase) {
     const s = STORE.getState();
@@ -2607,7 +2635,7 @@
   };
 
   // Quản lý Tab Giáo viên (1. Lớp học, 2. Xưởng soạn bài, 3. Sân khấu)
-  window.teacherSwitchTab = function(tab) {
+  window._impl_teacherSwitchTab = window.teacherSwitchTab = function(tab) {
     STORE.setState({ teacherTab: tab });
     document.querySelectorAll('.tnt-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.teacher-panel').forEach(p => p.style.display = 'none');
@@ -2638,7 +2666,7 @@
   };
 
   // Bắt đầu tiết học: Kích hoạt đếm ngược 3-2-1 đồng bộ trước khi vào bước 1
-  window.teacherStartLesson = function() {
+  window._impl_teacherStartLesson = window.teacherStartLesson = function() {
     const s = STORE.getState();
     const checkedInCount = Object.keys(s.occupiedMachines || {}).length;
     if (checkedInCount === 0) {
@@ -2695,7 +2723,7 @@
     }
   };
 
-  window.teacherEndSession = function() {
+  window._impl_teacherEndSession = window.teacherEndSession = function() {
     const btn = document.getElementById('btn-end-class-session');
     if (btn) btn.click();
   };

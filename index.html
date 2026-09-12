@@ -18,7 +18,16 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.0.2">
+  <link rel="stylesheet" href="style.css?v=2.3.0">
+
+  <!-- Tự động cập nhật Service Worker & giải phóng cache cũ -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => reg.update());
+      });
+    }
+  </script>
 
   <!-- Tự động nạp Manifest PWA an toàn khi chạy trên HTTP/HTTPS -->
   <script>
@@ -1191,7 +1200,7 @@ print(s[4:])</code></pre>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
-  <script src="js/bundle.js?v=2.2.0"></script>
+  <script src="js/bundle.js?v=2.3.0"></script>
 </body>
 </html>
 
