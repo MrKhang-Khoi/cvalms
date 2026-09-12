@@ -290,6 +290,12 @@
           if (num >= 1 && num <= 18) {
             localStorage.setItem('lms_fixed_machine_id', num.toString());
             this.state.fixedMachineId = num;
+            this.state.machineId = num;
+            this.state.screen = 'student';
+            const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
+            if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
+              this.state.students = cData.seatingPlan[num];
+            }
             return num;
           }
         }
@@ -298,6 +304,12 @@
           const num = parseInt(saved, 10);
           if (num >= 1 && num <= 18) {
             this.state.fixedMachineId = num;
+            this.state.machineId = num;
+            this.state.screen = 'student';
+            const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
+            if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
+              this.state.students = cData.seatingPlan[num];
+            }
             return num;
           }
         }
@@ -340,6 +352,13 @@
           firebase.initializeApp(FIREBASE_CONFIG);
         }
         db = firebase.database();
+        if (firebase.auth) {
+          firebase.auth().signInAnonymously().then(cred => {
+            console.log('[Firebase Auth] Đăng nhập ẩn danh thành công! UID:', cred.user?.uid);
+          }).catch(err => {
+            console.warn('[Firebase Auth] Lỗi đăng nhập ẩn danh:', err);
+          });
+        }
         console.log('[Firebase] Đã kết nối cơ sở dữ liệu thời gian thực.');
       } catch (e) {
         console.warn('[Firebase] Đang chạy chế độ Local Standalone:', e);
@@ -365,19 +384,52 @@
       // Nếu Firebase sẵn sàng, lắng nghe session từ Firebase
       if (db) {
         try {
-          db.ref('activeSession').on('value', (snap) => {
-            const val = snap.val();
-            if (!val) return;
-            const state = STORE.getState();
-            if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
-              STORE.setState({ currentPhase: val.currentPhase });
-            }
-            if (val.machines) {
-              const occ = Object.assign({}, state.occupiedMachines);
-              Object.keys(val.machines).forEach(m => { occ[m] = true; });
-              STORE.setState({ occupiedMachines: occ });
-            }
-          });
+          const attachSessionListener = () => {
+            db.ref('activeSession').on('value', (snap) => {
+              const val = snap.val();
+              if (!val) return;
+              const state = STORE.getState();
+              const updates = {};
+              if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
+                updates.currentPhase = val.currentPhase;
+              }
+              if (val.sessionStarted !== undefined && val.sessionStarted !== state.sessionStarted) {
+                updates.sessionStarted = val.sessionStarted;
+              }
+              if (val.oldLesson) {
+                updates.oldLesson = Object.assign({}, state.oldLesson, val.oldLesson);
+              }
+              if (val.luckyDraw) {
+                updates.luckyDraw = val.luckyDraw;
+                if (val.luckyDraw.payload && val.luckyDraw.spinning) {
+                  if (window.APP && window.APP.handleRemoteLuckyDrawSpin) {
+                    window.APP.handleRemoteLuckyDrawSpin(val.luckyDraw.payload);
+                  }
+                }
+              }
+              if (val.machines) {
+                const occ = Object.assign({}, state.occupiedMachines);
+                Object.keys(val.machines).forEach(m => { occ[m] = true; });
+                updates.occupiedMachines = occ;
+              }
+              if (Object.keys(updates).length > 0) {
+                STORE.setState(updates);
+              }
+            }, (err) => {
+              console.warn('[Firebase RTDB Listen Error]:', err);
+            });
+          };
+
+          if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().onAuthStateChanged((user) => {
+              if (user) {
+                console.log('[Firebase] User authenticated, attaching activeSession listener:', user.uid);
+                attachSessionListener();
+              }
+            });
+          } else {
+            attachSessionListener();
+          }
         } catch (e) {}
       }
       // Gửi tín hiệu thông báo máy đang online sau khi tải
@@ -1693,6 +1745,13 @@
         sosBtn.innerHTML = isSos ? '<i class="fas fa-hand-paper"></i> Đã gọi Thầy' : '<i class="fas fa-hand-paper"></i> Cần trợ giúp';
       }
 
+      // Khóa kỷ luật phòng máy: Học sinh KHÔNG ĐƯỢC thoát ra sảnh khi tiết học đã bắt đầu
+      const btnBackLobby = document.getElementById('btn-back-to-lobby');
+      if (btnBackLobby) {
+        const isLocked = (state.sessionStarted || (currentPhase && currentPhase !== 'waiting'));
+        btnBackLobby.style.display = isLocked ? 'none' : 'inline-flex';
+      }
+
       // Thanh tiến trình sư phạm (Pace Navigator)
       document.querySelectorAll('.pn-item').forEach(item => {
         item.classList.toggle('active', item.dataset.phase === currentPhase);
@@ -1730,9 +1789,9 @@
           spotlight.classList.toggle('highlighted', isThisMachine);
           if (ol.selectedStudent) {
             if (isThisMachine) {
-              callerInfo.innerHTML = `🎉 <strong>CHÚC MỪNG MÁY ${String(machineId).padStart(2,'0')}!</strong> Mời bạn <span style="color:#f59e0b;font-weight:800;">${ol.selectedStudent}</span> đại diện trả lời!`;
+              callerInfo.innerHTML = `🎉 <strong>CHÚC MỪNG MÁY ${String(machineId).padStart(2,'0')}!</strong> Mời bạn <span style="color:#f59e0b;font-weight:800;">${ol.selectedStudent}</span> đứng dậy (hoặc lên bảng) trả lời!`;
             } else {
-              callerInfo.innerHTML = `🎯 <strong>MÁY ${String(ol.selectedMachine).padStart(2,'0')}</strong> — Bạn <span style="color:#38bdf8;font-weight:700;">${ol.selectedStudent}</span> đang trả lời bài cũ...`;
+              callerInfo.innerHTML = `🎯 <strong>MÁY ${String(ol.selectedMachine).padStart(2,'0')}</strong> — Bạn <span style="color:#38bdf8;font-weight:700;">${ol.selectedStudent}</span> đang trả lời bài cũ... Cả lớp chú ý lắng nghe!`;
             }
           } else {
             callerInfo.textContent = 'Đang chờ Thầy bốc thăm gọi học sinh...';
@@ -1743,32 +1802,11 @@
         if (qText && ol.questionText) qText.textContent = ol.questionText;
 
         const qTypeBadge = document.getElementById('ol-q-type-badge');
-        if (qTypeBadge) qTypeBadge.textContent = ol.questionType === 'mcq' ? 'Trắc nghiệm A-B-C-D' : 'Tự luận ngắn';
-
-        const textWrap = document.getElementById('ol-answer-text-wrap');
-        const mcqWrap = document.getElementById('ol-answer-mcq-wrap');
-        if (textWrap && mcqWrap) {
-          textWrap.style.display = ol.questionType === 'mcq' ? 'none' : 'block';
-          mcqWrap.style.display = ol.questionType === 'mcq' ? 'block' : 'none';
-        }
-
-        const textarea = document.getElementById('ol-text-input');
-        const btnSubmit = document.getElementById('btn-submit-old-lesson');
-        if (textarea && btnSubmit) {
-          textarea.disabled = !!ol.isLocked;
-          btnSubmit.disabled = !!ol.isLocked;
-          if (ol.isLocked) {
-            btnSubmit.innerHTML = '<i class="fas fa-lock"></i> ĐÃ HẾT GIỜ / ĐÃ KHÓA';
-            btnSubmit.style.opacity = '0.6';
-          } else {
-            btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> GỬI CÂU TRẢ LỜI';
-            btnSubmit.style.opacity = '1';
-          }
-        }
+        if (qTypeBadge) qTypeBadge.innerHTML = '<i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ';
 
         const revealBox = document.getElementById('ol-reveal-box');
         if (revealBox) {
-          revealBox.style.display = ol.isRevealed ? 'flex' : 'none';
+          revealBox.style.display = ol.isRevealed ? 'block' : 'none';
         }
       }
 
@@ -2276,6 +2314,13 @@
           selectedStudent: targetStudent
         });
         STORE.setState({ oldLesson: oldL });
+        if (db && isInitiator) {
+          db.ref('activeSession/oldLesson').update({
+            selectedMachine: targetMachine,
+            selectedStudent: targetStudent
+          }).catch(()=>{});
+          db.ref('activeSession/luckyDraw/spinning').set(false).catch(()=>{});
+        }
 
         const spinBtn = document.getElementById('btn-trigger-spin');
         if (spinBtn) spinBtn.disabled = false;
@@ -2292,6 +2337,7 @@
 
   // Expose global methods for HTML onclick handlers
   window.APP = APP;
+  window.STORE = STORE;
   window.onSelectDesk = function(deskNum) {
     APP.onSelectMachine(deskNum);
   };
@@ -2305,14 +2351,32 @@
   };
 
   window.teacherSetPhase = function(phase) {
-    STORE.setState({ currentPhase: phase, teacherPhase: phase });
+    const s = STORE.getState();
+    const isStarted = (phase === 'old_lesson') ? true : s.sessionStarted;
+    STORE.setState({ currentPhase: phase, teacherPhase: phase, sessionStarted: isStarted });
     SYNC_BUS.broadcast('PHASE_CHANGE', { phase });
     if (db) {
-      db.ref('activeSession').update({
-        currentPhase: phase,
-        sessionStarted: true,
-        lastUpdated: Date.now()
-      }).catch(()=>{});
+      const doWrite = () => {
+        const fbData = {
+          currentPhase: phase,
+          sessionStarted: isStarted,
+          lastUpdated: Date.now()
+        };
+        if (phase === 'old_lesson') {
+          fbData.oldLesson = STORE.getState().oldLesson || {};
+        }
+        db.ref('activeSession').update(fbData).then(() => {
+          console.log('[Firebase] Đã cập nhật activeSession phase:', phase);
+        }).catch(err => {
+          console.warn('[Firebase] teacherSetPhase error:', err);
+        });
+      };
+
+      if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
+        firebase.auth().signInAnonymously().then(() => doWrite()).catch(() => doWrite());
+      } else {
+        doWrite();
+      }
     }
   };
 
@@ -2363,6 +2427,16 @@
   window.startLuckyDrawSpin = function() {
     APP.startLuckyDrawSpin();
   };
+
+  // Khóa kỷ luật: Cảnh báo học sinh khi cố tình đóng/thoát trang khi đang trong tiết học
+  window.addEventListener('beforeunload', (e) => {
+    const s = STORE.getState();
+    if (s.role === 'student' && (s.sessionStarted || (s.currentPhase && s.currentPhase !== 'waiting'))) {
+      e.preventDefault();
+      e.returnValue = 'Tiết học đang diễn ra! Em không được tự ý thoát khỏi phòng máy!';
+      return e.returnValue;
+    }
+  });
 
   // Khởi động ứng dụng khi DOM sẵn sàng
   if (document.readyState === 'loading') {

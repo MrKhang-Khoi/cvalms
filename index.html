@@ -191,60 +191,27 @@
             <div class="ol-cs-title" id="ol-caller-info">Đang chờ Thầy bốc thăm gọi học sinh...</div>
           </div>
 
-          <!-- Nội dung câu hỏi kiểm tra bài cũ -->
+          <!-- Nội dung câu hỏi kiểm tra bài cũ (Chỉ chiếu câu hỏi, học sinh đứng dậy trả lời miệng) -->
           <div class="ol-question-card">
             <div class="ol-q-header">
-              <span class="ol-q-badge">CÂU HỎI ÔN TẬP</span>
-              <span class="ol-q-type-badge" id="ol-q-type-badge">Tự luận ngắn</span>
+              <span class="ol-q-badge"><i class="fas fa-question-circle"></i> CÂU HỎI KIỂM TRA BÀI CŨ</span>
+              <span class="ol-q-type-badge" id="ol-q-type-badge"><i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ</span>
             </div>
             <div class="ol-question-text" id="ol-question-text">
               Em hãy cho biết: Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?
             </div>
 
-            <!-- Khu vực trả lời dạng Tự Luận Ngắn -->
-            <div class="ol-answer-text-wrap" id="ol-answer-text-wrap">
-              <textarea class="ol-text-input" id="ol-text-input" placeholder="Gõ câu trả lời của nhóm hoặc bạn được gọi vào đây..."></textarea>
-              <div class="ol-input-footer">
-                <span class="ol-char-count" id="ol-char-count">0 ký tự</span>
+            <!-- Hướng dẫn sư phạm: Học sinh đứng dậy hoặc lên bảng trả lời miệng -->
+            <div class="ol-oral-instruction-banner" style="margin-top:18px;padding:16px;background:rgba(56,189,248,0.1);border:1.5px dashed #38bdf8;border-radius:12px;display:flex;align-items:center;gap:14px;">
+              <div style="font-size:28px;color:#38bdf8;"><i class="fas fa-microphone-alt"></i></div>
+              <div>
+                <div style="font-weight:700;color:#f8fafc;font-size:15px;">HÌNH THỨC TRẢ LỜI: ĐỨNG DẬY HOẶC LÊN BẢNG</div>
+                <div style="color:#94a3b8;font-size:13px;margin-top:2px;">Học sinh được Thầy gọi tên sẽ đứng dậy tại chỗ hoặc lên bảng trả lời trực tiếp. Cả lớp chú ý theo dõi và nhận xét!</div>
               </div>
-            </div>
-
-            <!-- Khu vực trả lời dạng Trắc Nghiệm (A-B-C-D) -->
-            <div class="ol-answer-mcq-wrap" id="ol-answer-mcq-wrap" style="display:none;">
-              <div class="ol-mcq-grid">
-                <button type="button" class="ol-mcq-btn" data-ol-choice="A">
-                  <span class="ol-mcq-key">A</span>
-                  <span class="ol-mcq-val" id="ol-opt-a">Bộ nhớ trong RAM</span>
-                </button>
-                <button type="button" class="ol-mcq-btn" data-ol-choice="B">
-                  <span class="ol-mcq-key">B</span>
-                  <span class="ol-mcq-val" id="ol-opt-b">Bộ xử lý trung tâm CPU</span>
-                </button>
-                <button type="button" class="ol-mcq-btn" data-ol-choice="C">
-                  <span class="ol-mcq-key">C</span>
-                  <span class="ol-mcq-val" id="ol-opt-c">Ổ đĩa cứng SSD/HDD</span>
-                </button>
-                <button type="button" class="ol-mcq-btn" data-ol-choice="D">
-                  <span class="ol-mcq-key">D</span>
-                  <span class="ol-mcq-val" id="ol-opt-d">Bộ nguồn máy tính PSU</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Nút nộp bài dùng chung cho cả Tự luận và Trắc nghiệm -->
-            <div class="ol-submit-bar" style="margin-top:14px;display:flex;justify-content:flex-end;">
-              <button type="button" class="btn-primary ol-btn-submit" id="btn-submit-old-lesson">
-                <i class="fas fa-paper-plane"></i> GỬI CÂU TRẢ LỜI
-              </button>
-            </div>
-
-            <!-- Hộp trạng thái nộp bài -->
-            <div class="ol-status-msg" id="ol-status-msg">
-              <i class="fas fa-info-circle"></i> Học sinh trao đổi và nhập câu trả lời trước khi hết giờ.
             </div>
 
             <!-- Banner Đáp Án Chuẩn Khi Thầy Công Bố -->
-            <div class="ol-reveal-box" id="ol-reveal-box" style="display:none;">
+            <div class="ol-reveal-box" id="ol-reveal-box" style="display:none;margin-top:18px;">
               <div class="orb-header">
                 <i class="fas fa-check-circle"></i> ĐÁP ÁN CHUẨN CỦA THẦY:
               </div>
@@ -974,10 +941,11 @@ print(s[4:])</code></pre>
 
   <!-- Firebase Compat v9 (Offline resilient) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
-  <script src="js/bundle.js?v=2.1.0"></script>
+  <script src="js/bundle.js?v=2.2.0"></script>
 </body>
 </html>
 
