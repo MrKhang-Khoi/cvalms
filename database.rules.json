@@ -1,0 +1,24 @@
+﻿{
+  "rules": {
+    "system": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "classes": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "lessons": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "activeSession": {
+      ".read": true,
+      ".write": true
+    },
+    "sessionHistory": {
+      ".read": true,
+      ".write": "auth != null"
+    }
+  }
+}

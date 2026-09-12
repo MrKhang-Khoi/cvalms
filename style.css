@@ -1,0 +1,550 @@
+﻿/* ==========================================================
+ * STYLE.CSS — LMS PHÒNG MÁY TƯƠNG TÁC (MINIMALIST & HIGH CONTRAST)
+ * Thiết kế tối giản, tập trung, chống mỏi mắt cho phòng máy
+ * ========================================================== */
+
+:root {
+  --bg-main: #0f172a;       /* Nền xanh đen sâu */
+  --bg-card: #1e293b;       /* Nền thẻ nổi bật */
+  --bg-input: #0b1120;      /* Nền ô nhập liệu */
+  --border-color: #334155;  /* Viền xám xanh */
+  
+  --text-main: #f8fafc;     /* Chữ trắng sáng */
+  --text-muted: #94a3b8;    /* Chữ xám phụ */
+  
+  --primary: #3b82f6;       /* Xanh dương chủ đạo */
+  --primary-hover: #2563eb;
+  --success: #10b981;       /* Xanh lá nộp bài / đúng */
+  --warning: #f59e0b;       /* Vàng đang làm / lưu ý */
+  --danger: #ef4444;        /* Đỏ SOS / cảnh báo */
+  
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Fira Code", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  font-size: 16px;
+  line-height: 1.5;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ==========================================================
+ * 1. HEADER HỌC SINH TỐI GIẢN
+ * ========================================================== */
+.student-header {
+  height: 60px;
+  background-color: #111827;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.sh-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sh-machine-badge {
+  background: linear-gradient(135deg, var(--primary), #1d4ed8);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.sh-students-label {
+  font-size: 15px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.sh-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Nút SOS xin trợ giúp */
+.btn-sos {
+  background-color: #374151;
+  color: #f3f4f6;
+  border: 1px solid #4b5563;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-sos:hover {
+  background-color: #4b5563;
+}
+
+.btn-sos.active {
+  background-color: var(--warning);
+  color: #000;
+  border-color: #d97706;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* ==========================================================
+ * 2. KHÔNG GIAN LÀM VIỆC CHÍNH (MAIN WORKSPACE)
+ * ========================================================== */
+.student-main {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.st-view {
+  width: 100%;
+  height: 100%;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* ==========================================================
+ * 3. VIEW 0A: CHỜ GIÁO VIÊN
+ * ========================================================== */
+#st-view-waiting, #st-view-ready {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.waiting-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 40px 48px;
+  border-radius: 16px;
+  max-width: 540px;
+  width: 100%;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.waiting-icon {
+  font-size: 54px;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.waiting-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.waiting-subtitle {
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+/* ==========================================================
+ * 4. VIEW 0B: SẢNH ĐIỂM DANH ĐÔI TỰ ĐỘNG MAP
+ * ========================================================== */
+.seating-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 36px 40px;
+  max-width: 580px;
+  margin: auto;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.seating-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 20px;
+}
+
+.seating-pair-box {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pair-tag {
+  background-color: #1e293b;
+  border: 1px solid #475569;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pair-tag i {
+  color: var(--primary);
+}
+
+.btn-checkin-confirm {
+  background-color: var(--success);
+  color: #fff;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  transition: background-color 0.2s;
+}
+
+.btn-checkin-confirm:hover {
+  background-color: #059669;
+}
+
+/* ==========================================================
+ * 5. CHẶNG 1: QUICK POLL A-B-C-D
+ * ========================================================== */
+#st-view-warmup {
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.poll-question-header {
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.poll-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.poll-opt-btn {
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.poll-opt-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  background-color: #26354a;
+}
+
+.poll-opt-btn.selected {
+  border-color: var(--primary);
+  background: rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.poll-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background-color: #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.poll-opt-btn[data-choice="A"] .poll-badge { background-color: #ef4444; color: #fff; }
+.poll-opt-btn[data-choice="B"] .poll-badge { background-color: #3b82f6; color: #fff; }
+.poll-opt-btn[data-choice="C"] .poll-badge { background-color: #f59e0b; color: #000; }
+.poll-opt-btn[data-choice="D"] .poll-badge { background-color: #10b981; color: #fff; }
+
+.poll-status-box {
+  background-color: #111827;
+  border: 1px dashed var(--border-color);
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+/* ==========================================================
+ * 6. CHẶNG 2: THẺ LÝ THUYẾT PWA NOTEBOOKLM
+ * ========================================================== */
+#st-view-theory {
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.theory-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.theory-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.theory-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.theory-card-summary {
+  font-size: 15px;
+  color: #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.theory-card-note {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid var(--warning);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  color: #fde68a;
+  font-size: 14px;
+  margin-top: 12px;
+}
+
+/* Khối Code chuyên nghiệp cho Tin học */
+.code-block {
+  background-color: #030712;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: #38bdf8;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.code-block.mini {
+  padding: 8px 12px;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ==========================================================
+ * 7. CHẶNG 3: THẢO LUẬN NHÓM ĐÔI (SMART SPLIT VIEW)
+ * ========================================================== */
+#st-view-discussion {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 20px;
+  height: 100%;
+}
+
+.disc-left-ref {
+  background-color: #111827;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.disc-right-work {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.disc-task-description {
+  background-color: #0f172a;
+  border-left: 4px solid var(--primary);
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 16px;
+}
+
+.disc-task-description h3 {
+  font-size: 16px;
+  color: #93c5fd;
+  margin-bottom: 6px;
+}
+
+.disc-task-description p {
+  font-size: 15px;
+  color: #f1f5f9;
+}
+
+.disc-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 16px;
+}
+
+.disc-answer-input {
+  width: 100%;
+  flex: 1;
+  min-height: 200px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  color: #fff;
+  resize: none;
+  outline: none;
+}
+
+.disc-answer-input:focus {
+  border-color: var(--primary);
+}
+
+.disc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.badge-success {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.badge-warning {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* Ref card bên trái */
+.ref-card {
+  background-color: #1e293b;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.ref-card h4 {
+  font-size: 14px;
+  color: #93c5fd;
+  margin-bottom: 4px;
+}
+
+/* ==========================================================
+ * 8. THANH THỬ NGHIỆM CHẶNG (TEST PREVIEW BAR DÀNH CHO THẦY)
+ * ========================================================== */
+.test-preview-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background-color: #030712;
+  border-top: 1px solid #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 16px;
+  z-index: 9999;
+}
+
+.tpb-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tpb-btn {
+  background-color: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tpb-btn:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}

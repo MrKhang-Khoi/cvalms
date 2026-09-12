@@ -1,0 +1,54 @@
+﻿{
+  "classes": {
+    "9A1": {
+      "className": "Lớp 9A1",
+      "grade": 9,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Nguyễn Văn An", "Trần Thị Bình"],
+        "2": ["Lê Hoàng Cường", "Phạm Minh Đức"],
+        "3": ["Hoàng Thu Giang", "Võ Thị Hạnh"],
+        "4": ["Đỗ Minh Khang", "Bùi Như Lan"],
+        "5": ["Nguyễn Hữu Mai", "Phan Thanh Nam"],
+        "6": ["Vũ Hải Oanh", "Trịnh Quốc Phúc"],
+        "7": ["Đặng Như Quỳnh", "Trần Văn Sơn"],
+        "8": ["Lê Thị Thu", "Nguyễn Minh Uyên"],
+        "9": ["Hồ Quang Vinh", "Đoàn Kim Xuân"],
+        "10": ["Ngô Gia Bảo", "Dương Thuỳ Châu"],
+        "11": ["Lý Minh Dũng", "Phạm Ngọc Em"],
+        "12": ["Trương Hoàng Giao", "Lâm Quốc Hùng"],
+        "13": ["Chu Thị Kim", "Đinh Văn Long"],
+        "14": ["Vương Tuyết Mai", "Mai Văn Nhân"],
+        "15": ["Tạ Thị Oanh", "Phạm Hoàng Phương"],
+        "16": ["Hà Minh Quân", "Nguyễn Thị Sâm"],
+        "17": ["Thái Văn Tài", "Cao Minh Uy"],
+        "18": ["Lê Văn Việt", "Trần Như Ý"]
+      }
+    },
+    "10A1": {
+      "className": "Lớp 10A1",
+      "grade": 10,
+      "totalStudents": 35,
+      "seatingPlan": {
+        "1": ["Lê Hoàng Nam", "Phạm Ngọc Ánh"],
+        "2": ["Trần Bảo Long", "Nguyễn Thùy Linh"],
+        "3": ["Vũ Đức Minh", "Hoàng Kim Ngân"],
+        "4": ["Đỗ Gia Huy", "Bùi Phương Mai"],
+        "5": ["Phan Thanh Tùng", "Đặng Thu Trang"],
+        "6": ["Hồ Minh Trí", "Ngô Cẩm Tú"],
+        "7": ["Trịnh Văn Kiên", "Lý Thanh Hà"],
+        "8": ["Dương Quốc Đạt", "Mai Hồng Nhung"],
+        "9": ["Phạm Quang Huy", "Võ Ngọc Bích"],
+        "10": ["Đinh Minh Quân", "Lâm Mỹ Duyên"],
+        "11": ["Lê Tuấn Khang", "Chu Bảo Yến"],
+        "12": ["Nguyễn Thế Bảo", "Tạ Quỳnh Nga"],
+        "13": ["Hà Quốc Khánh", "Cao Thục Anh"],
+        "14": ["Vương Minh Khôi", "Đoàn Khánh Linh"],
+        "15": ["Thái Hữu Phước", "Trần Như Thảo"],
+        "16": ["Lâm Nhật Huy", "Nguyễn Mỹ Lan"],
+        "17": ["Tạ Văn Hưng", "Phạm Diệu Huyền"],
+        "18": ["Đặng Quốc Tuấn", ""]
+      }
+    }
+  }
+}

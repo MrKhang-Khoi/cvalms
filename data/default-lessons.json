@@ -1,0 +1,86 @@
+﻿{
+  "lessons": {
+    "tin10_bai12": {
+      "id": "tin10_bai12",
+      "title": "Bài 12: Kiểu dữ liệu xâu trong Python",
+      "grade": 10,
+      "subject": "Tin học 10 (GDPT 2018)",
+      "warmup": {
+        "type": "code-poll",
+        "question": "Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?",
+        "code": "s = \"Tin hoc\"\nprint(s[4:])",
+        "options": {
+          "A": "\"Tin\"",
+          "B": "\"hoc\"",
+          "C": "\"h\"",
+          "D": "Báo lỗi IndexError"
+        },
+        "timeLimit": 45
+      },
+      "theory": [
+        {
+          "id": "card-1",
+          "title": "1. Khái niệm & Khởi tạo Xâu ký tự",
+          "summary": "Xâu ký tự (string) trong Python là dãy các ký tự được đặt trong cặp dấu nháy đơn '...' hoặc nháy kép \"...\".",
+          "code": "# Ví dụ khởi tạo xâu\ns1 = 'Xin chao'\ns2 = \"Tin hoc 10\"\n\n# Độ dài xâu (hàm len)\nprint(len(s1))  # Kết quả: 8",
+          "note": "Ký tự khoảng trắng (dấu cách) cũng được tính là một ký tự trong xâu."
+        },
+        {
+          "id": "card-2",
+          "title": "2. Truy cập phần tử & Phép cắt xâu (Slicing)",
+          "summary": "Mỗi ký tự có một chỉ số (index): chỉ số dương bắt đầu từ 0 (từ trái qua), chỉ số âm từ -1 (từ phải qua). Cú pháp cắt xâu: s[bắt_đầu : kết_thúc].",
+          "code": "s = \"Python\"\nprint(s[0])    # 'P' (ký tự đầu)\nprint(s[-1])   # 'n' (ký tự cuối)\nprint(s[0:2])  # 'Py' (từ chỉ số 0 đến trước 2)\nprint(s[2:])   # 'thon' (từ chỉ số 2 đến hết)",
+          "note": "Cắt xâu s[start:end] lấy các ký tự từ vị trí start đến vị trí end - 1."
+        },
+        {
+          "id": "card-3",
+          "title": "3. Tính chất bất biến của xâu (Immutability)",
+          "summary": "Xâu trong Python là đối tượng bất biến: không thể gán lại hay thay đổi trực tiếp từng ký tự trong xâu đã tạo.",
+          "code": "s = \"Hello\"\n# s[0] = 'J' -> SẼ BÁO LỖI TypeError!\n\n# Cách thay đổi đúng: tạo một xâu mới\ns_moi = 'J' + s[1:]\nprint(s_moi)  # 'Jello'",
+          "note": "Để biến đổi xâu, ta luôn ghép nối để tạo ra xâu mới."
+        }
+      ],
+      "discussion": {
+        "title": "Nhiệm vụ Thảo luận & Thực hành Nhóm đôi",
+        "task": "Cho xâu ký tự: s = 'chuc mung nam moi 2026'\nHai em hãy thảo luận và viết các câu lệnh Python để thực hiện:\n1. In ra độ dài của xâu s.\n2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.\n3. Trình bày ít nhất 1 cách để đếm số lượng ký tự khoảng trắng có trong xâu s.",
+        "placeholder": "# Gõ câu trả lời và mã code của nhóm bạn vào đây...\n# Ví dụ:\ns = 'chuc mung nam moi 2026'\n# 1. In do dai:\nprint(...)\n\n# 2. Trich xuat 'nam moi':\nprint(...)\n\n# 3. Dem khoang trang:\n...",
+        "timeLimit": 720
+      },
+      "quiz": [
+        {
+          "id": "q1",
+          "question": "Trong Python, chỉ số đầu tiên của một xâu ký tự là bao nhiêu?",
+          "options": {
+            "A": "0",
+            "B": "1",
+            "C": "-1",
+            "D": "Tùy thuộc vào độ dài xâu"
+          },
+          "timeLimit": 30
+        },
+        {
+          "id": "q2",
+          "question": "Cho xâu s = 'LapTrinh'. Câu lệnh s[3:6] sẽ trả về giá trị nào?",
+          "options": {
+            "A": "'pTr'",
+            "B": "'Tri'",
+            "C": "'Trin'",
+            "D": "'pTri'"
+          },
+          "timeLimit": 30
+        },
+        {
+          "id": "q3",
+          "question": "Lệnh s[0] = 'A' thực hiện trên xâu s = 'Bao' sẽ dẫn đến kết quả gì?",
+          "options": {
+            "A": "xâu s đổi thành 'Aao'",
+            "B": "Báo lỗi TypeError vì xâu là bất biến",
+            "C": "xâu s đổi thành 'ABao'",
+            "D": "Không có lỗi gì nhưng xâu không đổi"
+          },
+          "timeLimit": 30
+        }
+      ]
+    }
+  }
+}

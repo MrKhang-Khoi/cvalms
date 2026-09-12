@@ -1,0 +1,180 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LMS Phòng Máy Tương Tác 18 Máy - Môn Tin học THPT">
+  <title>LMS Phòng Máy Tương Tác 18 Máy</title>
+
+  <!-- Google Fonts: Inter & Fira Code cho Code Tin học -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Stylesheet với Cache-Busting -->
+  <link rel="stylesheet" href="style.css?v=2.0.1">
+
+  <!-- Tự động nạp Manifest PWA an toàn khi chạy trên HTTP/HTTPS -->
+  <script>
+    if (window.location.protocol.startsWith('http')) {
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = 'manifest.json';
+      document.head.appendChild(link);
+    }
+  </script>
+</head>
+<body>
+
+  <!-- ============================================
+       1. THANH TIÊU ĐỀ HỌC SINH (MINIMAL HEADER)
+  ============================================= -->
+  <header class="student-header">
+    <div class="sh-left">
+      <div class="sh-machine-badge" id="sh-machine-badge">Máy 4</div>
+      <div class="sh-students-label" id="sh-students-label">Chưa điểm danh</div>
+    </div>
+    <div class="sh-right">
+      <button class="btn-sos" id="btn-student-sos" title="Bấm để phát tín hiệu xin trợ giúp lên máy giáo viên">
+        <i class="fas fa-hand-paper"></i> Cần trợ giúp
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================
+       2. KHÔNG GIAN LÀM VIỆC CHÍNH (MAIN WORKSPACE)
+  ============================================= -->
+  <main class="student-main">
+
+    <!-- VIEW 0A: CHỜ GIÁO VIÊN MỞ PHIÊN -->
+    <section id="st-view-waiting" class="st-view">
+      <div class="waiting-card">
+        <div class="waiting-icon"><i class="fas fa-hourglass-half fa-spin"></i></div>
+        <h2 class="waiting-title">Tiết học chưa bắt đầu</h2>
+        <p class="waiting-subtitle">Thầy đang chuẩn bị bài dạy. Các em hãy ngồi đúng vị trí máy của mình và chờ hiệu lệnh từ thầy nhé!</p>
+      </div>
+    </section>
+
+    <!-- VIEW 0B: SẢNH ĐIỂM DANH ĐÔI TỰ ĐỘNG MAP CHỖ NGỒI -->
+    <section id="st-view-seating" class="st-view" style="display:none;">
+      <div class="seating-card">
+        <h2 class="seating-title" id="seating-card-title">🖥️ MÁY BÀN SỐ 4 — LỚP 10A1</h2>
+        <p style="color:var(--text-muted); margin-bottom: 16px; font-size:15px;">Sơ đồ lớp đã phân công 2 bạn ngồi tại máy này:</p>
+        <div class="seating-pair-box" id="seating-pair-names">
+          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Đỗ Gia Huy</div>
+          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Bùi Phương Mai</div>
+        </div>
+        <button class="btn-checkin-confirm" id="btn-confirm-checkin">
+          <i class="fas fa-check-circle"></i> ĐÚNG VỊ TRÍ — VÀO TIẾT HỌC
+        </button>
+      </div>
+    </section>
+
+    <!-- VIEW 0C: ĐÃ VÀO PHÒNG - SẴN SÀNG -->
+    <section id="st-view-ready" class="st-view" style="display:none;">
+      <div class="waiting-card">
+        <div class="waiting-icon" style="color:var(--success)"><i class="fas fa-check-circle"></i></div>
+        <h2 class="waiting-title">Đã sẵn sàng vào học!</h2>
+        <p class="waiting-subtitle">Nhóm bạn đã điểm danh thành công. Hãy hướng mắt lên bảng nghe thầy hướng dẫn chặng tiếp theo.</p>
+      </div>
+    </section>
+
+    <!-- VIEW 1: CHẶNG 1 — KHỞI ĐỘNG TỨC THÌ (QUICK POLL A-B-C-D) -->
+    <section id="st-view-warmup" class="st-view" style="display:none;">
+      <div class="poll-question-header" id="poll-question-text">Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?</div>
+      <pre class="code-block" id="poll-code-snippet">s = "Tin hoc"
+print(s[4:])</pre>
+      
+      <div class="poll-grid">
+        <button class="poll-opt-btn" data-choice="A">
+          <span class="poll-badge">A</span>
+          <span class="poll-label">"Tin"</span>
+        </button>
+        <button class="poll-opt-btn" data-choice="B">
+          <span class="poll-badge">B</span>
+          <span class="poll-label">"hoc"</span>
+        </button>
+        <button class="poll-opt-btn" data-choice="C">
+          <span class="poll-badge">C</span>
+          <span class="poll-label">"h"</span>
+        </button>
+        <button class="poll-opt-btn" data-choice="D">
+          <span class="poll-badge">D</span>
+          <span class="poll-label">Báo lỗi IndexError</span>
+        </button>
+      </div>
+
+      <div class="poll-status-box" id="poll-status-msg">
+        Hai em hãy trao đổi nhanh và bấm chọn 1 đáp án:
+      </div>
+    </section>
+
+    <!-- VIEW 2: CHẶNG 2 — KHÁM PHÁ LÝ THUYẾT PWA NOTEBOOKLM -->
+    <section id="st-view-theory" class="st-view" style="display:none;">
+      <div class="theory-cards-container" id="theory-cards-container">
+        <!-- Render các thẻ kiến thức từ NotebookLM -->
+      </div>
+    </section>
+
+    <!-- VIEW 3: CHẶNG 3 — THẢO LUẬN & THỰC HÀNH NHÓM ĐÔI -->
+    <section id="st-view-discussion" class="st-view" style="display:none;">
+      <!-- Cột trái: Lý thuyết tham khảo thu gọn -->
+      <aside class="disc-left-ref" id="disc-theory-reference">
+        <!-- Thẻ tham khảo thu gọn -->
+      </aside>
+
+      <!-- Cột phải: Khung làm bài thảo luận của máy -->
+      <div class="disc-right-work">
+        <div class="disc-task-description" id="disc-task-description">
+          <!-- Đề bài nhiệm vụ thảo luận -->
+        </div>
+
+        <div class="disc-editor-wrapper">
+          <textarea class="disc-answer-input" id="disc-answer-input" placeholder="# Gõ nội dung thảo luận hoặc dán code của nhóm vào đây..."></textarea>
+        </div>
+
+        <div class="disc-actions">
+          <div id="disc-submission-status">
+            <span class="badge-warning"><i class="fas fa-clock"></i> Đang làm bài...</span>
+          </div>
+          <button class="btn-primary" id="btn-submit-discussion">
+            <i class="fas fa-paper-plane"></i> GỬI BÀI LÀM CỦA MÁY
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: CHẶNG 4 — LIVE QUIZ TRẮC NGHIỆM THI ĐUA -->
+    <section id="st-view-quiz" class="st-view" style="display:none;">
+      <div class="waiting-card">
+        <div class="waiting-icon" style="color:var(--primary)"><i class="fas fa-trophy"></i></div>
+        <h2 class="waiting-title">Trắc nghiệm thi đua</h2>
+        <p class="waiting-subtitle">Chuẩn bị thi đua cùng 17 máy khác trong phòng!</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================
+       THANH THỬ NGHIỆM NHANH (DÀNH CHO THẦY KIỂM TRA)
+  ============================================= -->
+  <div class="test-preview-bar">
+    <span class="tpb-title"><i class="fas fa-flask"></i> THỬ NGHIỆM CHẶNG:</span>
+    <button class="tpb-btn" onclick="window.setTestPhase('waiting')">⏳ Chờ mở bài</button>
+    <button class="tpb-btn" onclick="window.setTestPhase('seating')">0. Sảnh Điểm danh đôi</button>
+    <button class="tpb-btn" onclick="window.setTestPhase('warmup')">1. Quick Poll A-B-C-D</button>
+    <button class="tpb-btn" onclick="window.setTestPhase('theory')">2. Thẻ Lý thuyết PWA</button>
+    <button class="tpb-btn" onclick="window.setTestPhase('discussion')">3. Thảo luận & Thực hành</button>
+  </div>
+
+  <!-- Firebase Compat v9 -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
+  <script src="js/bundle.js?v=2.0.1"></script>
+</body>
+</html>
