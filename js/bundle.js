@@ -104,12 +104,19 @@
     }
   };
 
-  const EMBEDDED_LESSONS = {
+  const DEFAULT_LESSONS = {
     "tin10_bai12": {
       "id": "tin10_bai12",
       "title": "Bài 12: Kiểu dữ liệu xâu trong Python",
-      "grade": 10,
+      "grade": "10",
       "objective": "Hiểu khái niệm xâu, thành thạo phép cắt xâu (slicing) và nắm vững tính chất bất biến của xâu.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là \"bộ não\" điều khiển mọi hoạt động của máy tính?"
+      },
+      "theoryTask": "Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.",
+      "theoryDoc": "SGK Tin học 10 Cánh Diều - Mục 1 Trang 92",
       "warmup": {
         "question": "Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?",
         "code": "s = \"Tin hoc\"\nprint(s[4:])",
@@ -147,7 +154,7 @@
       "discussion": {
         "title": "Nhiệm vụ Thảo luận & Thực hành Nhóm đôi",
         "task": "Cho xâu ký tự: s = 'chuc mung nam moi 2026'\nHai em hãy thảo luận và viết các câu lệnh Python để thực hiện:\n1. In ra độ dài của xâu s.\n2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.\n3. Trình bày ít nhất 1 cách để đếm số lượng ký tự khoảng trắng có trong xâu s.",
-        "placeholder": "# Hai em hãy nhập nội dung thảo luận hoặc code Python của nhóm vào đây...\n# Ví dụ:\ns = 'chuc mung nam moi 2026'\n# 1. In do dai:\nprint(...)\n\n# 2. Trich xuat 'nam moi':\nprint(...)\n\n# 3. Dem khoang trang:\n...",
+        "placeholder": "# Gợi ý bài thực hành xâu ký tự:\ns = 'chuc mung nam moi 2026'\nprint(\"1. Độ dài xâu:\", len(s))\nprint(\"2. Cắt xâu:\", s[10:17])",
         "timeLimit": 720
       },
       "quiz": {
@@ -158,10 +165,172 @@
           "C": "Không thể dùng hàm len() để tính độ dài xâu",
           "D": "Xâu chỉ chứa được chữ số, không chứa được chữ cái"
         },
-        "correct": "B"
-      }
+        "correct": "B",
+        "timeLimit": 20
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin10_bai1": {
+      "id": "tin10_bai1",
+      "title": "Bài 01: Thông tin và xử lý thông tin",
+      "grade": "10",
+      "objective": "Hiểu khái niệm thông tin và dữ liệu, phân biệt các bước trong quy trình xử lý thông tin.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Hãy nêu khái niệm thông tin và dữ liệu? Cho ví dụ minh họa phân biệt giữa chúng."
+      },
+      "theoryTask": "Đọc SGK mục 1 (trang 5-8), thảo luận theo cặp đôi về sự khác nhau giữa Thông tin và Dữ liệu.",
+      "theoryDoc": "SGK Tin học 10 Cánh Diều - Trang 5",
+      "warmup": {
+        "question": "Dãy các số 38, 39, 40 khi chưa gắn với ngữ cảnh cụ thể được gọi là gì?",
+        "options": {
+          "A": "Thông tin",
+          "B": "Dữ liệu",
+          "C": "Tri thức",
+          "D": "Vật mang tin"
+        },
+        "timeLimit": 30
+      },
+      "theory": [
+        {
+          "id": "card-1",
+          "title": "1. Thông tin và Dữ liệu",
+          "summary": "Dữ liệu là các con số, văn bản, hình ảnh thô. Thông tin là ý nghĩa được rút ra từ việc xử lý dữ liệu.",
+          "code": "# Ví dụ dữ liệu thô:\ndiem = [8.5, 9.0, 10]\n# Thông tin xử lý:\ntb = sum(diem)/len(diem)\nprint('Điểm TB:', tb)",
+          "note": "Máy tính chỉ xử lý dữ liệu ở dạng số nhị phân 0 và 1."
+        }
+      ],
+      "discussion": {
+        "title": "Thực hành thu thập và mã hóa dữ liệu",
+        "task": "Hai em hãy thảo luận và nêu 3 ví dụ thực tế về dữ liệu đa phương tiện được thu thập và số hóa.",
+        "placeholder": "# Nhập ví dụ của nhóm vào đây...",
+        "timeLimit": 600
+      },
+      "quiz": {
+        "question": "Thiết bị nào sau đây vừa là thiết bị vào vừa là thiết bị ra của máy tính?",
+        "options": {
+          "A": "Bàn phím cơ",
+          "B": "Chuột quang",
+          "C": "Màn hình cảm ứng",
+          "D": "Máy in laser"
+        },
+        "correct": "C",
+        "timeLimit": 20
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin11_bai1": {
+      "id": "tin11_bai1",
+      "title": "Bài 01: Hệ điều hành và Phần mềm ứng dụng",
+      "grade": "11",
+      "objective": "Nắm vai trò của hệ điều hành, phân biệt phần mềm nguồn mở và nguồn đóng.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Hệ điều hành đóng vai trò gì trong việc quản lý và điều phối tài nguyên phần cứng máy tính?"
+      },
+      "theoryTask": "Đọc mục 2 SGK Tin 11 về chức năng của hệ điều hành Linux so với Windows.",
+      "theoryDoc": "SGK Tin học 11 - Trang 12",
+      "warmup": {
+        "question": "Hệ điều hành nào sau đây là phần mềm nguồn mở tiêu biểu?",
+        "options": {
+          "A": "Ubuntu Linux",
+          "B": "Microsoft Windows 11",
+          "C": "Apple macOS",
+          "D": "Apple iOS"
+        },
+        "timeLimit": 30
+      },
+      "theory": [
+        {
+          "id": "card-1",
+          "title": "1. Vai trò của Hệ điều hành",
+          "summary": "Hệ điều hành làm trung gian giao tiếp giữa phần cứng, phần mềm ứng dụng và người dùng.",
+          "code": "# Linux command check kernel:\nuname -a",
+          "note": "Linux là mã nguồn mở, Windows là mã nguồn đóng."
+        }
+      ],
+      "discussion": {
+        "title": "So sánh Hệ điều hành Windows và Linux",
+        "task": "Thảo luận về ưu điểm và nhược điểm của Linux đối với lập trình viên và doanh nghiệp.",
+        "placeholder": "# Gõ nội dung thảo luận nhóm...",
+        "timeLimit": 600
+      },
+      "quiz": {
+        "question": "Hệ điều hành nào sau đây là hệ điều hành mã nguồn mở?",
+        "options": {
+          "A": "Ubuntu Linux",
+          "B": "Microsoft Windows 11",
+          "C": "Apple macOS",
+          "D": "Apple iOS"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin12_bai1": {
+      "id": "tin12_bai1",
+      "title": "Bài 01: Giới thiệu Trí tuệ nhân tạo (AI)",
+      "grade": "12",
+      "objective": "Hiểu khái niệm AI, phân biệt AI hẹp và AGI, các ứng dụng của AI tạo sinh.",
+      "oldLesson": {
+        "tool": "slot",
+        "timeLimit": 120,
+        "question": "Trí tuệ nhân tạo hẹp (Narrow AI) khác gì so với Trí tuệ nhân tạo tổng quát (AGI)?"
+      },
+      "theoryTask": "Đọc SGK Tin 12 mục AI tạo sinh (Generative AI) và ứng dụng trong cuộc sống hiện đại.",
+      "theoryDoc": "SGK Tin học 12 - Trang 8",
+      "warmup": {
+        "question": "Công nghệ nào sau đây là nền tảng cốt lõi của các mô hình ngôn ngữ lớn (LLM)?",
+        "options": {
+          "A": "Mạng cục bộ LAN",
+          "B": "Cơ sở dữ liệu quan hệ SQL",
+          "C": "Giải thuật sắp xếp nhanh",
+          "D": "Kiến trúc Transformer & Deep Learning"
+        },
+        "timeLimit": 30
+      },
+      "theory": [
+        {
+          "id": "card-1",
+          "title": "1. Khái niệm Trí tuệ nhân tạo",
+          "summary": "AI là khả năng của máy tính mô phỏng các hành vi thông minh của con người như học hỏi, suy luận, thích nghi.",
+          "code": "# Phân loại AI:\n# 1. Narrow AI (Siri, ChatGPT)\n# 2. General AI (AGI)",
+          "note": "AI hiện tại chủ yếu là Narrow AI (chuyên biệt)."
+        }
+      ],
+      "discussion": {
+        "title": "Đạo đức AI và Trách nhiệm sử dụng công nghệ",
+        "task": "Hai em hãy thảo luận về các nguy cơ đạo đức và tin giả khi sử dụng AI tạo sinh.",
+        "placeholder": "# Ghi chú ý kiến nhóm đôi...",
+        "timeLimit": 600
+      },
+      "quiz": {
+        "question": "Công nghệ nào sau đây là nền tảng cốt lõi của các mô hình ngôn ngữ lớn (LLM)?",
+        "options": {
+          "A": "Mạng cục bộ LAN",
+          "B": "Cơ sở dữ liệu quan hệ SQL",
+          "C": "Giải thuật sắp xếp nhanh",
+          "D": "Kiến trúc Transformer & Deep Learning"
+        },
+        "correct": "D",
+        "timeLimit": 20
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
     }
   };
+
+  let customLessons = {};
+  try {
+    const savedLessons = localStorage.getItem('lms_custom_lessons');
+    if (savedLessons) {
+      customLessons = JSON.parse(savedLessons);
+    }
+  } catch {}
+
+  const EMBEDDED_LESSONS = Object.assign({}, DEFAULT_LESSONS, customLessons);
 
   // Mật khẩu Giáo viên mã hóa SHA-256 (admin123 và ThayKhang@2026)
   const VALID_PASSWORD_HASHES = [
@@ -466,12 +635,19 @@
                 }
               }
 
-              // 2. Đồng bộ lớp học được GV kích hoạt
+              // 2. Đồng bộ lớp học & bài dạy được GV kích hoạt
               if (val.classId && val.classId !== state.classId) {
                 updates.classId = val.classId;
               }
               if (val.grade && val.grade !== state.grade) {
                 updates.grade = val.grade;
+              }
+              if (val.lessonId && val.lessonId !== state.lessonId) {
+                updates.lessonId = val.lessonId;
+              }
+              if (val.lessonData) {
+                updates.lessonData = val.lessonData;
+                EMBEDDED_LESSONS[val.lessonData.id] = val.lessonData;
               }
 
               // 3. Đồng bộ tiến trình sư phạm
@@ -581,6 +757,19 @@
           APP.classes = Object.assign({}, EMBEDDED_CLASSES, data.payload.classes);
           STORE.setState({ classId: STORE.getState().classId });
         }
+      } else if (data.type === 'LESSON_UPDATED') {
+        if (data.payload && data.payload.lesson) {
+          const l = data.payload.lesson;
+          EMBEDDED_LESSONS[l.id] = l;
+          if (state.lessonId === l.id || !state.lessonData) {
+            STORE.setState({
+              lessonData: l,
+              oldLesson: Object.assign({}, state.oldLesson, {
+                questionText: l.oldLesson?.question || l.warmup?.question || state.oldLesson.questionText
+              })
+            });
+          }
+        }
       } else if (data.type === 'OLD_LESSON_START') {
         const modal = document.getElementById('modal-lucky-draw');
         if (modal) modal.style.display = 'none';
@@ -649,6 +838,7 @@
       SYNC_BUS.init();
       this.bindEvents();
       this.bindTeacherEvents();
+      this.initStudio();
       this.render(STORE.getState());
     },
 
@@ -977,11 +1167,16 @@
           const chosenGrade = selGrade ? selGrade.value : '10';
           const chosenClass = selClass ? selClass.value : '10A1';
           const chosenLesson = selLesson ? selLesson.value : 'tin10_bai12';
+          const lessonObj = this.getLesson(chosenLesson);
 
           STORE.setState({
             grade: chosenGrade,
             classId: chosenClass,
             lessonId: chosenLesson,
+            lessonData: lessonObj,
+            oldLesson: Object.assign({}, STORE.getState().oldLesson, {
+              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || STORE.getState().oldLesson.questionText
+            }),
             unlocked: true,
             sessionStarted: false,
             teacherStage: 'active',
@@ -993,6 +1188,7 @@
               grade: chosenGrade,
               classId: chosenClass,
               lessonId: chosenLesson,
+              lessonData: lessonObj,
               unlocked: true,
               sessionStarted: false,
               currentPhase: 'waiting',
@@ -1000,6 +1196,14 @@
             }).catch(()=>{});
           }
           alert(`🎉 Đã kích hoạt ${chosenClass}! Sơ đồ máy đã mở khóa để các em vào sảnh chờ.`);
+        });
+      }
+
+      // 4.1. Nút Lưu Kịch bản Bài dạy trong Studio Editor
+      const btnSaveStudio = document.getElementById('btn-studio-save-lesson');
+      if (btnSaveStudio) {
+        btnSaveStudio.addEventListener('click', () => {
+          this.saveStudioLesson();
         });
       }
 
@@ -1500,6 +1704,290 @@
           sel.value = currentVal;
         }
       });
+    },
+
+    // === CÁC PHƯƠNG THỨC QUẢN LÝ BÀI HỌC & XƯỞNG SOẠN KỊCH BẢN (STUDIO EDITOR) ===
+    currentStudioGrade: '10',
+    currentStudioLessonId: 'tin10_bai12',
+
+    getAllLessons() {
+      return EMBEDDED_LESSONS;
+    },
+
+    getLesson(id) {
+      return EMBEDDED_LESSONS[id] || EMBEDDED_LESSONS['tin10_bai12'] || DEFAULT_LESSONS['tin10_bai12'];
+    },
+
+    getLessonsByGrade(grade) {
+      const res = [];
+      Object.keys(EMBEDDED_LESSONS).forEach(k => {
+        const l = EMBEDDED_LESSONS[k];
+        if (String(l.grade) === String(grade)) {
+          res.push(l);
+        }
+      });
+      return res;
+    },
+
+    updateStageLessonDropdown(grade, selectedId) {
+      const sel = document.getElementById('teacher-select-lesson');
+      if (!sel) return;
+      const lessons = this.getLessonsByGrade(grade);
+      const currentVal = selectedId || sel.value;
+      if (lessons.length === 0) {
+        sel.innerHTML = '<option value="">(Chưa có bài dạy cho khối này)</option>';
+        return;
+      }
+      sel.innerHTML = lessons.map(l => `
+        <option value="${l.id}" ${(l.id === currentVal) ? 'selected' : ''}>${l.title}</option>
+      `).join('');
+      if (!lessons.some(l => l.id === currentVal)) {
+        sel.value = lessons[0].id;
+      }
+    },
+
+    initStudio() {
+      this.updateStageLessonDropdown(STORE.getState().grade || '10');
+      this.renderStudioLessonList(this.currentStudioGrade);
+      this.loadLessonToStudio(this.currentStudioLessonId);
+    },
+
+    renderStudioLessonList(grade) {
+      const listEl = document.getElementById('studio-lesson-list');
+      if (!listEl) return;
+      const lessons = this.getLessonsByGrade(grade);
+      if (lessons.length === 0) {
+        listEl.innerHTML = '<div style="padding:16px;color:#94a3b8;font-size:13px;text-align:center;">Chưa có bài dạy nào cho Khối ' + grade + '</div>';
+        return;
+      }
+      listEl.innerHTML = lessons.map(l => `
+        <div class="sb-lesson-item ${l.id === this.currentStudioLessonId ? 'active' : ''}" onclick="window.studioLoadLesson('${l.id}')">
+          <div class="sli-title">${l.title}</div>
+          <div class="sli-meta">Khối ${l.grade} • 5 bước • Đã lưu</div>
+        </div>
+      `).join('');
+    },
+
+    loadLessonToStudio(lessonId) {
+      const lesson = this.getLesson(lessonId);
+      this.currentStudioLessonId = lesson.id;
+      this.currentStudioGrade = String(lesson.grade || '10');
+
+      document.querySelectorAll('.sg-btn').forEach(b => {
+        b.classList.toggle('active', b.textContent.includes(this.currentStudioGrade));
+      });
+      this.renderStudioLessonList(this.currentStudioGrade);
+
+      // Điền dữ liệu vào form
+      const titleInp = document.getElementById('studio-lesson-title-input');
+      if (titleInp) titleInp.value = lesson.title || '';
+
+      // Bước 1: Khởi động & Bài cũ
+      const tool1 = document.getElementById('step-tool-1');
+      if (tool1 && lesson.oldLesson && lesson.oldLesson.tool) tool1.value = lesson.oldLesson.tool;
+      const time1 = document.getElementById('step-time-1');
+      if (time1 && lesson.oldLesson && lesson.oldLesson.timeLimit) time1.value = String(lesson.oldLesson.timeLimit);
+      const q1 = document.getElementById('studio-old-lesson-q');
+      if (q1) q1.value = (lesson.oldLesson && lesson.oldLesson.question) || (lesson.warmup && lesson.warmup.question) || '';
+      const tog1 = document.getElementById('step-toggle-1');
+      if (tog1) tog1.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[1] !== false : true);
+
+      // Bước 2: Khám phá SGK
+      const task2 = document.getElementById('studio-theory-task');
+      if (task2) task2.value = lesson.theoryTask || (lesson.theory && lesson.theory[0] && lesson.theory[0].summary) || '';
+      const doc2 = document.getElementById('studio-theory-doc');
+      if (doc2) doc2.value = lesson.theoryDoc || (lesson.theory && lesson.theory[0] && lesson.theory[0].title) || '';
+      const tog2 = document.getElementById('step-toggle-2');
+      if (tog2) tog2.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[2] !== false : true);
+
+      // Bước 3: Đấu trường Kahoot
+      const time3 = document.getElementById('step-time-3');
+      if (time3 && lesson.quiz && lesson.quiz.timeLimit) time3.value = String(lesson.quiz.timeLimit);
+      const cor3 = document.getElementById('studio-quiz-correct');
+      if (cor3 && lesson.quiz && lesson.quiz.correct) cor3.value = lesson.quiz.correct;
+      const q3 = document.getElementById('studio-quiz-q');
+      if (q3 && lesson.quiz) q3.value = lesson.quiz.question || '';
+      const optA = document.getElementById('studio-quiz-opt-a');
+      if (optA && lesson.quiz && lesson.quiz.options) optA.value = lesson.quiz.options.A || '';
+      const optB = document.getElementById('studio-quiz-opt-b');
+      if (optB && lesson.quiz && lesson.quiz.options) optB.value = lesson.quiz.options.B || '';
+      const optC = document.getElementById('studio-quiz-opt-c');
+      if (optC && lesson.quiz && lesson.quiz.options) optC.value = lesson.quiz.options.C || '';
+      const optD = document.getElementById('studio-quiz-opt-d');
+      if (optD && lesson.quiz && lesson.quiz.options) optD.value = lesson.quiz.options.D || '';
+      const tog3 = document.getElementById('step-toggle-3');
+      if (tog3) tog3.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[3] !== false : true);
+
+      // Bước 4: Thực hành
+      const dTitle = document.getElementById('studio-disc-title');
+      if (dTitle && lesson.discussion) dTitle.value = lesson.discussion.title || '';
+      const dTask = document.getElementById('studio-disc-task');
+      if (dTask && lesson.discussion) dTask.value = lesson.discussion.task || '';
+      const dStart = document.getElementById('studio-disc-starter');
+      if (dStart && lesson.discussion) dStart.value = lesson.discussion.placeholder || '';
+      const tog4 = document.getElementById('step-toggle-4');
+      if (tog4) tog4.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[4] !== false : true);
+
+      // Bước 5: Vinh danh
+      const tog5 = document.getElementById('step-toggle-5');
+      if (tog5) tog5.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[5] !== false : true);
+    },
+
+    saveStudioLesson() {
+      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const existing = this.getLesson(lessonId) || {};
+
+      const title = document.getElementById('studio-lesson-title-input')?.value.trim() || existing.title || 'Bài dạy mới';
+      const grade = this.currentStudioGrade || existing.grade || '10';
+
+      const tool1 = document.getElementById('step-tool-1')?.value || 'wheel';
+      const time1 = parseInt(document.getElementById('step-time-1')?.value || '120', 10);
+      const q1 = document.getElementById('studio-old-lesson-q')?.value.trim() || '';
+
+      const task2 = document.getElementById('studio-theory-task')?.value.trim() || '';
+      const doc2 = document.getElementById('studio-theory-doc')?.value.trim() || '';
+
+      const time3 = parseInt(document.getElementById('step-time-3')?.value || '20', 10);
+      const cor3 = document.getElementById('studio-quiz-correct')?.value || 'B';
+      const q3 = document.getElementById('studio-quiz-q')?.value.trim() || '';
+      const optA = document.getElementById('studio-quiz-opt-a')?.value.trim() || '';
+      const optB = document.getElementById('studio-quiz-opt-b')?.value.trim() || '';
+      const optC = document.getElementById('studio-quiz-opt-c')?.value.trim() || '';
+      const optD = document.getElementById('studio-quiz-opt-d')?.value.trim() || '';
+
+      const dTitle = document.getElementById('studio-disc-title')?.value.trim() || 'Nhiệm vụ Thảo luận & Thực hành';
+      const dTask = document.getElementById('studio-disc-task')?.value.trim() || '';
+      const dStart = document.getElementById('studio-disc-starter')?.value || '';
+
+      const stepsEnabled = {
+        1: document.getElementById('step-toggle-1')?.checked !== false,
+        2: document.getElementById('step-toggle-2')?.checked !== false,
+        3: document.getElementById('step-toggle-3')?.checked !== false,
+        4: document.getElementById('step-toggle-4')?.checked !== false,
+        5: document.getElementById('step-toggle-5')?.checked !== false
+      };
+
+      const updatedLesson = {
+        id: lessonId,
+        title: title,
+        grade: grade,
+        oldLesson: {
+          tool: tool1,
+          timeLimit: time1,
+          question: q1
+        },
+        theoryTask: task2,
+        theoryDoc: doc2,
+        theory: (existing.theory && existing.theory.length) ? existing.theory.map((t, idx) => {
+          if (idx === 0) return Object.assign({}, t, { summary: task2, title: doc2 || t.title });
+          return t;
+        }) : [{ id: 'card-1', title: doc2 || 'Lý thuyết', summary: task2, code: '' }],
+        quiz: {
+          timeLimit: time3,
+          correct: cor3,
+          question: q3,
+          options: {
+            A: optA,
+            B: optB,
+            C: optC,
+            D: optD
+          }
+        },
+        discussion: {
+          title: dTitle,
+          task: dTask,
+          placeholder: dStart,
+          timeLimit: existing.discussion?.timeLimit || 720
+        },
+        stepsEnabled: stepsEnabled
+      };
+
+      // Lưu vào bộ nhớ cục bộ
+      EMBEDDED_LESSONS[lessonId] = updatedLesson;
+      customLessons[lessonId] = updatedLesson;
+      try {
+        localStorage.setItem('lms_custom_lessons', JSON.stringify(customLessons));
+      } catch {}
+
+      // Cập nhật STORE nếu đang dùng bài học này
+      const state = STORE.getState();
+      if (state.lessonId === lessonId || !state.lessonData) {
+        STORE.setState({
+          lessonData: updatedLesson,
+          oldLesson: Object.assign({}, state.oldLesson, {
+            questionText: q1,
+            timerSeconds: time1,
+            timeLeft: time1
+          })
+        });
+      }
+
+      // Cập nhật Stage 1 dropdown & Studio list
+      this.updateStageLessonDropdown(grade, lessonId);
+      this.renderStudioLessonList(grade);
+
+      // Đồng bộ SYNC_BUS và Firebase
+      SYNC_BUS.broadcast('LESSON_UPDATED', { lesson: updatedLesson });
+      if (db) {
+        db.ref(`lessons/${lessonId}`).set(updatedLesson).catch(()=>{});
+        if (state.lessonId === lessonId) {
+          db.ref('activeSession/lessonData').set(updatedLesson).catch(()=>{});
+          db.ref('activeSession/oldLesson/questionText').set(q1).catch(()=>{});
+        }
+      }
+
+      alert(`💾 ĐÃ LƯU THÀNH CÔNG!\nKịch bản "${title}" đã sẵn sàng cho 18 máy phòng thực hành.`);
+    },
+
+    studioCreateNewLesson() {
+      const title = prompt('Nhập tên bài dạy mới:', 'Bài mới: ');
+      if (!title || !title.trim()) return;
+      const grade = this.currentStudioGrade || '10';
+      const id = `lesson_${grade}_${Date.now()}`;
+      const newLesson = {
+        id: id,
+        title: title.trim(),
+        grade: grade,
+        oldLesson: {
+          tool: 'wheel',
+          timeLimit: 120,
+          question: 'Câu hỏi kiểm tra bài cũ...'
+        },
+        theoryTask: 'Nhiệm vụ học tập / Đọc SGK...',
+        theoryDoc: `SGK Tin học ${grade}`,
+        theory: [{ id: 'card-1', title: `SGK Tin học ${grade}`, summary: 'Nhiệm vụ học tập...', code: '' }],
+        quiz: {
+          timeLimit: 20,
+          correct: 'A',
+          question: 'Nội dung câu hỏi trắc nghiệm...',
+          options: {
+            A: 'Phương án A (Đỏ)',
+            B: 'Phương án B (Lam)',
+            C: 'Phương án C (Vàng)',
+            D: 'Phương án D (Lục)'
+          }
+        },
+        discussion: {
+          title: 'Nhiệm vụ Thảo luận & Thực hành',
+          task: 'Yêu cầu thực hành trên máy tính...',
+          placeholder: '# Gõ mã lệnh hoặc kết quả thảo luận tại đây...',
+          timeLimit: 720
+        },
+        stepsEnabled: { 1: true, 2: true, 3: true, 4: true, 5: true }
+      };
+      EMBEDDED_LESSONS[id] = newLesson;
+      customLessons[id] = newLesson;
+      try {
+        localStorage.setItem('lms_custom_lessons', JSON.stringify(customLessons));
+      } catch {}
+      this.loadLessonToStudio(id);
+      this.updateStageLessonDropdown(grade, id);
+      alert(`🎉 Đã tạo bài dạy mới "${title.trim()}" cho Khối ${grade}! Thầy hãy chỉnh sửa nội dung và bấm [LƯU KỊCH BẢN].`);
+    },
+
+    studioPreviewLesson() {
+      const l = this.getLesson(this.currentStudioLessonId);
+      alert(`👁️ XEM TRƯỚC KỊCH BẢN: ${l.title}\n\n• Bước 1: ${l.oldLesson?.question || 'Chưa đặt'}\n• Bước 2: ${l.theoryTask || 'Chưa đặt'}\n• Bước 3 Quiz: ${l.quiz?.question || 'Chưa đặt'} (Đ/A: ${l.quiz?.correct})\n• Bước 4 Thực hành: ${l.discussion?.title || 'Chưa đặt'}\n• Bước 5: Bục vinh danh Podium.`);
     },
 
     // Xử lý nộp form đăng nhập Admin
@@ -2648,6 +3136,8 @@
 
     if (tab === 'classes') {
       APP.renderSettingsSeatingGrid();
+    } else if (tab === 'studio') {
+      APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin10_bai12');
     }
   };
 
@@ -2662,6 +3152,10 @@
       } else {
         classSel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option><option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option><option value="10A3">Lớp 10A3 (34 học sinh • 18 máy)</option>';
       }
+    }
+    // Cập nhật danh sách bài dạy theo khối đã chọn
+    if (APP && APP.updateStageLessonDropdown) {
+      APP.updateStageLessonDropdown(grade);
     }
   };
 
@@ -2729,24 +3223,34 @@
   };
 
   window.studioSelectGrade = function(grade) {
-    document.querySelectorAll('.sg-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(grade)));
+    if (typeof APP.studioSelectGrade === 'function') {
+      APP.studioSelectGrade(grade);
+    } else {
+      APP.currentStudioGrade = grade;
+      document.querySelectorAll('.sg-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(grade)));
+      const lessons = APP.getLessonsByGrade(grade);
+      if (lessons.length > 0) {
+        APP.loadLessonToStudio(lessons[0].id);
+      } else {
+        APP.renderStudioLessonList(grade);
+      }
+    }
   };
 
-  window.studioLoadLesson = function(_lessonId) {
-    document.querySelectorAll('.sb-lesson-item').forEach(b => b.classList.remove('active'));
+  window.studioLoadLesson = function(lessonId) {
+    APP.loadLessonToStudio(lessonId);
   };
 
   window.studioCreateNewLesson = function() {
-    const name = prompt('Nhập tên bài dạy mới:', 'Bài 03: Mạng máy tính và Internet');
-    if (name) alert(`🎉 Đã tạo bài dạy: "${name}"! Thầy hãy cấu hình các bước trong kịch bản.`);
+    APP.studioCreateNewLesson();
   };
 
   window.studioPreviewLesson = function() {
-    alert('👁️ Mở chế độ xem trước (Preview): Kịch bản hoạt động chính xác theo chuẩn Kahoot/Quizizz!');
+    APP.studioPreviewLesson();
   };
 
   window.studioSaveLesson = function() {
-    alert('💾 Đã lưu Kịch bản Bài dạy thành công vào cơ sở dữ liệu!');
+    APP.saveStudioLesson();
   };
 
   window.filterClassesByGrade = function(g) {

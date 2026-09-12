@@ -457,12 +457,6 @@ print(s[4:])</code></pre>
         </div>
       </div>
       <div class="th-right">
-        <button type="button" class="btn-tool" id="btn-remote-reload-all" title="Gửi lệnh F5 xóa cache toàn bộ 18 máy học sinh">
-          <i class="fas fa-sync-alt"></i> F5 18 máy
-        </button>
-        <button type="button" class="btn-tool" id="btn-random-pick-student" title="Bốc thăm ngẫu nhiên máy học sinh">
-          <i class="fas fa-dice"></i> Bốc thăm
-        </button>
         <button type="button" class="btn-tool btn-tool-danger" id="btn-teacher-logout" title="Đăng xuất khỏi tài khoản Giáo viên">
           <i class="fas fa-sign-out-alt"></i> Đăng xuất
         </button>
@@ -548,116 +542,179 @@ print(s[4:])</code></pre>
             </div>
 
             <!-- Cột phải: Dòng thời gian Timeline 5 bước có Bật/Tắt -->
+            <!-- Cột phải: Dòng thời gian Timeline 5 bước có Bật/Tắt & CHỈNH SỬA TOÀN BỘ NỘI DUNG -->
             <div class="studio-timeline-area">
               <div class="sta-header">
-                <div>
-                  <h3 id="studio-lesson-title-head">KỊCH BẢN: Bài 12 - Kiểu dữ liệu xâu trong Python</h3>
-                  <p>Thầy có toàn quyền Bật / Tắt hoặc Xóa bất kỳ bước nào trong kịch bản.</p>
+                <div class="sta-title-box">
+                  <div class="sta-badge"><i class="fas fa-edit"></i> BỘ SOẠN KỊCH BẢN BÀI DẠY (STUDIO EDITOR)</div>
+                  <input type="text" id="studio-lesson-title-input" class="studio-title-input" value="Bài 12: Kiểu dữ liệu xâu trong Python" placeholder="Nhập tên bài dạy tại đây..." title="Bấm vào để đổi tên bài dạy">
                 </div>
                 <div class="sta-actions">
                   <button type="button" class="btn-tool-sm" onclick="window.studioPreviewLesson()">
                     <i class="fas fa-eye"></i> Xem trước (Preview)
                   </button>
-                  <button type="button" class="btn-primary" onclick="window.studioSaveLesson()">
+                  <button type="button" class="btn-primary btn-save-studio" id="btn-studio-save-lesson" onclick="window.studioSaveLesson()">
                     <i class="fas fa-save"></i> LƯU KỊCH BẢN
                   </button>
                 </div>
               </div>
 
               <div class="studio-steps-list" id="studio-steps-list">
-                <!-- Bước 1 -->
+                <!-- Bước 1: KHỞI ĐỘNG & BÀI CŨ -->
                 <div class="studio-step-card" data-step="1">
                   <div class="ssc-header">
                     <div class="ssc-title"><i class="fas fa-history"></i> BƯỚC 1: KHỞI ĐỘNG & KIỂM TRA BÀI CŨ</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-1">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
                     <div class="ssc-row">
-                      <label>Công cụ:</label>
-                      <select class="th-select-sm" id="step-tool-1">
-                        <option value="wheel">Vòng quay may mắn (Lucky Wheel)</option>
-                        <option value="oral">Gọi trả lời miệng</option>
-                      </select>
-                      <label>Thời lượng:</label>
-                      <select class="th-select-sm" id="step-time-1">
-                        <option value="120">2 phút</option>
-                        <option value="180">3 phút</option>
-                        <option value="300">5 phút</option>
-                      </select>
+                      <div class="ssc-col">
+                        <label><i class="fas fa-dice"></i> Công cụ bốc thăm:</label>
+                        <select class="th-select-sm" id="step-tool-1">
+                          <option value="wheel" selected>Vòng quay may mắn (Lucky Wheel)</option>
+                          <option value="slot">Máy quay số ngẫu nhiên (Slot Machine)</option>
+                          <option value="oral">Gọi trả lời miệng</option>
+                        </select>
+                      </div>
+                      <div class="ssc-col">
+                        <label><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                        <select class="th-select-sm" id="step-time-1">
+                          <option value="60">1 phút</option>
+                          <option value="120" selected>2 phút</option>
+                          <option value="180">3 phút</option>
+                          <option value="300">5 phút</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-question-circle"></i> Câu hỏi kiểm tra bài cũ phát xuống 18 máy:</label>
+                      <textarea class="otc-input studio-textarea" id="studio-old-lesson-q" rows="2" placeholder="Nhập câu hỏi kiểm tra bài cũ...">Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?</textarea>
                     </div>
                   </div>
                 </div>
 
-                <!-- Bước 2 -->
+                <!-- Bước 2: KHÁM PHÁ KIẾN THỨC -->
                 <div class="studio-step-card" data-step="2">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-bolt"></i> BƯỚC 2: KHÁM PHÁ KIẾN THỨC</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                    <div class="ssc-title"><i class="fas fa-bolt"></i> BƯỚC 2: KHÁM PHÁ KIẾN THỨC (SGK)</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-2">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-row">
-                      <label>Nhiệm vụ:</label>
-                      <input type="text" class="otc-input" id="step-task-2" value="Đọc SGK mục 1, thảo luận khái niệm xâu và phép cắt slicing">
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-book-reader"></i> Nhiệm vụ học tập / Hướng dẫn đọc SGK:</label>
+                      <textarea class="otc-input studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
+                    </div>
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
+                      <input type="text" class="otc-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
                     </div>
                   </div>
                 </div>
 
-                <!-- Bước 3 -->
+                <!-- Bước 3: ĐẤU TRƯỜNG KAHOOT (LIVE QUIZ) -->
                 <div class="studio-step-card" data-step="3">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 3: ĐẤU TRƯỜNG KAHOOT (QUIZ)</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 3: ĐẤU TRƯỜNG KAHOOT (QUIZ 4 MÀU)</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-3">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
                     <div class="ssc-row">
-                      <label>Bộ câu hỏi:</label>
-                      <span class="badge-tag">4 câu trắc nghiệm 4 màu</span>
-                      <label>Thời gian/câu:</label>
-                      <select class="th-select-sm" id="step-time-3">
-                        <option value="20">20 giây</option>
-                        <option value="30">30 giây</option>
-                      </select>
+                      <div class="ssc-col">
+                        <label><i class="fas fa-hourglass-half"></i> Thời gian mỗi câu hỏi:</label>
+                        <select class="th-select-sm" id="step-time-3">
+                          <option value="15">15 giây</option>
+                          <option value="20" selected>20 giây</option>
+                          <option value="30">30 giây</option>
+                        </select>
+                      </div>
+                      <div class="ssc-col">
+                        <label><i class="fas fa-check-circle"></i> Đáp án đúng:</label>
+                        <select class="th-select-sm" id="studio-quiz-correct">
+                          <option value="A">Đáp án A (Đỏ)</option>
+                          <option value="B" selected>Đáp án B (Lam)</option>
+                          <option value="C">Đáp án C (Vàng)</option>
+                          <option value="D">Đáp án D (Lục)</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-question"></i> Nội dung câu hỏi trắc nghiệm Đấu trường:</label>
+                      <input type="text" class="otc-input" id="studio-quiz-q" value="Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?" placeholder="Nhập nội dung câu hỏi trắc nghiệm...">
+                    </div>
+                    <div class="studio-quiz-options-grid">
+                      <div class="sqo-item opt-red">
+                        <span class="sqo-badge">A (Đỏ)</span>
+                        <input type="text" class="otc-input" id="studio-quiz-opt-a" value="Không thể truy cập các ký tự qua chỉ số index" placeholder="Phương án A (Đỏ)...">
+                      </div>
+                      <div class="sqo-item opt-blue">
+                        <span class="sqo-badge">B (Lam)</span>
+                        <input type="text" class="otc-input" id="studio-quiz-opt-b" value="Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" placeholder="Phương án B (Lam)...">
+                      </div>
+                      <div class="sqo-item opt-yellow">
+                        <span class="sqo-badge">C (Vàng)</span>
+                        <input type="text" class="otc-input" id="studio-quiz-opt-c" value="Không thể dùng hàm len() để tính độ dài xâu" placeholder="Phương án C (Vàng)...">
+                      </div>
+                      <div class="sqo-item opt-green">
+                        <span class="sqo-badge">D (Lục)</span>
+                        <input type="text" class="otc-input" id="studio-quiz-opt-d" value="Xâu chỉ chứa được chữ số, không chứa được chữ cái" placeholder="Phương án D (Lục)...">
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Bước 4 -->
+                <!-- Bước 4: THỰC HÀNH TRÊN MÁY -->
                 <div class="studio-step-card" data-step="4">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 4: THỰC HÀNH TRÊN MÁY</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 4: THỰC HÀNH TRÊN MÁY (CODE PYTHON)</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-4">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-row">
-                      <label>Đề bài thực hành:</label>
-                      <input type="text" class="otc-input" id="step-task-4" value="Viết mã Python đảo ngược xâu họ tên và đếm ký tự">
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-tag"></i> Tên bài thực hành:</label>
+                      <input type="text" class="otc-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                    </div>
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
+                      <textarea class="otc-input studio-textarea" id="studio-disc-task" rows="3" placeholder="Yêu cầu đề bài thực hành...">Cho xâu ký tự: s = 'chuc mung nam moi 2026'
+Hai em hãy thảo luận và viết các câu lệnh Python để thực hiện:
+1. In ra độ dài của xâu s.
+2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.
+3. Đếm số lượng ký tự khoảng trắng có trong xâu s.</textarea>
+                    </div>
+                    <div class="ssc-field-group">
+                      <label><i class="fas fa-code"></i> Mã Python gợi ý ban đầu (Code Template):</label>
+                      <textarea class="otc-input studio-textarea code-font" id="studio-disc-starter" rows="3" placeholder="Mã Python gợi ý..."># Gợi ý bài thực hành xâu ký tự:
+s = 'chuc mung nam moi 2026'
+print("1. Độ dài xâu:", len(s))
+print("2. Cắt xâu:", s[10:17])
+</textarea>
                     </div>
                   </div>
                 </div>
 
-                <!-- Bước 5 -->
+                <!-- Bước 5: TỔNG KẾT & VINH DANH -->
                 <div class="studio-step-card" data-step="5">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-award"></i> BƯỚC 5: TỔNG KẾT & VINH DANH</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                    <div class="ssc-title"><i class="fas fa-award"></i> BƯỚC 5: TỔNG KẾT & VINH DANH PODIUM</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-5">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <p class="text-muted">Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 và tổng kết điểm thi đua.</p>
+                    <p class="text-muted" style="margin:0;"><i class="fas fa-trophy" style="color:#fbbf24;"></i> Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 dựa trên tổng điểm thi đua của 18 máy và tổng kết tiết học.</p>
                   </div>
                 </div>
               </div>
@@ -727,10 +784,79 @@ print(s[4:])</code></pre>
            GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC (ĐIỂM DANH & CÁC BƯỚC)
       ==================================================== -->
       <section id="teacher-stage-active" class="teacher-stage">
-        <!-- Master Control Bar: Điều khiển Đồng hồ Master & Bỏ qua bước -->
+        <!-- Master Control Bar: HỢP NHẤT TIẾN TRÌNH SƯ PHẠM + ĐỒNG HỒ MASTER TRÊN 1 DÒNG DUY NHẤT -->
         <div class="teacher-master-control-bar">
+          <!-- Phía Trái: Thanh tiến trình sư phạm (0 -> 5) -->
+          <div class="teacher-pace-bar">
+            <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
+              <span class="tpb-badge">0</span>
+              <span>Điểm danh</span>
+            </div>
+
+            <!-- BƯỚC 1: KIỂM TRA BÀI CŨ (Có Dropdown Menu Cài Đặt) -->
+            <div class="tpb-step-dropdown-wrapper">
+              <div class="tpb-step" data-tphase="old_lesson" id="tpb-step-old-lesson" onclick="window.teacherSetPhase('old_lesson')">
+                <span class="tpb-badge">1</span>
+                <span>Kiểm tra bài cũ</span>
+                <button type="button" class="btn-tpb-dropdown" id="btn-toggle-old-lesson-menu" title="Mở menu cài đặt kiểm tra bài cũ" onclick="event.stopPropagation(); window.toggleOldLessonMenu();">
+                  <i class="fas fa-chevron-down"></i>
+                </button>
+              </div>
+              <!-- Menu Xổ Xuống Cài Đặt -->
+              <div class="tpb-dropdown-menu" id="tpb-menu-old-lesson" style="display:none;">
+                <div class="tdm-header">
+                  <i class="fas fa-sliders-h"></i> CÀI ĐẶT KIỂM TRA BÀI CŨ
+                </div>
+                <div class="tdm-section">
+                  <label><i class="fas fa-dice"></i> Bốc thăm gọi học sinh:</label>
+                  <button type="button" class="tdm-btn-action" onclick="window.openLuckyDrawModal(); window.closeAllTpbMenus();">
+                    <i class="fas fa-gift"></i> Mở bốc thăm kịch tính (Phương án A / B)
+                  </button>
+                </div>
+                <div class="tdm-section">
+                  <label><i class="fas fa-stopwatch"></i> Thời gian đếm ngược:</label>
+                  <div class="tdm-timer-options">
+                    <button type="button" class="tdm-timer-btn active" data-sec="60" onclick="window.setOldLessonTimer(60)">1 phút</button>
+                    <button type="button" class="tdm-timer-btn" data-sec="120" onclick="window.setOldLessonTimer(120)">2 phút</button>
+                    <button type="button" class="tdm-timer-btn" data-sec="180" onclick="window.setOldLessonTimer(180)">3 phút</button>
+                  </div>
+                </div>
+                <div class="tdm-section">
+                  <label><i class="fas fa-tasks"></i> Dạng câu hỏi:</label>
+                  <div class="tdm-type-options">
+                    <button type="button" class="tdm-type-btn active" data-qtype="text" onclick="window.setOldLessonQType('text')">Tự luận ngắn</button>
+                    <button type="button" class="tdm-type-btn" data-qtype="mcq" onclick="window.setOldLessonQType('mcq')">Trắc nghiệm</button>
+                  </div>
+                </div>
+                <div class="tdm-actions">
+                  <button type="button" class="tdm-btn-submit" onclick="window.broadcastOldLessonStart(); window.closeAllTpbMenus();">
+                    <i class="fas fa-paper-plane"></i> PHÁT ĐỀ BÀI CHO 18 MÁY
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="tpb-step" data-tphase="warmup" onclick="window.teacherSetPhase('warmup')">
+              <span class="tpb-badge">2</span>
+              <span>Khởi động</span>
+            </div>
+            <div class="tpb-step" data-tphase="theory" onclick="window.teacherSetPhase('theory')">
+              <span class="tpb-badge">3</span>
+              <span>Khám phá SGK</span>
+            </div>
+            <div class="tpb-step" data-tphase="discussion" onclick="window.teacherSetPhase('discussion')">
+              <span class="tpb-badge">4</span>
+              <span>Thực hành</span>
+            </div>
+            <div class="tpb-step" data-tphase="quiz" onclick="window.teacherSetPhase('quiz')">
+              <span class="tpb-badge">5</span>
+              <span>Live Quiz</span>
+            </div>
+          </div>
+
+          <!-- Ở Giữa: Đồng hồ Master NTP Sync gọn gàng -->
           <div class="tmc-timer-wrap">
-            <span class="tmc-label"><i class="fas fa-stopwatch"></i> ĐỒNG HỒ MASTER (NTP SYNC):</span>
+            <span class="tmc-label"><i class="fas fa-stopwatch"></i> MASTER:</span>
             <span class="tmc-timer-display" id="master-timer-display">02:00</span>
             <button type="button" class="tmc-btn" id="btn-master-pause-timer" onclick="window.masterPauseTimer()" title="Tạm dừng/Tiếp tục đồng hồ">
               <i class="fas fa-pause"></i> Tạm dừng
@@ -739,86 +865,16 @@ print(s[4:])</code></pre>
               <i class="fas fa-plus"></i> +30s
             </button>
           </div>
+
+          <!-- Phía Phải: Bỏ qua bước & Kết thúc tiết học DUY NHẤT -->
           <div class="tmc-actions-wrap">
             <button type="button" class="tmc-btn tmc-btn-skip" id="btn-master-skip-step" onclick="window.masterSkipStep()" title="Bỏ qua bước này, chuyển ngay sang bước kế tiếp">
-              <i class="fas fa-forward"></i> BỎ QUA BƯỚC NÀY
+              <i class="fas fa-forward"></i> BƯỚC TIẾP
             </button>
             <button type="button" class="btn-end-session" id="btn-end-class-session" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo" onclick="window.teacherEndSession()">
               <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
             </button>
           </div>
-        </div>
-
-        <!-- Thanh điều phối tiến trình sư phạm (Click để nhảy bước) -->
-        <div class="teacher-pace-bar">
-          <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
-            <span class="tpb-badge">0</span>
-            <span>Điểm danh</span>
-          </div>
-
-          <!-- BƯỚC 1: KIỂM TRA BÀI CŨ (Có Dropdown Menu Cài Đặt) -->
-          <div class="tpb-step-dropdown-wrapper">
-            <div class="tpb-step" data-tphase="old_lesson" id="tpb-step-old-lesson" onclick="window.teacherSetPhase('old_lesson')">
-              <span class="tpb-badge">1</span>
-              <span>Kiểm tra bài cũ</span>
-              <button type="button" class="btn-tpb-dropdown" id="btn-toggle-old-lesson-menu" title="Mở menu cài đặt kiểm tra bài cũ" onclick="event.stopPropagation(); window.toggleOldLessonMenu();">
-                <i class="fas fa-chevron-down"></i>
-              </button>
-            </div>
-            <!-- Menu Xổ Xuống Cài Đặt -->
-            <div class="tpb-dropdown-menu" id="tpb-menu-old-lesson" style="display:none;">
-              <div class="tdm-header">
-                <i class="fas fa-sliders-h"></i> CÀI ĐẶT KIỂM TRA BÀI CŨ
-              </div>
-              <div class="tdm-section">
-                <label><i class="fas fa-dice"></i> Bốc thăm gọi học sinh:</label>
-                <button type="button" class="tdm-btn-action" onclick="window.openLuckyDrawModal(); window.closeAllTpbMenus();">
-                  <i class="fas fa-gift"></i> Mở bốc thăm kịch tính (Phương án A / B)
-                </button>
-              </div>
-              <div class="tdm-section">
-                <label><i class="fas fa-stopwatch"></i> Thời gian đếm ngược:</label>
-                <div class="tdm-timer-options">
-                  <button type="button" class="tdm-timer-btn active" data-sec="60" onclick="window.setOldLessonTimer(60)">1 phút</button>
-                  <button type="button" class="tdm-timer-btn" data-sec="120" onclick="window.setOldLessonTimer(120)">2 phút</button>
-                  <button type="button" class="tdm-timer-btn" data-sec="180" onclick="window.setOldLessonTimer(180)">3 phút</button>
-                </div>
-              </div>
-              <div class="tdm-section">
-                <label><i class="fas fa-tasks"></i> Dạng câu hỏi:</label>
-                <div class="tdm-type-options">
-                  <button type="button" class="tdm-type-btn active" data-qtype="text" onclick="window.setOldLessonQType('text')">Tự luận ngắn</button>
-                  <button type="button" class="tdm-type-btn" data-qtype="mcq" onclick="window.setOldLessonQType('mcq')">Trắc nghiệm</button>
-                </div>
-              </div>
-              <div class="tdm-actions">
-                <button type="button" class="tdm-btn-submit" onclick="window.broadcastOldLessonStart(); window.closeAllTpbMenus();">
-                  <i class="fas fa-paper-plane"></i> PHÁT ĐỀ BÀI CHO 18 MÁY
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="tpb-step" data-tphase="warmup" onclick="window.teacherSetPhase('warmup')">
-            <span class="tpb-badge">2</span>
-            <span>Khởi động</span>
-          </div>
-          <div class="tpb-step" data-tphase="theory" onclick="window.teacherSetPhase('theory')">
-            <span class="tpb-badge">3</span>
-            <span>Khám phá SGK</span>
-          </div>
-          <div class="tpb-step" data-tphase="discussion" onclick="window.teacherSetPhase('discussion')">
-            <span class="tpb-badge">4</span>
-            <span>Thực hành</span>
-          </div>
-          <div class="tpb-step" data-tphase="quiz" onclick="window.teacherSetPhase('quiz')">
-            <span class="tpb-badge">5</span>
-            <span>Live Quiz & Củng cố</span>
-          </div>
-
-          <button type="button" class="btn-end-session" id="btn-end-class-session-legacy" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo" onclick="window.teacherEndSession()">
-            <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
-          </button>
         </div>
 
         <!-- Bố cục tác nghiệp Giáo viên: Tách biệt hoàn toàn từng Tab (100% Width Full View) -->
