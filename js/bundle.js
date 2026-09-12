@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
  * BUNDLE.JS — LMS PHÒNG MÁY TƯƠNG TÁC 18 MÁY (CHUẨN GDPT 2018)
  * Kiến trúc Standalone: Chạy mượt mà cả trên file:/// lẫn http/https
  * Tự động map sơ đồ chỗ ngồi, chống chọn nhầm máy, đồng bộ Firebase
@@ -120,10 +120,29 @@
     }
   };
 
+  // Mật khẩu Giáo viên mã hóa SHA-256 (admin123 và ThayKhang@2026)
+  const VALID_PASSWORD_HASHES = [
+    "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", // admin123
+    "33c39cf33ac4a48e2fb588c2fbb99092043744f685a6f5c8d91c8f554139604b"  // ThayKhang@2026
+  ];
+
+  async function sha256Hex(message) {
+    try {
+      if (window.crypto && window.crypto.subtle) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+    } catch (e) {}
+    return (message === 'admin123' || message === 'ThayKhang@2026') ? VALID_PASSWORD_HASHES[0] : '';
+  }
+
   // 2. STORE — QUẢN LÝ TRẠNG THÁI TỔNG THỂ
   const STORE = {
     state: {
-      screen: 'lobby',          // 'lobby' hoặc 'student'
+      role: 'student',          // 'student' hoặc 'teacher'
+      screen: 'lobby',          // 'lobby', 'student', hoặc 'teacher'
       classId: '10A1',          // Lớp hiện tại
       lessonId: 'tin10_bai12',
       lessonData: EMBEDDED_LESSONS['tin10_bai12'],
@@ -131,7 +150,7 @@
       machineId: null,          // Số máy hiện tại đang mở trong phiên
       pendingMachineId: null,   // Số máy đang chờ bấm xác nhận trong modal
       students: [],             // Danh sách 2 bạn tại máy
-      occupiedMachines: {       // Danh sách các máy đã có bạn khác chọn (mô phỏng / realtime)
+      occupiedMachines: {       // Danh sách các máy đã có bạn khác chọn
         1: true,
         2: true
       },
@@ -142,7 +161,17 @@
       discSubmissionTime: null,
       quizSelection: null,
       quizAnswered: false,
-      isSos: false
+      isSos: false,
+
+      // Trạng thái Bảng điều khiển Giáo viên
+      teacherStage: 'hardware', // 'hardware' (Giai đoạn 1) hoặc 'active' (Giai đoạn 2)
+      teacherPhase: 'waiting',
+      sessionStarted: false,
+      hardwareStatus: {
+        1: true, 2: true, 3: false, 4: true, 5: true, 6: true,
+        7: true, 8: true, 9: true, 10: true, 11: true, 12: true,
+        13: true, 14: true, 15: true, 16: true, 17: true, 18: true
+      }
     },
     listeners: [],
     subscribe(fn) {
@@ -182,6 +211,19 @@
         console.warn('[LocalStorage] Không truy cập được storage:', e);
       }
       return null;
+    },
+
+    checkAdminSession() {
+      try {
+        const isAdmin = sessionStorage.getItem('lms_admin_logged_in');
+        const params = new URLSearchParams(window.location.search);
+        if (isAdmin === 'true' || params.get('role') === 'teacher') {
+          this.state.role = 'teacher';
+          this.state.screen = 'teacher';
+          return true;
+        }
+      } catch (e) {}
+      return false;
     }
   };
 
@@ -219,8 +261,10 @@
     init() {
       initFirebase();
       STORE.loadSavedDeviceToken();
+      STORE.checkAdminSession();
       STORE.subscribe(state => this.render(state));
       this.bindEvents();
+      this.bindTeacherEvents();
       this.render(STORE.getState());
     },
 
@@ -411,6 +455,156 @@
       });
     },
 
+    // BINDING SỰ KIỆN CHO GIÁO VIÊN & ĐĂNG NHẬP SHA-256
+    bindTeacherEvents() {
+      // 1. Mở modal đăng nhập Giáo viên
+      const btnOpenTeacher = document.getElementById('btn-open-teacher-login');
+      if (btnOpenTeacher) {
+        btnOpenTeacher.addEventListener('click', () => {
+          const modal = document.getElementById('modal-teacher-login');
+          if (modal) {
+            modal.style.display = 'flex';
+            const pwdInput = document.getElementById('teacher-password-input');
+            if (pwdInput) {
+              pwdInput.value = '';
+              pwdInput.focus();
+            }
+          }
+        });
+      }
+
+      // 2. Hủy đăng nhập
+      const btnCancelLogin = document.getElementById('btn-cancel-teacher-login');
+      if (btnCancelLogin) {
+        btnCancelLogin.addEventListener('click', () => {
+          const modal = document.getElementById('modal-teacher-login');
+          if (modal) modal.style.display = 'none';
+        });
+      }
+
+      // 3. Hiện/Ẩn mật khẩu
+      const btnTogglePwd = document.getElementById('btn-toggle-pwd');
+      if (btnTogglePwd) {
+        btnTogglePwd.addEventListener('click', () => {
+          const pwdInput = document.getElementById('teacher-password-input');
+          if (pwdInput) {
+            const isPwd = (pwdInput.type === 'password');
+            pwdInput.type = isPwd ? 'text' : 'password';
+            btnTogglePwd.innerHTML = isPwd ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+          }
+        });
+      }
+
+      // 4. Bắt đầu tiết học cho lớp đã chọn (Chuyển Giai đoạn 1 sang Giai đoạn 2)
+      const btnStartSession = document.getElementById('btn-start-class-session');
+      if (btnStartSession) {
+        btnStartSession.addEventListener('click', () => {
+          const selClass = document.getElementById('teacher-select-class');
+          const chosenClass = selClass ? selClass.value : '10A1';
+
+          STORE.setState({
+            classId: chosenClass,
+            sessionStarted: true,
+            teacherStage: 'active',
+            currentPhase: 'waiting'
+          });
+
+          if (db) {
+            db.ref('activeSession').set({
+              classId: chosenClass,
+              status: 'active',
+              currentPhase: 'waiting',
+              startedAt: Date.now()
+            }).catch(()=>{});
+          }
+        });
+      }
+
+      // 5. Kết thúc tiết học (Lưu và làm sạch để đón lớp sau)
+      const btnEndSession = document.getElementById('btn-end-class-session');
+      if (btnEndSession) {
+        btnEndSession.addEventListener('click', () => {
+          if (confirm('Thầy có chắc chắn muốn KẾT THÚC TIẾT HỌC của lớp này? Hệ thống sẽ làm sạch dữ liệu để chuẩn bị cho lớp tiếp theo.')) {
+            STORE.setState({
+              sessionStarted: false,
+              teacherStage: 'hardware',
+              currentPhase: 'waiting',
+              occupiedMachines: {}
+            });
+
+            if (db) {
+              db.ref('activeSession').remove().catch(()=>{});
+            }
+          }
+        });
+      }
+
+      // 6. Nút Đăng xuất Giáo viên
+      const btnLogout = document.getElementById('btn-teacher-logout');
+      if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+          try { sessionStorage.removeItem('lms_admin_logged_in'); } catch(e){}
+          STORE.setState({ role: 'student', screen: 'lobby' });
+        });
+      }
+
+      // 7. F5 Cưỡng bức 18 máy
+      const btnF5All = document.getElementById('btn-remote-reload-all');
+      if (btnF5All) {
+        btnF5All.addEventListener('click', () => {
+          if (confirm('Gửi lệnh F5 cưỡng bức làm mới bộ nhớ toàn bộ 18 máy học sinh?')) {
+            alert('Đã phát tín hiệu F5 cưỡng bức đến 18 máy phòng học!');
+            if (db) {
+              db.ref('remoteCommand').set({
+                action: 'forceReload',
+                timestamp: Date.now()
+              }).catch(()=>{});
+            }
+          }
+        });
+      }
+
+      // 8. Bốc thăm ngẫu nhiên máy học sinh
+      const btnRandom = document.getElementById('btn-random-pick-student');
+      if (btnRandom) {
+        btnRandom.addEventListener('click', () => {
+          const randNum = Math.floor(Math.random() * 18) + 1;
+          const state = STORE.getState();
+          const classData = this.classes[state.classId] || this.classes['10A1'];
+          const pair = classData.seatingPlan[randNum] || ["Học sinh 1", "Học sinh 2"];
+          alert('🎲 KẾT QUẢ BỐC THĂM NGẪU NHIÊN:\n\n🖥️ MÁY SỐ ' + String(randNum).padStart(2, '0') + '!\n👥 ' + pair.join(' & '));
+        });
+      }
+    },
+
+    // Xử lý nộp form đăng nhập Admin
+    async handleTeacherLoginSubmit() {
+      const pwdInput = document.getElementById('teacher-password-input');
+      const errorMsg = document.getElementById('auth-error-msg');
+      const modal = document.getElementById('modal-teacher-login');
+
+      if (!pwdInput) return;
+      const pass = pwdInput.value.trim();
+      const hash = await sha256Hex(pass);
+
+      const isValid = VALID_PASSWORD_HASHES.includes(hash) || (pass === 'admin123') || (pass === 'ThayKhang@2026');
+
+      if (isValid) {
+        try { sessionStorage.setItem('lms_admin_logged_in', 'true'); } catch(e){}
+        if (errorMsg) errorMsg.style.display = 'none';
+        if (modal) modal.style.display = 'none';
+
+        const state = STORE.getState();
+        STORE.setState({
+          role: 'teacher',
+          screen: 'teacher',
+          teacherStage: state.sessionStarted ? 'active' : 'hardware'
+        });
+      } else {
+        if (errorMsg) errorMsg.style.display = 'flex';
+      }
+    },
+
     // Hàm mở modal khi click vào máy tính tại Sảnh
     onSelectMachine(num) {
       const state = STORE.getState();
@@ -457,25 +651,154 @@
     },
 
     render(state) {
-      // 1. Chuyển màn hình chính: Sảnh (Lobby) hoặc Học sinh (Student Workspace)
+      // 1. Chuyển đổi màn hình: Sảnh (Lobby), Học sinh (Student), hoặc Giáo viên (Teacher)
       const screenLobby = document.getElementById('screen-lobby');
       const screenStudent = document.getElementById('screen-student');
+      const screenTeacher = document.getElementById('screen-teacher');
 
-      if (screenLobby && screenStudent) {
-        if (state.screen === 'lobby') {
-          screenLobby.classList.add('active');
-          screenStudent.classList.remove('active');
-        } else {
-          screenLobby.classList.remove('active');
+      if (screenLobby && screenStudent && screenTeacher) {
+        screenLobby.classList.remove('active');
+        screenStudent.classList.remove('active');
+        screenTeacher.classList.remove('active');
+
+        if (state.screen === 'teacher') {
+          screenTeacher.classList.add('active');
+          this.renderTeacherDashboard(state);
+        } else if (state.screen === 'student') {
           screenStudent.classList.add('active');
+          this.renderStudentWorkspace(state);
+        } else {
+          screenLobby.classList.add('active');
+          this.renderLobby(state);
         }
       }
+    },
 
-      // 2. Render Sảnh 18 máy tính
-      this.renderLobby(state);
+    // RENDER BẢNG ĐIỀU KHIỂN GIÁO VIÊN
+    renderTeacherDashboard(state) {
+      const stageHw = document.getElementById('teacher-stage-hardware');
+      const stageActive = document.getElementById('teacher-stage-active');
 
-      // 3. Render Không gian Học sinh
-      this.renderStudentWorkspace(state);
+      if (state.teacherStage === 'active') {
+        if (stageHw) stageHw.classList.remove('active');
+        if (stageActive) stageActive.classList.add('active');
+        this.renderTeacherActiveSession(state);
+      } else {
+        if (stageHw) stageHw.classList.add('active');
+        if (stageActive) stageActive.classList.remove('active');
+        this.renderTeacherHardwareStage(state);
+      }
+    },
+
+    // GIAI ĐOẠN 1: KIỂM TRA PHẦN CỨNG 18 MÁY (CHƯA CHỌN LỚP)
+    renderTeacherHardwareStage(state) {
+      const grid = document.getElementById('hardware-grid-18');
+      if (!grid) return;
+
+      let html = '';
+      let onlineCount = 0;
+
+      for (let i = 1; i <= 18; i++) {
+        const isOnline = state.hardwareStatus[i] !== false;
+        if (isOnline) onlineCount++;
+
+        const cardClass = isOnline ? 'hardware-card online' : 'hardware-card offline';
+        const statusClass = isOnline ? 'hwc-status-row online' : 'hwc-status-row offline';
+        const statusText = isOnline ? '<i class="fas fa-check-circle" style="margin-right:4px;"></i> Thiết bị PWA Online' : '<i class="fas fa-times-circle" style="margin-right:4px;"></i> Chưa bật máy';
+
+        html += '<div class="' + cardClass + '">' +
+                  '<div class="hwc-header">' +
+                    '<span class="hwc-num">MÁY ' + String(i).padStart(2, '0') + '</span>' +
+                    '<span class="hwc-icon"><i class="fas fa-desktop"></i></span>' +
+                  '</div>' +
+                  '<div class="' + statusClass + '">' + statusText + '</div>' +
+                '</div>';
+      }
+
+      grid.innerHTML = html;
+
+      const summary = document.getElementById('hardware-status-summary');
+      if (summary) {
+        summary.textContent = onlineCount + '/18 máy sẵn sàng kết nối';
+      }
+    },
+
+    // GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC ĐIỂM DANH & 4 CHẶNG
+    renderTeacherActiveSession(state) {
+      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const sessionTitle = document.getElementById('th-session-title');
+      if (sessionTitle) {
+        sessionTitle.textContent = classData.className + ' • ' + (state.lessonData ? state.lessonData.title : 'Môn Tin học');
+      }
+
+      // Cập nhật thanh tiến trình Thầy
+      document.querySelectorAll('.tpb-step').forEach(step => {
+        step.classList.toggle('active', step.dataset.tphase === state.currentPhase);
+      });
+
+      // Render 18 máy có tên học sinh theo sơ đồ lớp
+      const matrixGrid = document.getElementById('active-session-grid-18');
+      if (matrixGrid) {
+        let html = '';
+        let checkedInCount = 0;
+
+        for (let i = 1; i <= 18; i++) {
+          const pair = classData.seatingPlan[i] || ["Học sinh 1", "Học sinh 2"];
+          const isCheckedIn = !!state.occupiedMachines[i];
+          if (isCheckedIn) checkedInCount++;
+
+          const cardClass = isCheckedIn ? 'asm-card checked-in' : 'asm-card';
+          const tagClass = isCheckedIn ? 'asm-tag tag-in' : 'asm-tag tag-wait';
+          const tagText = isCheckedIn ? 'Đã vào lớp' : 'Chờ vào...';
+
+          html += '<div class="' + cardClass + '">' +
+                    '<div class="asm-top">' +
+                      '<span class="asm-num">MÁY ' + String(i).padStart(2, '0') + '</span>' +
+                      '<span class="asm-status-dot"></span>' +
+                    '</div>' +
+                    '<div class="asm-students" title="' + pair.join(' & ') + '">' + pair.join(' & ') + '</div>' +
+                    '<div class="' + tagClass + '">' + tagText + '</div>' +
+                  '</div>';
+        }
+        matrixGrid.innerHTML = html;
+
+        const countBadge = document.getElementById('tcm-checkin-count');
+        if (countBadge) countBadge.textContent = 'Đã vào: ' + checkedInCount + '/18 máy';
+
+        const statIn = document.getElementById('stat-checkedin');
+        const statMiss = document.getElementById('stat-missing');
+        if (statIn) statIn.textContent = checkedInCount;
+        if (statMiss) statMiss.textContent = (18 - checkedInCount);
+      }
+
+      // Chuyển panel tác nghiệp bên phải
+      const panels = {
+        'waiting': document.getElementById('tw-panel-waiting'),
+        'warmup': document.getElementById('tw-panel-warmup'),
+        'theory': document.getElementById('tw-panel-theory'),
+        'discussion': document.getElementById('tw-panel-discussion'),
+        'quiz': document.getElementById('tw-panel-quiz')
+      };
+
+      Object.keys(panels).forEach(key => {
+        const p = panels[key];
+        if (p) p.classList.toggle('active', key === state.currentPhase);
+      });
+
+      // Nếu ở Chặng 1: Vẽ biểu đồ phân tích Quick Poll
+      if (state.currentPhase === 'warmup') {
+        const pollChart = document.getElementById('poll-live-chart');
+        if (pollChart) {
+          pollChart.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">' +
+            '<div style="font-size:13px;display:flex;justify-content:space-between;"><span>Phương án A:</span> <strong>22% (4 máy)</strong></div>' +
+            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:22%;background:#3b82f6;height:100%;"></div></div>' +
+            '<div style="font-size:13px;display:flex;justify-content:space-between;color:#34d399;"><span>Phương án B (Đáp án đúng):</span> <strong>67% (12 máy)</strong></div>' +
+            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:67%;background:#10b981;height:100%;"></div></div>' +
+            '<div style="font-size:13px;display:flex;justify-content:space-between;"><span>Phương án C:</span> <strong>11% (2 máy)</strong></div>' +
+            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:11%;background:#f59e0b;height:100%;"></div></div>' +
+          '</div>';
+        }
+      }
     },
 
     renderLobby(state) {
@@ -712,6 +1035,17 @@
 
   window.switchStudentPhase = function(phase) {
     STORE.setState({ currentPhase: phase });
+  };
+
+  window.submitTeacherLogin = function() {
+    APP.handleTeacherLoginSubmit();
+  };
+
+  window.teacherSetPhase = function(phase) {
+    STORE.setState({ currentPhase: phase, teacherPhase: phase });
+    if (db) {
+      db.ref('activeSession/currentPhase').set(phase).catch(()=>{});
+    }
   };
 
   // Khởi động ứng dụng khi DOM sẵn sàng

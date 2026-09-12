@@ -46,7 +46,10 @@
         </div>
       </div>
 
-            <div class="lobby-controls">
+                  <div class="lobby-controls">
+        <button type="button" class="btn-teacher-entry" id="btn-open-teacher-login" title="Đăng nhập Bảng điều khiển Giáo viên">
+          <i class="fas fa-chalkboard-teacher"></i> Giáo viên
+        </button>
         <div class="device-badge-wrap" id="device-pwa-badge" title="Định danh máy phần cứng được PWA ghi nhớ">
           <i class="fas fa-desktop"></i> Đang nhận diện thiết bị...
         </div>
@@ -397,6 +400,229 @@ print(s[4:])</code></pre>
     </div>
   </div>
 
+    <!-- =========================================================
+       MÀN HÌNH 3: BẢNG ĐIỀU KHIỂN GIÁO VIÊN (TEACHER DASHBOARD)
+  ========================================================== -->
+  <section id="screen-teacher" class="app-screen">
+    <!-- Header Giáo viên -->
+    <header class="teacher-header">
+      <div class="th-left">
+        <div class="th-brand-badge"><i class="fas fa-chalkboard-teacher"></i> BẢNG ĐIỀU KHIỂN GIÁO VIÊN</div>
+        <div class="th-session-title" id="th-session-title">Phòng Máy Tin Học • Tiêu chuẩn 18 Máy</div>
+      </div>
+      <div class="th-center">
+        <div class="th-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="th-online-label">Realtime Database: Sẵn sàng</span>
+        </div>
+      </div>
+      <div class="th-right">
+        <button type="button" class="btn-tool" id="btn-remote-reload-all" title="Gửi lệnh F5 xóa cache toàn bộ 18 máy học sinh">
+          <i class="fas fa-sync-alt"></i> F5 18 máy
+        </button>
+        <button type="button" class="btn-tool" id="btn-random-pick-student" title="Bốc thăm ngẫu nhiên máy học sinh">
+          <i class="fas fa-dice"></i> Bốc thăm
+        </button>
+        <button type="button" class="btn-tool btn-tool-danger" id="btn-teacher-logout" title="Đăng xuất khỏi tài khoản Giáo viên">
+          <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </button>
+      </div>
+    </header>
+
+    <!-- Khung nội dung Giáo viên: Giai đoạn 1 & Giai đoạn 2 -->
+    <main class="teacher-main">
+
+      <!-- ===================================================
+           GIAI ĐOẠN 1: KIỂM TRA PHẦN CỨNG 18 MÁY (CHƯA CHỌN LỚP)
+      ==================================================== -->
+      <section id="teacher-stage-hardware" class="teacher-stage active">
+        <div class="stage1-container">
+          <div class="stage1-action-bar">
+            <div class="s1-form-group">
+              <label for="teacher-select-class"><i class="fas fa-users-class"></i> 1. CHỌN LỚP DẠY:</label>
+              <select id="teacher-select-class" class="th-select">
+                <option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option>
+                <option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option>
+              </select>
+            </div>
+
+            <div class="s1-form-group">
+              <label for="teacher-select-lesson"><i class="fas fa-book"></i> 2. CHỌN BÀI HỌC:</label>
+              <select id="teacher-select-lesson" class="th-select">
+                <option value="tin10_bai12">Bài 12: Kiểu dữ liệu xâu trong Python</option>
+              </select>
+            </div>
+
+            <button type="button" class="btn-start-session" id="btn-start-class-session">
+              <i class="fas fa-play-circle"></i> BẮT ĐẦU TIẾT HỌC CHO LỚP NÀY
+            </button>
+          </div>
+
+          <div class="stage1-info-bar">
+            <div class="s1-summary-tag">
+              <i class="fas fa-info-circle"></i> <strong>TÌNH TRẠNG PHẦN CỨNG PHÒNG MÁY:</strong>
+              <span id="hardware-status-summary" style="color:#34d399;margin-left:6px;">18/18 máy sẵn sàng kết nối</span>
+            </div>
+            <p class="s1-hint-text">
+              * Đây là tín hiệu kết nối thiết bị PWA của 18 máy tính. Tên học sinh sẽ tự động được nạp sau khi Thầy chọn lớp và bấm nút <strong>"BẮT ĐẦU TIẾT HỌC"</strong>.
+            </p>
+          </div>
+
+          <!-- Lưới 18 máy kiểm tra phần cứng (Online / Offline) -->
+          <div class="hardware-grid-18" id="hardware-grid-18">
+            <!-- Render 18 máy bởi JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC (ĐIỂM DANH & 4 CHẶNG)
+      ==================================================== -->
+      <section id="teacher-stage-active" class="teacher-stage">
+        <!-- Thanh điều phối tiến trình sư phạm -->
+        <div class="teacher-pace-bar">
+          <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
+            <span class="tpb-badge">0</span>
+            <span>Sẵn sàng & Điểm danh</span>
+          </div>
+          <div class="tpb-step" data-tphase="warmup" onclick="window.teacherSetPhase('warmup')">
+            <span class="tpb-badge">1</span>
+            <span>Khởi động Quick Poll</span>
+          </div>
+          <div class="tpb-step" data-tphase="theory" onclick="window.teacherSetPhase('theory')">
+            <span class="tpb-badge">2</span>
+            <span>Trạm Lý thuyết PWA</span>
+          </div>
+          <div class="tpb-step" data-tphase="discussion" onclick="window.teacherSetPhase('discussion')">
+            <span class="tpb-badge">3</span>
+            <span>Thảo luận & Thực hành</span>
+          </div>
+          <div class="tpb-step" data-tphase="quiz" onclick="window.teacherSetPhase('quiz')">
+            <span class="tpb-badge">4</span>
+            <span>Live Quiz & Củng cố</span>
+          </div>
+
+          <button type="button" class="btn-end-session" id="btn-end-class-session" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo">
+            <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
+          </button>
+        </div>
+
+        <!-- Bố cục 2 cột: Trái 18 máy có tên HS | Phải Bảng tác nghiệp -->
+        <div class="teacher-2col-layout">
+          <!-- Cột trái: Sơ đồ 18 máy điểm danh và nộp bài -->
+          <div class="teacher-col-matrix">
+            <div class="tcm-header">
+              <h3><i class="fas fa-network-wired"></i> SƠ ĐỒ ĐIỂM DANH & BÀI LÀM 18 MÁY</h3>
+              <span class="tcm-badge" id="tcm-checkin-count">Đã vào: 2/18 máy</span>
+            </div>
+            <div class="active-session-grid-18" id="active-session-grid-18">
+              <!-- Render 18 ô máy có tên học sinh theo sơ đồ lớp -->
+            </div>
+          </div>
+
+          <!-- Cột phải: Bảng tác nghiệp trực tiếp theo từng chặng -->
+          <div class="teacher-col-workspace">
+            <!-- Chặng 0: Điểm danh -->
+            <div id="tw-panel-waiting" class="tw-panel active">
+              <div class="tw-card">
+                <h3><i class="fas fa-clipboard-check"></i> ĐIỂM DANH ĐẦU GIỜ</h3>
+                <p>Học sinh tại 18 máy đang quan sát và bấm xác nhận vị trí chỗ ngồi nhóm đôi.</p>
+                <div class="tw-stats-box">
+                  <div class="stat-item"><span class="stat-num" id="stat-checkedin">2</span><span>Máy đã vào</span></div>
+                  <div class="stat-item"><span class="stat-num" id="stat-missing">16</span><span>Máy chưa vào</span></div>
+                </div>
+                <button type="button" class="btn-primary" onclick="window.teacherSetPhase('warmup')" style="margin-top:16px;">
+                  <i class="fas fa-bolt"></i> CHUYỂN SANG CHẶNG 1: KHỞI ĐỘNG NHANH
+                </button>
+              </div>
+            </div>
+
+            <!-- Chặng 1: Live Analytics Quick Poll -->
+            <div id="tw-panel-warmup" class="tw-panel">
+              <div class="tw-card">
+                <div class="twc-header">
+                  <h3><i class="fas fa-chart-bar"></i> BIỂU ĐỒ LIVE ANALYTICS (QUICK POLL)</h3>
+                  <button type="button" class="btn-tool-sm" id="btn-lock-poll"><i class="fas fa-lock"></i> Khóa chọn</button>
+                </div>
+                <div class="poll-live-chart" id="poll-live-chart">
+                  <!-- Biểu đồ phân tích A, B, C, D -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Chặng 2: Trạm lý thuyết PWA -->
+            <div id="tw-panel-theory" class="tw-panel">
+              <div class="tw-card">
+                <h3><i class="fas fa-book-reader"></i> 18 MÁY ĐANG ĐỌC LÝ THUYẾT PWA</h3>
+                <p>Nội dung NotebookLM đã được tải cứng vào bộ nhớ đệm của 18 máy học sinh.</p>
+                <button type="button" class="btn-primary" onclick="window.teacherSetPhase('discussion')" style="margin-top:16px;">
+                  <i class="fas fa-arrow-right"></i> CHUYỂN SANG CHẶNG 3: THẢO LUẬN & THỰC HÀNH
+                </button>
+              </div>
+            </div>
+
+            <!-- Chặng 3: Danh sách bài làm thảo luận & Spotlight -->
+            <div id="tw-panel-discussion" class="tw-panel">
+              <div class="tw-card">
+                <div class="twc-header">
+                  <h3><i class="fas fa-laptop-code"></i> BÀI LÀM THỰC HÀNH CỦA 18 MÁY</h3>
+                  <span id="disc-submitted-count" style="color:#34d399;font-weight:700;">Đã nộp: 1/18</span>
+                </div>
+                <div class="disc-submissions-list" id="disc-submissions-list">
+                  <!-- Danh sách bài nộp -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Chặng 4: Live Quiz -->
+            <div id="tw-panel-quiz" class="tw-panel">
+              <div class="tw-card">
+                <h3><i class="fas fa-trophy"></i> TRẮC NGHIỆM THI ĐUA (LIVE QUIZ)</h3>
+                <div class="quiz-leaderboard" id="quiz-leaderboard">
+                  <!-- Bảng xếp hạng -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </section>
+
+  <!-- =========================================================
+       MODAL: ĐĂNG NHẬP GIÁO VIÊN BẢO MẬT (SHA-256 ENCRYPTED)
+  ========================================================== -->
+  <div class="modal-overlay" id="modal-teacher-login" style="display:none;">
+    <div class="modal-card auth-card">
+      <div class="modal-header auth-header">
+        <div class="modal-icon auth-icon"><i class="fas fa-user-shield"></i></div>
+        <h3>ĐĂNG NHẬP GIÁO VIÊN</h3>
+        <p class="auth-sub">Bảo mật mã hóa SHA-256 • Chống xem trộm F12</p>
+      </div>
+      <form id="form-teacher-login" onsubmit="event.preventDefault(); window.submitTeacherLogin();">
+        <div class="form-group-auth">
+          <label for="teacher-password-input"><i class="fas fa-key"></i> Mật khẩu Giáo viên:</label>
+          <div class="pwd-input-wrap">
+            <input type="password" id="teacher-password-input" placeholder="Nhập mật khẩu quản trị..." autocomplete="current-password" required>
+            <button type="button" class="btn-toggle-pwd" id="btn-toggle-pwd" title="Hiện/ẩn mật khẩu">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="auth-hint">Mật khẩu mặc định: <code>admin123</code> hoặc <code>ThayKhang@2026</code></div>
+          <div class="auth-error-msg" id="auth-error-msg" style="display:none;">
+            <i class="fas fa-exclamation-circle"></i> Mật khẩu không chính xác. Vui lòng thử lại!
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:20px;">
+          <button type="button" class="btn-cancel" id="btn-cancel-teacher-login">Hủy</button>
+          <button type="submit" class="btn-confirm"><i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Firebase Compat v9 (Offline resilient) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -405,4 +631,5 @@ print(s[4:])</code></pre>
   <script src="js/bundle.js?v=2.0.2"></script>
 </body>
 </html>
+
 
