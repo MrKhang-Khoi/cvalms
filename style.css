@@ -4612,91 +4612,243 @@ input:checked + .slider:before {
   font-weight: 800 !important;
 }
 
-.ssc-field-group {
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* ==========================================================
+ * STUDIO SCRIPT EDITOR & KAHOOT 4-COLOR GRID
+ * ========================================================== */
+.studio-timeline-area {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.ssc-field-group label {
-  font-size: 12.5px;
+.sta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1e293b;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sta-title-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 280px;
+}
+
+.sta-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+}
+
+.studio-title-input {
+  width: 100%;
+  max-width: 650px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  background: #0f172a;
+  border: 2px solid #38bdf8;
+  border-radius: 10px;
+  padding: 10px 16px;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.25);
+  box-sizing: border-box;
+}
+
+.studio-title-input:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 20px rgba(96, 165, 250, 0.5);
+}
+
+.btn-save-studio {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: 800;
+  font-size: 14px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-save-studio:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.65);
+}
+
+.studio-step-card {
+  background: #1e293b;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  display: block;
+}
+
+.studio-step-card:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.ssc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+
+.ssc-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #38bdf8;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ssc-body {
+  display: block;
+  width: 100%;
+}
+
+.studio-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 900px) {
+  .studio-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.studio-form-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.studio-form-group, .ssc-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.studio-field-label, .ssc-field-group label {
+  display: block;
+  font-size: 13px;
   font-weight: 700;
   color: #94a3b8;
+  letter-spacing: 0.2px;
+}
+
+.studio-input, .studio-textarea, .studio-select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: #0f172a;
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: all 0.2s;
+}
+
+.studio-input:focus, .studio-textarea:focus, .studio-select:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+  background: #0b1120;
 }
 
 .studio-textarea {
-  width: 100%;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  color: #f1f5f9;
-  padding: 8px 12px;
-  font-size: 13.5px;
-  line-height: 1.5;
+  min-height: 75px;
   resize: vertical;
-}
-
-.studio-textarea:focus {
-  outline: none;
-  border-color: #60a5fa;
-  box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
 }
 
 .studio-textarea.code-font {
   font-family: 'Fira Code', monospace;
-  font-size: 12.5px;
-  background: rgba(0, 0, 0, 0.5);
-  color: #a7f3d0;
+  background: #040813;
+  color: #6ee7b7;
+  border-color: #059669;
+  min-height: 95px;
 }
 
-.ssc-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-}
-
-.ssc-col label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #94a3b8;
-}
-
-/* 4-Color Kahoot Quiz Options Grid in Studio */
-.studio-quiz-options-grid {
+.studio-kahoot-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
 }
 
-.sqo-item {
+@media (max-width: 900px) {
+  .studio-kahoot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sk-card {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid;
+  box-sizing: border-box;
 }
 
-.sqo-badge {
-  font-size: 11.5px;
+.sk-card.sk-red { background: rgba(239, 68, 68, 0.16); border-color: #ef4444; }
+.sk-card.sk-blue { background: rgba(59, 130, 246, 0.16); border-color: #3b82f6; }
+.sk-card.sk-yellow { background: rgba(245, 158, 11, 0.16); border-color: #f59e0b; }
+.sk-card.sk-green { background: rgba(16, 185, 129, 0.16); border-color: #10b981; }
+
+.sk-badge {
+  font-size: 12px;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #ffffff;
   white-space: nowrap;
+  letter-spacing: 0.5px;
 }
 
-.sqo-item.opt-red { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3); }
-.sqo-item.opt-red .sqo-badge { background: #dc2626; color: white; }
+.sk-red .sk-badge { background: #ef4444; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+.sk-blue .sk-badge { background: #3b82f6; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4); }
+.sk-yellow .sk-badge { background: #d97706; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4); }
+.sk-green .sk-badge { background: #059669; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4); }
 
-.sqo-item.opt-blue { background: rgba(37, 99, 235, 0.1); border-color: rgba(37, 99, 235, 0.3); }
-.sqo-item.opt-blue .sqo-badge { background: #2563eb; color: white; }
-
-.sqo-item.opt-yellow { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
-.sqo-item.opt-yellow .sqo-badge { background: #d97706; color: white; }
-
-.sqo-item.opt-green { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); }
-.sqo-item.opt-green .sqo-badge { background: #059669; color: white; }
+.sk-input {
+  flex: 1;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(255, 255, 255, 0.2);
+}
 

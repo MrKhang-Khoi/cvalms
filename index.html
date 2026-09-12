@@ -18,7 +18,228 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.3.0">
+  <link rel="stylesheet" href="style.css?v=2.4.0">
+
+  <!-- Tinh chỉnh Trực quan Studio Editor & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
+  <style id="lms-studio-direct-css">
+    /* Layout chung Studio */
+    .studio-timeline-area {
+      background: rgba(15, 23, 42, 0.95) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 16px !important;
+      padding: 24px !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+    }
+    .sta-header {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      background: #1e293b !important;
+      padding: 16px 20px !important;
+      border-radius: 14px !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      margin-bottom: 24px !important;
+      gap: 16px !important;
+      flex-wrap: wrap !important;
+    }
+    .sta-title-box {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      min-width: 280px !important;
+    }
+    .sta-badge {
+      font-size: 11px !important;
+      font-weight: 800 !important;
+      color: #38bdf8 !important;
+      letter-spacing: 0.8px !important;
+    }
+    .studio-title-input {
+      width: 100% !important;
+      max-width: 650px !important;
+      font-size: 18px !important;
+      font-weight: 800 !important;
+      color: #ffffff !important;
+      background: #0f172a !important;
+      border: 2px solid #38bdf8 !important;
+      border-radius: 10px !important;
+      padding: 10px 16px !important;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.25) !important;
+      box-sizing: border-box !important;
+    }
+    .studio-title-input:focus {
+      outline: none !important;
+      border-color: #60a5fa !important;
+      box-shadow: 0 0 20px rgba(96, 165, 250, 0.5) !important;
+    }
+    .btn-save-studio {
+      background: linear-gradient(135deg, #059669, #10b981) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.3) !important;
+      font-weight: 800 !important;
+      font-size: 14px !important;
+      padding: 12px 24px !important;
+      border-radius: 10px !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45) !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      transition: transform 0.15s, box-shadow 0.15s !important;
+    }
+    .btn-save-studio:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.65) !important;
+    }
+
+    /* Step Card */
+    .studio-step-card {
+      background: #1e293b !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 16px !important;
+      padding: 20px 24px !important;
+      margin-bottom: 20px !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+      display: block !important;
+    }
+    .studio-step-card:hover {
+      border-color: rgba(56, 189, 248, 0.35) !important;
+    }
+    .ssc-header {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      padding-bottom: 12px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      margin-bottom: 16px !important;
+    }
+    .ssc-title {
+      font-size: 15.5px !important;
+      font-weight: 800 !important;
+      color: #38bdf8 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+    }
+    .ssc-body {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    /* Các hàng và nhóm trường */
+    .studio-form-row {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+      width: 100% !important;
+      margin-bottom: 14px !important;
+    }
+    @media (max-width: 900px) {
+      .studio-form-row {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    .studio-form-col {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      width: 100% !important;
+    }
+    .studio-form-group {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      width: 100% !important;
+      margin-bottom: 14px !important;
+    }
+    .studio-field-label {
+      display: block !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      color: #94a3b8 !important;
+      letter-spacing: 0.2px !important;
+    }
+
+    /* Inputs, Textareas, Selects */
+    .studio-input, .studio-textarea, .studio-select {
+      display: block !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      background: #0f172a !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+      border-radius: 10px !important;
+      padding: 10px 14px !important;
+      color: #ffffff !important;
+      font-size: 13.5px !important;
+      font-family: inherit !important;
+      line-height: 1.5 !important;
+      transition: all 0.2s !important;
+    }
+    .studio-input:focus, .studio-textarea:focus, .studio-select:focus {
+      outline: none !important;
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+      background: #0b1120 !important;
+    }
+    .studio-textarea {
+      min-height: 75px !important;
+      resize: vertical !important;
+    }
+    .studio-textarea.code-font {
+      font-family: 'Fira Code', monospace !important;
+      background: #040813 !important;
+      color: #6ee7b7 !important;
+      border-color: #059669 !important;
+      min-height: 95px !important;
+    }
+
+    /* Kahoot 4-Color Grid */
+    .studio-kahoot-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 12px !important;
+      width: 100% !important;
+      margin-top: 6px !important;
+    }
+    @media (max-width: 900px) {
+      .studio-kahoot-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+    .sk-card {
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 10px 14px !important;
+      border-radius: 12px !important;
+      border: 1.5px solid !important;
+      box-sizing: border-box !important;
+    }
+    .sk-card.sk-red { background: rgba(239, 68, 68, 0.16) !important; border-color: #ef4444 !important; }
+    .sk-card.sk-blue { background: rgba(59, 130, 246, 0.16) !important; border-color: #3b82f6 !important; }
+    .sk-card.sk-yellow { background: rgba(245, 158, 11, 0.16) !important; border-color: #f59e0b !important; }
+    .sk-card.sk-green { background: rgba(16, 185, 129, 0.16) !important; border-color: #10b981 !important; }
+    .sk-badge {
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      padding: 6px 12px !important;
+      border-radius: 8px !important;
+      color: #ffffff !important;
+      white-space: nowrap !important;
+      letter-spacing: 0.5px !important;
+    }
+    .sk-red .sk-badge { background: #ef4444 !important; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important; }
+    .sk-blue .sk-badge { background: #3b82f6 !important; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4) !important; }
+    .sk-yellow .sk-badge { background: #d97706 !important; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4) !important; }
+    .sk-green .sk-badge { background: #059669 !important; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important; }
+    .sk-input {
+      flex: 1 !important;
+      margin: 0 !important;
+      background: rgba(15, 23, 42, 0.85) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  </style>
 
   <!-- Tự động cập nhật Service Worker & giải phóng cache cũ -->
   <script>
@@ -551,7 +772,7 @@ print(s[4:])</code></pre>
                 </div>
                 <div class="sta-actions">
                   <button type="button" class="btn-tool-sm" onclick="window.studioPreviewLesson()">
-                    <i class="fas fa-eye"></i> Xem trước (Preview)
+                    <i class="fas fa-eye"></i> Xem trước
                   </button>
                   <button type="button" class="btn-primary btn-save-studio" id="btn-studio-save-lesson" onclick="window.studioSaveLesson()">
                     <i class="fas fa-save"></i> LƯU KỊCH BẢN
@@ -570,18 +791,18 @@ print(s[4:])</code></pre>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-row">
-                      <div class="ssc-col">
-                        <label><i class="fas fa-dice"></i> Công cụ bốc thăm:</label>
-                        <select class="th-select-sm" id="step-tool-1">
+                    <div class="studio-form-row">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-dice"></i> Công cụ bốc thăm:</label>
+                        <select class="studio-select" id="step-tool-1">
                           <option value="wheel" selected>Vòng quay may mắn (Lucky Wheel)</option>
                           <option value="slot">Máy quay số ngẫu nhiên (Slot Machine)</option>
                           <option value="oral">Gọi trả lời miệng</option>
                         </select>
                       </div>
-                      <div class="ssc-col">
-                        <label><i class="fas fa-stopwatch"></i> Thời lượng:</label>
-                        <select class="th-select-sm" id="step-time-1">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng đếm ngược:</label>
+                        <select class="studio-select" id="step-time-1">
                           <option value="60">1 phút</option>
                           <option value="120" selected>2 phút</option>
                           <option value="180">3 phút</option>
@@ -589,9 +810,9 @@ print(s[4:])</code></pre>
                         </select>
                       </div>
                     </div>
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-question-circle"></i> Câu hỏi kiểm tra bài cũ phát xuống 18 máy:</label>
-                      <textarea class="otc-input studio-textarea" id="studio-old-lesson-q" rows="2" placeholder="Nhập câu hỏi kiểm tra bài cũ...">Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?</textarea>
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-question-circle"></i> Câu hỏi kiểm tra bài cũ phát xuống 18 máy:</label>
+                      <textarea class="studio-textarea" id="studio-old-lesson-q" rows="2" placeholder="Nhập câu hỏi kiểm tra bài cũ...">Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?</textarea>
                     </div>
                   </div>
                 </div>
@@ -606,13 +827,13 @@ print(s[4:])</code></pre>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-book-reader"></i> Nhiệm vụ học tập / Hướng dẫn đọc SGK:</label>
-                      <textarea class="otc-input studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-book-reader"></i> Nhiệm vụ học tập / Hướng dẫn đọc SGK:</label>
+                      <textarea class="studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
                     </div>
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
-                      <input type="text" class="otc-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
+                      <input type="text" class="studio-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
                     </div>
                   </div>
                 </div>
@@ -627,18 +848,18 @@ print(s[4:])</code></pre>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-row">
-                      <div class="ssc-col">
-                        <label><i class="fas fa-hourglass-half"></i> Thời gian mỗi câu hỏi:</label>
-                        <select class="th-select-sm" id="step-time-3">
+                    <div class="studio-form-row">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-hourglass-half"></i> Thời gian mỗi câu hỏi:</label>
+                        <select class="studio-select" id="step-time-3">
                           <option value="15">15 giây</option>
                           <option value="20" selected>20 giây</option>
                           <option value="30">30 giây</option>
                         </select>
                       </div>
-                      <div class="ssc-col">
-                        <label><i class="fas fa-check-circle"></i> Đáp án đúng:</label>
-                        <select class="th-select-sm" id="studio-quiz-correct">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-check-circle"></i> Đáp án đúng:</label>
+                        <select class="studio-select" id="studio-quiz-correct">
                           <option value="A">Đáp án A (Đỏ)</option>
                           <option value="B" selected>Đáp án B (Lam)</option>
                           <option value="C">Đáp án C (Vàng)</option>
@@ -646,26 +867,29 @@ print(s[4:])</code></pre>
                         </select>
                       </div>
                     </div>
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-question"></i> Nội dung câu hỏi trắc nghiệm Đấu trường:</label>
-                      <input type="text" class="otc-input" id="studio-quiz-q" value="Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?" placeholder="Nhập nội dung câu hỏi trắc nghiệm...">
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi trắc nghiệm Đấu trường:</label>
+                      <textarea class="studio-textarea" id="studio-quiz-q" rows="2" placeholder="Nhập nội dung câu hỏi trắc nghiệm...">Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?</textarea>
                     </div>
-                    <div class="studio-quiz-options-grid">
-                      <div class="sqo-item opt-red">
-                        <span class="sqo-badge">A (Đỏ)</span>
-                        <input type="text" class="otc-input" id="studio-quiz-opt-a" value="Không thể truy cập các ký tự qua chỉ số index" placeholder="Phương án A (Đỏ)...">
-                      </div>
-                      <div class="sqo-item opt-blue">
-                        <span class="sqo-badge">B (Lam)</span>
-                        <input type="text" class="otc-input" id="studio-quiz-opt-b" value="Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" placeholder="Phương án B (Lam)...">
-                      </div>
-                      <div class="sqo-item opt-yellow">
-                        <span class="sqo-badge">C (Vàng)</span>
-                        <input type="text" class="otc-input" id="studio-quiz-opt-c" value="Không thể dùng hàm len() để tính độ dài xâu" placeholder="Phương án C (Vàng)...">
-                      </div>
-                      <div class="sqo-item opt-green">
-                        <span class="sqo-badge">D (Lục)</span>
-                        <input type="text" class="otc-input" id="studio-quiz-opt-d" value="Xâu chỉ chứa được chữ số, không chứa được chữ cái" placeholder="Phương án D (Lục)...">
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-palette"></i> 4 Phương án trả lời (4 Màu Đấu trường Kahoot):</label>
+                      <div class="studio-kahoot-grid">
+                        <div class="sk-card sk-red">
+                          <div class="sk-badge">A (ĐỎ)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-a" value="Không thể truy cập các ký tự qua chỉ số index" placeholder="Phương án A (Đỏ)...">
+                        </div>
+                        <div class="sk-card sk-blue">
+                          <div class="sk-badge">B (LAM)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-b" value="Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" placeholder="Phương án B (Lam)...">
+                        </div>
+                        <div class="sk-card sk-yellow">
+                          <div class="sk-badge">C (VÀNG)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-c" value="Không thể dùng hàm len() để tính độ dài xâu" placeholder="Phương án C (Vàng)...">
+                        </div>
+                        <div class="sk-card sk-green">
+                          <div class="sk-badge">D (LỤC)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-d" value="Xâu chỉ chứa được chữ số, không chứa được chữ cái" placeholder="Phương án D (Lục)...">
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -681,21 +905,21 @@ print(s[4:])</code></pre>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-tag"></i> Tên bài thực hành:</label>
-                      <input type="text" class="otc-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-tag"></i> Tiêu đề bài thực hành:</label>
+                      <input type="text" class="studio-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
                     </div>
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
-                      <textarea class="otc-input studio-textarea" id="studio-disc-task" rows="3" placeholder="Yêu cầu đề bài thực hành...">Cho xâu ký tự: s = 'chuc mung nam moi 2026'
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
+                      <textarea class="studio-textarea" id="studio-disc-task" rows="3" placeholder="Yêu cầu đề bài thực hành...">Cho xâu ký tự: s = 'chuc mung nam moi 2026'
 Hai em hãy thảo luận và viết các câu lệnh Python để thực hiện:
 1. In ra độ dài của xâu s.
 2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.
 3. Đếm số lượng ký tự khoảng trắng có trong xâu s.</textarea>
                     </div>
-                    <div class="ssc-field-group">
-                      <label><i class="fas fa-code"></i> Mã Python gợi ý ban đầu (Code Template):</label>
-                      <textarea class="otc-input studio-textarea code-font" id="studio-disc-starter" rows="3" placeholder="Mã Python gợi ý..."># Gợi ý bài thực hành xâu ký tự:
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-code"></i> Mã Python gợi ý ban đầu (Code Template):</label>
+                      <textarea class="studio-textarea code-font" id="studio-disc-starter" rows="3" placeholder="Mã Python gợi ý..."># Gợi ý bài thực hành xâu ký tự:
 s = 'chuc mung nam moi 2026'
 print("1. Độ dài xâu:", len(s))
 print("2. Cắt xâu:", s[10:17])
@@ -714,7 +938,7 @@ print("2. Cắt xâu:", s[10:17])
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <p class="text-muted" style="margin:0;"><i class="fas fa-trophy" style="color:#fbbf24;"></i> Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 dựa trên tổng điểm thi đua của 18 máy và tổng kết tiết học.</p>
+                    <p style="color:#94a3b8;margin:0;font-size:13.5px;"><i class="fas fa-trophy" style="color:#fbbf24;"></i> Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 dựa trên tổng điểm thi đua của 18 máy và tổng kết tiết học.</p>
                   </div>
                 </div>
               </div>

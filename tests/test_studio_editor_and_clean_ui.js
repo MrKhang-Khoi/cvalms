@@ -1,4 +1,4 @@
-﻿const { chromium } = require('playwright');
+const { chromium } = require('playwright');
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
@@ -72,6 +72,30 @@ async function testStudioEditorAndCleanUI() {
     console.log('   [Dialog Alert]:', d.message());
     await d.accept();
   });
+
+  console.log('[Setup] Resetting Firebase activeSession to clean locked state...');
+  try {
+    const authRes = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCC2tCURXYAMpdN687kcjY537K7zUhh_Fg', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ returnSecureToken: true })
+    }).then(r => r.json());
+    await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=' + authRes.idToken, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        currentPhase: 'waiting',
+        sessionStarted: false,
+        unlocked: false,
+        luckyDraw: { spinning: false },
+        resetAt: 0,
+        machines: null
+      })
+    });
+    console.log('   -> Firebase activeSession reset OK!');
+  } catch (e) {
+    console.warn('   -> Reset warning:', e.message);
+  }
 
   try {
     await page.goto('http://127.0.0.1:8089/', { waitUntil: 'networkidle' });
@@ -155,9 +179,15 @@ async function testStudioEditorAndCleanUI() {
     await page.click('#btn-tnav-stage');
     await page.waitForTimeout(300);
 
-    // Kích hoạt lớp để vào màn hình Live Stage
-    await page.click('#btn-start-class-session');
-    await page.waitForTimeout(500);
+    // Kích hoạt lớp để vào màn hình Live Stage nếu chưa kích hoạt
+    const isStartBtnVisible = await page.isVisible('#btn-start-class-session');
+    if (isStartBtnVisible) {
+      console.log('   - Kích hoạt lớp học qua #btn-start-class-session...');
+      await page.click('#btn-start-class-session');
+      await page.waitForTimeout(500);
+    } else {
+      console.log('   - Tiết học đã ở trạng thái Active Live Stage.');
+    }
 
     // Kiểm tra thanh Master Bar duy nhất
     const masterBarCount = await page.locator('.teacher-master-control-bar').count();
