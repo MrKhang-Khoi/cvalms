@@ -1303,16 +1303,26 @@
           if (isCheckedIn) checkedInCount++;
 
           const cardClass = isCheckedIn ? 'asm-card checked-in' : 'asm-card';
-          const tagClass = isCheckedIn ? 'asm-tag tag-in' : 'asm-tag tag-wait';
-          const tagText = isCheckedIn ? 'Đã vào lớp' : 'Chờ vào...';
+          const pillClass = isCheckedIn ? 'online' : 'offline';
+          const pillText = isCheckedIn ? 'Đã vào' : 'Chờ...';
+          const studentsDisplay = pair.join(' • ');
+          const fullTitle = 'MÁY ' + String(i).padStart(2, '0') + ': ' + pair.join(', ');
 
-          html += '<div class="' + cardClass + '">' +
+          html += '<div class="' + cardClass + '" title="' + fullTitle + '">' +
                     '<div class="asm-top">' +
-                      '<span class="asm-num">MÁY ' + String(i).padStart(2, '0') + '</span>' +
-                      '<span class="asm-status-dot"></span>' +
+                      '<div class="asm-id">' +
+                        '<i class="fas fa-desktop"></i> ' +
+                        '<span class="asm-num">MÁY ' + String(i).padStart(2, '0') + '</span>' +
+                      '</div>' +
+                      '<div class="asm-status-pill ' + pillClass + '">' +
+                        '<span class="asm-status-dot"></span>' +
+                        '<span class="asm-status-text">' + pillText + '</span>' +
+                      '</div>' +
                     '</div>' +
-                    '<div class="asm-students" title="' + pair.join(' & ') + '">' + pair.join(' & ') + '</div>' +
-                    '<div class="' + tagClass + '">' + tagText + '</div>' +
+                    '<div class="asm-students-row">' +
+                      '<i class="fas fa-user-friends asm-stu-icon"></i>' +
+                      '<span class="asm-stu-names">' + studentsDisplay + '</span>' +
+                    '</div>' +
                   '</div>';
         }
         matrixGrid.innerHTML = html;

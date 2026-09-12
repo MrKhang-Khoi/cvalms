@@ -2101,30 +2101,41 @@ body {
   font-weight: 700;
 }
 
-/* Lưới 18 máy có tên HS (Active Session) */
+/* Lưới 18 máy có tên HS (Active Session) - Compact Dashboard */
 .active-session-grid-18 {
   flex: 1;
-  padding: 16px;
+  padding: 10px 14px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  overflow-y: auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  overflow: hidden;
+  align-content: start;
 }
 
 .asm-card {
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  padding: 12px;
+  background-color: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  border-radius: 7px;
+  padding: 6px 9px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: all 0.2s;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 48px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.asm-card:hover {
+  border-color: rgba(96, 165, 250, 0.5);
+  background-color: rgba(30, 41, 59, 0.9);
 }
 
 .asm-card.checked-in {
-  border-color: rgba(16, 185, 129, 0.4);
-  background-color: rgba(16, 185, 129, 0.05);
+  border-color: rgba(16, 185, 129, 0.45);
+  background-color: rgba(16, 185, 129, 0.08);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.1);
 }
 
 .asm-card.is-sos {
@@ -2133,56 +2144,121 @@ body {
   animation: pulse-sos 1.5s infinite;
 }
 
+/* Dòng 1: Header (MÁY XX + Status Pill nhỏ gọn) */
 .asm-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 
-.asm-num {
+.asm-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: var(--font-code);
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 800;
-  color: #60a5fa;
+  color: #38bdf8;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.asm-id i {
+  font-size: 10.5px;
+  opacity: 0.85;
+}
+
+/* Huy hiệu trạng thái nhỏ gọn (Status Pill) */
+.asm-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.asm-status-pill.online {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.asm-status-pill.offline {
+  background-color: rgba(51, 65, 85, 0.4);
+  color: #94a3b8;
+  border: 1px solid rgba(71, 85, 105, 0.3);
 }
 
 .asm-status-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background-color: #475569;
+  display: inline-block;
 }
 
-.asm-card.checked-in .asm-status-dot {
-  background-color: var(--success);
-  box-shadow: 0 0 6px var(--success);
+.asm-status-pill.online .asm-status-dot {
+  background-color: #10b981;
+  box-shadow: 0 0 5px #10b981;
 }
 
-.asm-students {
-  font-size: 12px;
+.asm-status-pill.offline .asm-status-dot {
+  background-color: #64748b;
+}
+
+.asm-status-text {
+  font-size: 10px;
+}
+
+/* Dòng 2: Tên học sinh hiển thị bên dưới */
+.asm-students-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.asm-stu-icon {
+  font-size: 10px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.asm-stu-names {
+  font-size: 11px;
   font-weight: 600;
-  color: #fff;
+  color: #cbd5e1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.asm-card.checked-in .asm-stu-names {
+  color: #ffffff;
+}
+
+/* Giữ tương thích ngược */
+.asm-num {
+  font-family: var(--font-code);
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #38bdf8;
+}
+
+.asm-students {
+  display: none;
 }
 
 .asm-tag {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.asm-tag.tag-in {
-  background-color: var(--success-light);
-  color: #34d399;
-}
-
-.asm-tag.tag-wait {
-  background-color: rgba(71, 85, 105, 0.3);
-  color: #94a3b8;
+  display: none;
 }
 
 /* Bảng Tác Nghiệp Phía Phải */
