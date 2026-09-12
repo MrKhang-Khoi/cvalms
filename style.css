@@ -125,6 +125,19 @@ body {
   gap: 20px;
 }
 
+.device-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .class-picker-wrap {
   display: flex;
   align-items: center;
@@ -1547,3 +1560,4 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+

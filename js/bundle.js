@@ -521,6 +521,18 @@
 
       grid.innerHTML = html;
 
+            // Cập nhật huy hiệu PWA trên Topbar
+      const pwaBadge = document.getElementById('device-pwa-badge');
+      if (pwaBadge) {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const modeText = isStandalone ? 'PWA Standalone' : 'Browser';
+        if (fixedId) {
+          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+        } else {
+          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+        }
+      }
+
       // Cập nhật thông tin token lưu nhớ
       const tokenStatus = document.getElementById('device-token-status');
       if (tokenStatus) {
@@ -710,3 +722,5 @@
   }
 
 })();
+
+
