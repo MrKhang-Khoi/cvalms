@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -14,8 +14,11 @@
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <!-- Canvas Confetti cho hiệu ứng thi đua Live Quiz -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.0.1">
+  <link rel="stylesheet" href="style.css?v=2.0.2">
 
   <!-- Tự động nạp Manifest PWA an toàn khi chạy trên HTTP/HTTPS -->
   <script>
@@ -29,162 +32,373 @@
 </head>
 <body>
 
-  <!-- ============================================
-       1. THANH TIÊU ĐỀ HỌC SINH (MINIMAL HEADER)
-  ============================================= -->
-  <header class="student-header">
-    <div class="sh-left">
-      <div class="sh-machine-badge" id="sh-machine-badge">Máy 4</div>
-      <div class="sh-students-label" id="sh-students-label">Chưa điểm danh</div>
-    </div>
-    <div class="sh-right">
-      <button class="btn-sos" id="btn-student-sos" title="Bấm để phát tín hiệu xin trợ giúp lên máy giáo viên">
-        <i class="fas fa-hand-paper"></i> Cần trợ giúp
-      </button>
-    </div>
-  </header>
-
-  <!-- THANH CHUYỂN NHANH 5 MÀN HÌNH HỌC SINH ĐỂ THẦY KIỂM TRA DUYỆT -->
-  <nav class="phase-nav-tabs">
-    <span class="pnt-title"><i class="fas fa-eye"></i> XEM MÀN HÌNH:</span>
-    <button class="p-tab active" onclick="window.setTestPhase('waiting', this)">⏳ Chờ mở bài</button>
-    <button class="p-tab" onclick="window.setTestPhase('seating', this)">👥 Điểm danh đôi</button>
-    <button class="p-tab" onclick="window.setTestPhase('warmup', this)">⚡ 1. Quick Poll</button>
-    <button class="p-tab" onclick="window.setTestPhase('theory', this)">📖 2. Lý thuyết PWA</button>
-    <button class="p-tab" onclick="window.setTestPhase('discussion', this)">💬 3. Thảo luận & Thực hành</button>
-  </nav>
-
-  <!-- ============================================
-       2. KHÔNG GIAN LÀM VIỆC CHÍNH (MAIN WORKSPACE)
-  ============================================= -->
-  <main class="student-main">
-
-    <!-- VIEW 0A: CHỜ GIÁO VIÊN MỞ PHIÊN -->
-    <section id="st-view-waiting" class="st-view">
-      <div class="waiting-card">
-        <div class="waiting-icon"><i class="fas fa-hourglass-half fa-spin"></i></div>
-        <h2 class="waiting-title">Tiết học chưa bắt đầu</h2>
-        <p class="waiting-subtitle">Thầy đang chuẩn bị bài dạy. Các em hãy ngồi đúng vị trí máy của mình và chờ hiệu lệnh từ thầy nhé!</p>
-      </div>
-    </section>
-
-    <!-- VIEW 0B: SẢNH ĐIỂM DANH ĐÔI TỰ ĐỘNG MAP CHỖ NGỒI -->
-    <section id="st-view-seating" class="st-view" style="display:none;">
-      <div class="seating-card">
-        <h2 class="seating-title" id="seating-card-title">🖥️ MÁY BÀN SỐ 4 — LỚP 10A1</h2>
-        <p style="color:var(--text-muted); margin-bottom: 16px; font-size:15px;">Sơ đồ lớp đã phân công 2 bạn ngồi tại máy này:</p>
-        <div class="seating-pair-box" id="seating-pair-names">
-          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Đỗ Gia Huy</div>
-          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Bùi Phương Mai</div>
+  <!-- =========================================================
+       MÀN HÌNH 1: SẢNH CHỌN MÁY TÍNH (18 MÁY TỰ ĐỘNG MAP CHỖ NGỒI)
+  ========================================================== -->
+  <section id="screen-lobby" class="app-screen active">
+    <!-- Header Sảnh -->
+    <header class="lobby-topbar">
+      <div class="lobby-brand">
+        <div class="brand-icon"><i class="fas fa-network-wired"></i></div>
+        <div>
+          <h1 class="brand-title">LMS PHÒNG MÁY TƯƠNG TÁC</h1>
+          <p class="brand-subtitle">Môn Tin học • Phòng máy tiêu chuẩn 18 máy (Nhóm đôi 2 học sinh/máy)</p>
         </div>
-        <button class="btn-checkin-confirm" id="btn-confirm-checkin">
-          <i class="fas fa-check-circle"></i> ĐÚNG VỊ TRÍ — VÀO TIẾT HỌC
-        </button>
-      </div>
-    </section>
-
-    <!-- VIEW 0C: ĐÃ VÀO PHÒNG - SẴN SÀNG -->
-    <section id="st-view-ready" class="st-view" style="display:none;">
-      <div class="waiting-card">
-        <div class="waiting-icon" style="color:var(--success)"><i class="fas fa-check-circle"></i></div>
-        <h2 class="waiting-title">Đã sẵn sàng vào học!</h2>
-        <p class="waiting-subtitle">Nhóm bạn đã điểm danh thành công. Hãy hướng mắt lên bảng nghe thầy hướng dẫn chặng tiếp theo.</p>
-      </div>
-    </section>
-
-    <!-- VIEW 1: CHẶNG 1 — KHỞI ĐỘNG TỨC THÌ (QUICK POLL A-B-C-D) -->
-    <section id="st-view-warmup" class="st-view" style="display:none;">
-      <div class="poll-question-header" id="poll-question-text">Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?</div>
-      <pre class="code-block" id="poll-code-snippet">s = "Tin hoc"
-print(s[4:])</pre>
-      
-      <div class="poll-grid">
-        <button class="poll-opt-btn" data-choice="A">
-          <span class="poll-badge">A</span>
-          <span class="poll-label">"Tin"</span>
-        </button>
-        <button class="poll-opt-btn" data-choice="B">
-          <span class="poll-badge">B</span>
-          <span class="poll-label">"hoc"</span>
-        </button>
-        <button class="poll-opt-btn" data-choice="C">
-          <span class="poll-badge">C</span>
-          <span class="poll-label">"h"</span>
-        </button>
-        <button class="poll-opt-btn" data-choice="D">
-          <span class="poll-badge">D</span>
-          <span class="poll-label">Báo lỗi IndexError</span>
-        </button>
       </div>
 
-      <div class="poll-status-box" id="poll-status-msg">
-        Hai em hãy trao đổi nhanh và bấm chọn 1 đáp án:
-      </div>
-    </section>
-
-    <!-- VIEW 2: CHẶNG 2 — KHÁM PHÁ LÝ THUYẾT PWA NOTEBOOKLM -->
-    <section id="st-view-theory" class="st-view" style="display:none;">
-      <div class="theory-cards-container" id="theory-cards-container">
-        <!-- Render các thẻ kiến thức từ NotebookLM -->
-      </div>
-    </section>
-
-    <!-- VIEW 3: CHẶNG 3 — THẢO LUẬN & THỰC HÀNH NHÓM ĐÔI -->
-    <section id="st-view-discussion" class="st-view" style="display:none;">
-      <!-- Cột trái: Lý thuyết tham khảo thu gọn -->
-      <aside class="disc-left-ref" id="disc-theory-reference">
-        <!-- Thẻ tham khảo thu gọn -->
-      </aside>
-
-      <!-- Cột phải: Khung làm bài thảo luận của máy -->
-      <div class="disc-right-work">
-        <div class="disc-task-description" id="disc-task-description">
-          <!-- Đề bài nhiệm vụ thảo luận -->
+      <div class="lobby-controls">
+        <div class="class-picker-wrap">
+          <label for="select-lobby-class"><i class="fas fa-users-class"></i> Lớp học:</label>
+          <select id="select-lobby-class" class="class-select">
+            <option value="10A1">Lớp 10A1 (35 học sinh)</option>
+            <option value="9A1">Lớp 9A1 (36 học sinh)</option>
+          </select>
         </div>
-
-        <div class="disc-editor-wrapper">
-          <textarea class="disc-answer-input" id="disc-answer-input" placeholder="# Gõ nội dung thảo luận hoặc dán code của nhóm vào đây..."></textarea>
+        <div class="lobby-status-pill">
+          <span class="pulse-dot"></span>
+          <span id="lobby-online-count">18 máy trực tuyến</span>
         </div>
+      </div>
+    </header>
 
-        <div class="disc-actions">
-          <div id="disc-submission-status">
-            <span class="badge-warning"><i class="fas fa-clock"></i> Đang làm bài...</span>
+    <!-- Thân Sảnh: Lưới 18 Máy Tính Trực Quan -->
+    <main class="lobby-body">
+      <div class="lobby-banner">
+        <h2><i class="fas fa-desktop"></i> SƠ ĐỒ CHỖ NGỒI PHÒNG MÁY</h2>
+        <p>Học sinh quan sát vị trí và nhấp vào <strong>Đúng số máy bạn đang ngồi</strong> để vào tiết học. Hệ thống tự động phân cặp theo sơ đồ lớp.</p>
+      </div>
+
+      <div class="lobby-legend">
+        <span class="legend-item"><span class="legend-badge available"></span> Trống — Bấm để chọn</span>
+        <span class="legend-item"><span class="legend-badge occupied"></span> Đã có bạn chọn (Khoá)</span>
+        <span class="legend-item"><span class="legend-badge my-device"></span> Vị trí đã lưu cho máy này</span>
+      </div>
+
+      <!-- Lưới 18 máy tính -->
+      <div class="computers-grid" id="computers-grid">
+        <!-- Render động 18 máy bởi JavaScript -->
+      </div>
+    </main>
+
+    <!-- Footer thông tin phòng máy -->
+    <footer class="lobby-footer">
+      <div class="token-info-bar">
+        <span id="device-token-status"><i class="fas fa-info-circle"></i> Trình duyệt sẵn sàng nhận diện vị trí máy</span>
+        <button type="button" class="btn-text-reset" id="btn-reset-device-token" title="Xóa lưu nhớ số máy trên thiết bị này">
+          <i class="fas fa-rotate-left"></i> Đặt lại nhớ máy
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- =========================================================
+       MÀN HÌNH 2: KHÔNG GIAN LÀM VIỆC HỌC SINH (STUDENT WORKSPACE)
+  ========================================================== -->
+  <section id="screen-student" class="app-screen">
+    <!-- Header Học sinh -->
+    <header class="student-header">
+      <div class="sh-left">
+        <div class="sh-machine-badge" id="sh-machine-badge">MÁY 04</div>
+        <div class="sh-pair-info">
+          <div class="sh-students-label" id="sh-students-label">Đỗ Gia Huy & Bùi Phương Mai</div>
+          <div class="sh-class-label" id="sh-class-label">Lớp 10A1 • Môn Tin học</div>
+        </div>
+      </div>
+
+      <div class="sh-right">
+        <span class="connection-status"><span class="pulse-dot"></span> Trực tuyến</span>
+        <button class="btn-change-machine" id="btn-back-to-lobby" title="Quay lại sảnh chọn máy">
+          <i class="fas fa-arrow-left"></i> Đổi máy
+        </button>
+        <button class="btn-sos" id="btn-student-sos" title="Phát tín hiệu xin trợ giúp lên màn hình giáo viên">
+          <i class="fas fa-hand-paper"></i> Cần trợ giúp
+        </button>
+      </div>
+    </header>
+
+    <!-- Thanh Tiến Trình Tiết Học (Classroom Pace Navigator) -->
+    <nav class="pace-navigator">
+      <div class="pn-item active" data-phase="waiting" onclick="window.switchStudentPhase('waiting')">
+        <span class="pn-step">0</span>
+        <span class="pn-text">Sẵn sàng & Sơ đồ lớp</span>
+      </div>
+      <div class="pn-item" data-phase="warmup" onclick="window.switchStudentPhase('warmup')">
+        <span class="pn-step">1</span>
+        <span class="pn-text">Khởi động (Quick Poll)</span>
+      </div>
+      <div class="pn-item" data-phase="theory" onclick="window.switchStudentPhase('theory')">
+        <span class="pn-step">2</span>
+        <span class="pn-text">Trạm Lý thuyết PWA</span>
+      </div>
+      <div class="pn-item" data-phase="discussion" onclick="window.switchStudentPhase('discussion')">
+        <span class="pn-step">3</span>
+        <span class="pn-text">Thảo luận & Thực hành</span>
+      </div>
+      <div class="pn-item" data-phase="quiz" onclick="window.switchStudentPhase('quiz')">
+        <span class="pn-step">4</span>
+        <span class="pn-text">Live Quiz & Củng cố</span>
+      </div>
+    </nav>
+
+    <!-- Không gian làm việc chính (Workspace Content) -->
+    <main class="student-main">
+
+      <!-- CHẶNG 0: PHÒNG CHỜ & SƠ ĐỒ LỚP RADAR -->
+      <section id="st-view-waiting" class="st-view active">
+        <div class="workspace-grid-2col">
+          <!-- Cột trái: Thẻ xác nhận & Thông tin bài học -->
+          <div class="lesson-brief-card">
+            <div class="lbc-header">
+              <span class="badge-tag">TIẾT HỌC HÔM NAY</span>
+              <h2 id="waiting-lesson-title">Bài 12: Kiểu dữ liệu xâu trong Python</h2>
+            </div>
+            <div class="lbc-body">
+              <div class="info-row">
+                <i class="fas fa-desktop"></i>
+                <div>
+                  <strong>Vị trí ngồi:</strong>
+                  <span id="waiting-desk-info">Máy bàn số 04</span>
+                </div>
+              </div>
+              <div class="info-row">
+                <i class="fas fa-user-friends"></i>
+                <div>
+                  <strong>Nhóm đôi:</strong>
+                  <span id="waiting-pair-info">Đỗ Gia Huy & Bùi Phương Mai</span>
+                </div>
+              </div>
+              <div class="info-row">
+                <i class="fas fa-bullseye"></i>
+                <div>
+                  <strong>Mục tiêu:</strong>
+                  <span>Hiểu khái niệm xâu, thành thạo phép cắt xâu (slicing) và tính chất bất biến.</span>
+                </div>
+              </div>
+            </div>
+            <div class="lbc-footer">
+              <div class="ready-badge"><i class="fas fa-check-circle"></i> Hai bạn đã sẵn sàng</div>
+              <p>Hãy hướng mắt lên bảng hoặc chờ hiệu lệnh của Thầy để bắt đầu chặng 1.</p>
+            </div>
           </div>
-          <button class="btn-primary" id="btn-submit-discussion">
-            <i class="fas fa-paper-plane"></i> GỬI BÀI LÀM CỦA MÁY
-          </button>
+
+          <!-- Cột phải: Sơ đồ phòng học trực quan thu nhỏ (Classroom Radar) -->
+          <div class="classroom-radar-card">
+            <div class="crc-header">
+              <h3><i class="fas fa-network-wired"></i> SƠ ĐỒ PHÒNG MÁY HIỆN TẠI (18 MÁY)</h3>
+              <span class="crc-count" id="radar-count-label">18 máy đang kết nối</span>
+            </div>
+            <div class="radar-grid" id="radar-grid">
+              <!-- Render 18 ô radar mini -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHẶNG 1: KHỞI ĐỘNG TỨC THÌ (QUICK POLL A-B-C-D) -->
+      <section id="st-view-warmup" class="st-view">
+        <div class="poll-container">
+          <div class="poll-banner">
+            <span class="poll-phase-tag"><i class="fas fa-bolt"></i> CHẶNG 1: KHỞI ĐỘNG NHANH</span>
+            <div class="poll-timer" id="poll-timer"><i class="fas fa-clock"></i> 45s</div>
+          </div>
+
+          <div class="poll-question-header" id="poll-question-text">
+            Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?
+          </div>
+
+          <pre class="code-block" id="poll-code-snippet"><code>s = "Tin hoc"
+print(s[4:])</code></pre>
+          
+          <div class="poll-grid">
+            <button class="poll-opt-btn" data-choice="A">
+              <span class="poll-badge">A</span>
+              <span class="poll-label">"Tin"</span>
+            </button>
+            <button class="poll-opt-btn" data-choice="B">
+              <span class="poll-badge">B</span>
+              <span class="poll-label">"hoc"</span>
+            </button>
+            <button class="poll-opt-btn" data-choice="C">
+              <span class="poll-badge">C</span>
+              <span class="poll-label">"h"</span>
+            </button>
+            <button class="poll-opt-btn" data-choice="D">
+              <span class="poll-badge">D</span>
+              <span class="poll-label">Báo lỗi IndexError</span>
+            </button>
+          </div>
+
+          <div class="poll-status-box" id="poll-status-msg">
+            <i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:
+          </div>
+        </div>
+      </section>
+
+      <!-- CHẶNG 2: TRẠM LÝ THUYẾT PWA NOTEBOOKLM -->
+      <section id="st-view-theory" class="st-view">
+        <div class="theory-view-wrapper">
+          <div class="theory-header-bar">
+            <div>
+              <span class="badge-tag"><i class="fas fa-book-open"></i> CHẶNG 2: TRẠM KIẾN THỨC SỐ</span>
+              <h2>Tóm Tắt Khái Niệm Trọng Tâm (Trích xuất từ NotebookLM)</h2>
+            </div>
+            <div class="pwa-cache-status">
+              <i class="fas fa-bolt"></i> Nạp tức thì từ bộ đệm PWA (0.1s)
+            </div>
+          </div>
+          <div class="theory-cards-container" id="theory-cards-container">
+            <!-- Render động các thẻ kiến thức -->
+          </div>
+        </div>
+      </section>
+
+      <!-- CHẶNG 3: THẢO LUẬN & THỰC HÀNH NHÓM ĐÔI (SMART SPLIT-VIEW) -->
+      <section id="st-view-discussion" class="st-view">
+        <div class="disc-split-container">
+          <!-- Cột trái: Lý thuyết tham khảo thu gọn -->
+          <aside class="disc-left-ref">
+            <div class="dlr-header">
+              <i class="fas fa-bookmark"></i> Lý Thuyết Tra Cứu
+            </div>
+            <div class="dlr-content" id="disc-theory-reference">
+              <!-- Nội dung tra cứu -->
+            </div>
+          </aside>
+
+          <!-- Cột phải: Khung làm bài thảo luận của máy -->
+          <div class="disc-right-work">
+            <div class="disc-task-description">
+              <div class="dtd-header">
+                <span class="badge-tag"><i class="fas fa-laptop-code"></i> CHẶNG 3: NHIỆM VỤ NHÓM ĐÔI</span>
+                <span class="disc-timer"><i class="fas fa-stopwatch"></i> Thời gian: 12 phút</span>
+              </div>
+              <h3 id="disc-task-title">Nhiệm vụ Thảo luận & Thực hành</h3>
+              <div class="task-text" id="disc-task-text">
+                Cho xâu ký tự: <code>s = 'chuc mung nam moi 2026'</code><br>
+                Hai em hãy thảo luận và viết các câu lệnh Python để thực hiện:<br>
+                1. In ra độ dài của xâu s.<br>
+                2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.<br>
+                3. Trình bày ít nhất 1 cách để đếm số lượng ký tự khoảng trắng có trong xâu s.
+              </div>
+            </div>
+
+            <div class="disc-editor-wrapper">
+              <div class="editor-header">
+                <span><i class="fas fa-code"></i> KHUNG BÀI LÀM CỦA MÁY (Gõ câu trả lời hoặc dán code Python):</span>
+              </div>
+              <textarea class="disc-answer-input" id="disc-answer-input" spellcheck="false" placeholder="# Hai em hãy nhập nội dung thảo luận hoặc code Python của nhóm vào đây..."></textarea>
+            </div>
+
+            <div class="disc-actions">
+              <div id="disc-submission-status">
+                <span class="badge-status-working"><i class="fas fa-pencil-alt"></i> Đang làm bài...</span>
+              </div>
+              <button class="btn-primary" id="btn-submit-discussion">
+                <i class="fas fa-paper-plane"></i> NỘP BÀI LÀM CỦA NHÓM
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHẶNG 4: LIVE QUIZ TRẮC NGHIỆM THI ĐUA & CỦNG CỐ -->
+      <section id="st-view-quiz" class="st-view">
+        <div class="quiz-container">
+          <div class="quiz-header-card">
+            <span class="badge-tag"><i class="fas fa-trophy"></i> CHẶNG 4: TRẮC NGHIỆM THI ĐUA (LIVE QUIZ)</span>
+            <h2>Câu hỏi củng cố kiến thức</h2>
+            <p>Hệ thống tự động chấm điểm và tính vận tốc phản hồi để xếp hạng giữa 18 máy.</p>
+          </div>
+
+          <div class="quiz-card">
+            <div class="quiz-q-num">Câu hỏi 1 / 1</div>
+            <div class="quiz-question" id="quiz-question-text">
+              Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?
+            </div>
+            <div class="quiz-options-grid">
+              <button class="quiz-opt" data-qopt="A">
+                <span class="qo-key">A</span>
+                <span class="qo-label">Không thể truy cập các ký tự qua chỉ số index</span>
+              </button>
+              <button class="quiz-opt" data-qopt="B">
+                <span class="qo-key">B</span>
+                <span class="qo-label">Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo</span>
+              </button>
+              <button class="quiz-opt" data-qopt="C">
+                <span class="qo-key">C</span>
+                <span class="qo-label">Không thể dùng hàm len() để tính độ dài xâu</span>
+              </button>
+              <button class="quiz-opt" data-qopt="D">
+                <span class="qo-key">D</span>
+                <span class="qo-label">Xâu chỉ chứa được chữ số, không chứa được chữ cái</span>
+              </button>
+            </div>
+            <div class="quiz-feedback" id="quiz-feedback-box" style="display:none;">
+              <!-- Phản hồi sau khi chọn -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </section>
+
+  <!-- =========================================================
+       MODAL 1: XÁC NHẬN CHỌN MÁY TÍNH
+  ========================================================== -->
+  <div class="modal-overlay" id="modal-confirm-machine" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-desktop"></i></div>
+        <h3 id="modal-machine-title">XÁC NHẬN MÁY BÀN SỐ 01</h3>
+      </div>
+      <div class="modal-body">
+        <p class="mb-text">Theo sơ đồ lớp <strong id="modal-class-name">10A1</strong>, vị trí này được phân công cho:</p>
+        <div class="modal-pair-tags" id="modal-pair-tags">
+          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Nguyễn Văn An</div>
+          <div class="pair-tag"><i class="fas fa-user-graduate"></i> Trần Thị Bình</div>
+        </div>
+        <div class="modal-confirm-notice">
+          <i class="fas fa-shield-alt"></i> Sau khi xác nhận, máy này sẽ được khóa trên sơ đồ phòng máy và ghi nhớ cho thiết bị này.
         </div>
       </div>
-    </section>
-
-    <!-- VIEW 4: CHẶNG 4 — LIVE QUIZ TRẮC NGHIỆM THI ĐUA -->
-    <section id="st-view-quiz" class="st-view" style="display:none;">
-      <div class="waiting-card">
-        <div class="waiting-icon" style="color:var(--primary)"><i class="fas fa-trophy"></i></div>
-        <h2 class="waiting-title">Trắc nghiệm thi đua</h2>
-        <p class="waiting-subtitle">Chuẩn bị thi đua cùng 17 máy khác trong phòng!</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="btn-modal-cancel">Hủy, chọn máy khác</button>
+        <button type="button" class="btn-confirm" id="btn-modal-confirm"><i class="fas fa-check-circle"></i> ĐÚNG VỊ TRÍ — VÀO HỌC</button>
       </div>
-    </section>
-
-  </main>
-
-  <!-- ============================================
-       THANH THỬ NGHIỆM NHANH (DÀNH CHO THẦY KIỂM TRA)
-  ============================================= -->
-  <div class="test-preview-bar">
-    <span class="tpb-title"><i class="fas fa-flask"></i> THỬ NGHIỆM CHẶNG:</span>
-    <button class="tpb-btn" onclick="window.setTestPhase('waiting')">⏳ Chờ mở bài</button>
-    <button class="tpb-btn" onclick="window.setTestPhase('seating')">0. Sảnh Điểm danh đôi</button>
-    <button class="tpb-btn" onclick="window.setTestPhase('warmup')">1. Quick Poll A-B-C-D</button>
-    <button class="tpb-btn" onclick="window.setTestPhase('theory')">2. Thẻ Lý thuyết PWA</button>
-    <button class="tpb-btn" onclick="window.setTestPhase('discussion')">3. Thảo luận & Thực hành</button>
+    </div>
   </div>
 
-  <!-- Firebase Compat v9 -->
+  <!-- =========================================================
+       MODAL 2: CẢNH BÁO CHỐNG CHỌN NHẦM MÁY (TOKEN GUARD)
+  ========================================================== -->
+  <div class="modal-overlay" id="modal-token-warning" style="display:none;">
+    <div class="modal-card warning-card">
+      <div class="modal-header warning-header">
+        <div class="modal-icon warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <h3>CẢNH BÁO: CHỌN NHẦM VỊ TRÍ MÁY!</h3>
+      </div>
+      <div class="modal-body">
+        <p class="warning-text" id="warning-text-content">
+          Thiết bị này đã được lưu định danh cố định là <strong>MÁY 04</strong>.<br>
+          Bạn không thể bấm chọn máy khác để tránh trùng lặp chỗ ngồi của bạn cùng lớp!
+        </p>
+        <div class="warning-guidance">
+          Nếu nhóm bạn đã chuyển vị trí thực tế trong phòng, hãy bấm <strong>"Đặt lại máy này"</strong> hoặc báo Thầy để mở khóa.
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-warning-action" id="btn-warning-back">Về đúng máy của tôi</button>
+        <button type="button" class="btn-secondary" id="btn-warning-reset-force">Đặt lại máy này</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat v9 (Offline resilient) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
-  <script src="js/bundle.js?v=2.0.1"></script>
+  <script src="js/bundle.js?v=2.0.2"></script>
 </body>
 </html>
