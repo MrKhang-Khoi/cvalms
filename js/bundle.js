@@ -34,6 +34,31 @@
         "18": ["Đặng Quốc Tuấn", "Dự bị máy 18"]
       }
     },
+    "10A2": {
+      "className": "Lớp 10A2",
+      "grade": 10,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Nguyễn Gia Huy", "Trần Mai Anh"],
+        "2": ["Lê Minh Khang", "Phạm Thu Thảo"],
+        "3": ["Vũ Hải Đăng", "Đặng Thùy Dung"],
+        "4": ["Bùi Quốc Bảo", "Hoàng Ngọc Hân"],
+        "5": ["Đinh Tuấn Anh", "Ngô Phương Linh"],
+        "6": ["Lý Gia Bảo", "Võ Thị Quỳnh"],
+        "7": ["Trịnh Đức Trọng", "Dương Mỹ Tâm"],
+        "8": ["Phan Bảo Nam", "Cao Thị Yến"],
+        "9": ["Hà Minh Triết", "Đoàn Thúy Vi"],
+        "10": ["Chu Đình Trọng", "Lâm Mỹ Hạnh"],
+        "11": ["Tạ Quốc Cường", "Nguyễn Hồng Hạnh"],
+        "12": ["Thái Duy Anh", "Trần Như Quỳnh"],
+        "13": ["Lâm Chí Khang", "Bùi Thanh Trúc"],
+        "14": ["Vương Quốc Việt", "Đặng Bích Ngọc"],
+        "15": ["Hồ Quang Hiếu", "Phạm Mỹ Duyên"],
+        "16": ["Mai Hữu Phước", "Nguyễn Cẩm Ly"],
+        "17": ["Đặng Văn Hậu", "Lê Thị Bích"],
+        "18": ["Trần Tiến Đạt", "Vũ Hoàng My"]
+      }
+    },
     "9A1": {
       "className": "Lớp 9A1",
       "grade": 9,
@@ -705,6 +730,14 @@
         });
       }
 
+      // Thêm lớp mới
+      const btnAddClass = document.getElementById('btn-add-new-class-modal');
+      if (btnAddClass) {
+        btnAddClass.addEventListener('click', () => {
+          this.addNewClassModal();
+        });
+      }
+
       // Tải file mẫu Excel
       const btnDlTemplate = document.getElementById('btn-download-excel-template');
       if (btnDlTemplate) {
@@ -873,13 +906,18 @@
     },
 
     downloadExcelTemplate() {
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+
       const rows = [
-        ["Số máy", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
+        ["Số máy", "Lớp", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
       ];
       for (let i = 1; i <= 18; i++) {
-        const p = (this.classes['10A1'].seatingPlan[i] || []);
+        const p = (classData.seatingPlan[i] || []);
         rows.push([
           i,
+          classData.className || clsId,
           p[0] || "",
           p[1] || "",
           p[2] || "",
@@ -891,14 +929,14 @@
       if (typeof XLSX !== 'undefined') {
         const ws = XLSX.utils.aoa_to_sheet(rows);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "DanhSach18May");
-        XLSX.writeFile(wb, "Mau_Danh_Sach_18_May.xlsx");
+        XLSX.utils.book_append_sheet(wb, ws, clsId);
+        XLSX.writeFile(wb, `Mau_Danh_Sach_${clsId}_18_May.xlsx`);
       } else {
         let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "Mau_Danh_Sach_18_May.csv");
+        link.setAttribute("download", `Mau_Danh_Sach_${clsId}_18_May.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -911,12 +949,13 @@
       const classData = this.classes[clsId] || this.classes['10A1'];
 
       const rows = [
-        ["Số máy", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
+        ["Số máy", "Lớp", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
       ];
       for (let i = 1; i <= 18; i++) {
         const p = (classData.seatingPlan[i] || []);
         rows.push([
           i,
+          classData.className || clsId,
           p[0] || "",
           p[1] || "",
           p[2] || "",
@@ -994,13 +1033,30 @@
       }
     },
 
-    processImportedRows(rows, classData) {
+    processImportedRows(rows, targetClassData) {
       if (!rows || rows.length === 0) {
         alert('File không có dữ liệu!');
         return;
       }
 
+      let classData = targetClassData;
+      if (!classData) {
+        const selectCls = document.getElementById('settings-select-class');
+        const clsId = selectCls ? selectCls.value : '10A1';
+        classData = this.classes[clsId] || this.classes['10A1'];
+      }
+
       let importedCount = 0;
+      let hasClassCol = false;
+
+      // Kiểm tra dòng tiêu đề xem có cột Lớp không
+      if (rows[0]) {
+        hasClassCol = rows[0].some(cell => {
+          const s = String(cell).toLowerCase();
+          return s.includes('lớp') || s.includes('class');
+        });
+      }
+
       rows.forEach((row, idx) => {
         if (idx === 0 && (String(row[0]).includes('Số') || String(row[0]).includes('Machine'))) {
           return;
@@ -1010,7 +1066,8 @@
         const machineNum = parseInt(rawNum, 10);
         if (machineNum >= 1 && machineNum <= 18) {
           const students = [];
-          for (let col = 1; col <= 4; col++) {
+          const startCol = hasClassCol ? 2 : 1;
+          for (let col = startCol; col <= startCol + 3; col++) {
             const name = String(row[col] || '').trim();
             if (name && name !== 'undefined' && name !== 'null') {
               students.push(name);
@@ -1025,6 +1082,55 @@
 
       this.renderSettingsSeatingGrid();
       alert(`🎉 Đã nhập thành công danh sách học sinh cho ${importedCount} máy từ file!\nThầy hãy kiểm tra lại và bấm [LƯU THAY ĐỔI VÀ ĐỒNG BỘ] để áp dụng.`);
+    },
+
+    addNewClassModal() {
+      const className = prompt('Nhập tên lớp mới (ví dụ: 10A3, 11A1, 9A2):', '');
+      if (!className || !className.trim()) return;
+      const cleanName = className.trim();
+      const classId = cleanName.replace(/^(lớp|lop)\s*/i, '').replace(/\s+/g, '');
+
+      if (this.classes[classId]) {
+        alert('Lớp này đã tồn tại trong hệ thống!');
+        const selectCls = document.getElementById('settings-select-class');
+        if (selectCls) selectCls.value = classId;
+        this.renderSettingsSeatingGrid();
+        return;
+      }
+
+      this.classes[classId] = {
+        className: 'Lớp ' + classId,
+        grade: parseInt(classId.replace(/[^\d]/g, ''), 10) || 10,
+        totalStudents: 0,
+        seatingPlan: {
+          "1": [], "2": [], "3": [], "4": [], "5": [], "6": [],
+          "7": [], "8": [], "9": [], "10": [], "11": [], "12": [],
+          "13": [], "14": [], "15": [], "16": [], "17": [], "18": []
+        }
+      };
+
+      this.refreshClassDropdowns(classId);
+      this.renderSettingsSeatingGrid();
+      alert(`🎉 Đã tạo ${this.classes[classId].className}! Thầy có thể nhập học sinh trực tiếp hoặc tải file mẫu Excel về điền.`);
+    },
+
+    refreshClassDropdowns(selectedId) {
+      const selects = ['settings-select-class', 'select-lobby-class', 'teacher-select-class'];
+      selects.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const currentVal = selectedId || sel.value;
+        let html = '';
+        Object.keys(this.classes).forEach(cId => {
+          const c = this.classes[cId];
+          const total = Object.values(c.seatingPlan).reduce((acc, cur) => acc + cur.length, 0);
+          html += `<option value="${cId}">${c.className} (${total} học sinh • 18 máy)</option>`;
+        });
+        sel.innerHTML = html;
+        if (this.classes[currentVal]) {
+          sel.value = currentVal;
+        }
+      });
     },
 
     // Xử lý nộp form đăng nhập Admin

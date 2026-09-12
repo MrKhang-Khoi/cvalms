@@ -56,8 +56,9 @@
         <div class="class-picker-wrap">
           <label for="select-lobby-class"><i class="fas fa-users-class"></i> Lớp học:</label>
           <select id="select-lobby-class" class="class-select">
-            <option value="10A1">Lớp 10A1 (35 học sinh)</option>
-            <option value="9A1">Lớp 9A1 (36 học sinh)</option>
+            <option value="10A1">Lớp 10A1</option>
+            <option value="10A2">Lớp 10A2</option>
+            <option value="9A1">Lớp 9A1</option>
           </select>
         </div>
         <div class="lobby-status-pill">
@@ -417,8 +418,8 @@ print(s[4:])</code></pre>
         </div>
       </div>
       <div class="th-right">
-        <button type="button" class="btn-tool" id="btn-open-teacher-settings" title="Cài đặt danh sách lớp và phân bổ học sinh vào 18 máy">
-          <i class="fas fa-sliders-h"></i> Cài đặt
+        <button type="button" class="btn-tool" id="btn-open-teacher-settings" title="Cài đặt danh sách học sinh theo lớp và phân bổ vào 18 máy">
+          <i class="fas fa-user-cog"></i> Cài đặt học sinh
         </button>
         <button type="button" class="btn-tool" id="btn-remote-reload-all" title="Gửi lệnh F5 xóa cache toàn bộ 18 máy học sinh">
           <i class="fas fa-sync-alt"></i> F5 18 máy
@@ -444,7 +445,8 @@ print(s[4:])</code></pre>
             <div class="s1-form-group">
               <label for="teacher-select-class"><i class="fas fa-users-class"></i> 1. CHỌN LỚP DẠY:</label>
               <select id="teacher-select-class" class="th-select">
-                <option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option>
+                <option value="10A1">Lớp 10A1 (37 học sinh • 18 máy)</option>
+                <option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option>
                 <option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option>
               </select>
             </div>
@@ -635,8 +637,8 @@ print(s[4:])</code></pre>
         <div class="sh-left">
           <div class="modal-icon settings-icon"><i class="fas fa-sliders-h"></i></div>
           <div>
-            <h3>CÀI ĐẶT DANH SÁCH LỚP & SƠ ĐỒ 18 MÁY</h3>
-            <p class="auth-sub">Tải file mẫu Excel • Nhập danh sách tự động • Hỗ trợ linh hoạt 1-4 học sinh/máy</p>
+            <h3>CÀI ĐẶT HỌC SINH & SƠ ĐỒ 18 MÁY</h3>
+            <p class="auth-sub">Quản lý danh sách học sinh theo từng lớp • Nhập/Xuất file Excel có cột Lớp học • Hỗ trợ linh hoạt 1-4 học sinh/máy</p>
           </div>
         </div>
         <button type="button" class="btn-close-modal" id="btn-close-settings" title="Đóng cài đặt">
@@ -649,9 +651,13 @@ print(s[4:])</code></pre>
           <label for="settings-select-class"><i class="fas fa-users"></i> Lớp học:</label>
           <select id="settings-select-class" class="th-select">
             <option value="10A1">Lớp 10A1</option>
+            <option value="10A2">Lớp 10A2</option>
             <option value="9A1">Lớp 9A1</option>
           </select>
-          <span class="badge-total-students" id="settings-student-count-badge">36 học sinh / 18 máy</span>
+          <button type="button" class="btn-tool-sm" id="btn-add-new-class-modal" title="Thêm lớp học mới">
+            <i class="fas fa-plus-circle"></i> Thêm lớp mới
+          </button>
+          <span class="badge-total-students" id="settings-student-count-badge">37 học sinh / 18 máy</span>
         </div>
 
         <div class="st-actions">
