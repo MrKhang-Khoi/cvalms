@@ -444,8 +444,15 @@
   window.STORE = STORE;
   window.STUDENT_MODULE = STUDENT_MODULE;
 
-  window.setTestPhase = function(phase) {
+  window.setTestPhase = function(phase, btnEl) {
     console.log(`[Thử nghiệm] Chuyển sang chặng: ${phase}`);
+    document.querySelectorAll('.p-tab').forEach(b => b.classList.remove('active'));
+    if (btnEl) {
+      btnEl.classList.add('active');
+    } else {
+      const match = document.querySelector(`.p-tab[onclick*="'${phase}'"]`);
+      if (match) match.classList.add('active');
+    }
     STORE.setState({
       classId: '10A1',
       sessionStatus: 'running',

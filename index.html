@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -43,6 +43,16 @@
       </button>
     </div>
   </header>
+
+  <!-- THANH CHUYỂN NHANH 5 MÀN HÌNH HỌC SINH ĐỂ THẦY KIỂM TRA DUYỆT -->
+  <nav class="phase-nav-tabs">
+    <span class="pnt-title"><i class="fas fa-eye"></i> XEM MÀN HÌNH:</span>
+    <button class="p-tab active" onclick="window.setTestPhase('waiting', this)">⏳ Chờ mở bài</button>
+    <button class="p-tab" onclick="window.setTestPhase('seating', this)">👥 Điểm danh đôi</button>
+    <button class="p-tab" onclick="window.setTestPhase('warmup', this)">⚡ 1. Quick Poll</button>
+    <button class="p-tab" onclick="window.setTestPhase('theory', this)">📖 2. Lý thuyết PWA</button>
+    <button class="p-tab" onclick="window.setTestPhase('discussion', this)">💬 3. Thảo luận & Thực hành</button>
+  </nav>
 
   <!-- ============================================
        2. KHÔNG GIAN LÀM VIỆC CHÍNH (MAIN WORKSPACE)

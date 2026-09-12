@@ -548,3 +548,54 @@ body {
   border-color: var(--primary);
   color: #fff;
 }
+
+/* ==========================================================
+ * THANH CHUYỂN CHẶNG THỬ NGHIỆM DƯỚI HEADER (DÀNH CHO THẦY)
+ * ========================================================== */
+.phase-nav-tabs {
+  background-color: #0b1120;
+  border-bottom: 2px solid #2563eb;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: 100;
+  overflow-x: auto;
+}
+
+.pnt-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
+.p-tab {
+  background-color: #1e293b;
+  color: #94a3b8;
+  border: 1px solid #334155;
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.p-tab:hover {
+  background-color: #334155;
+  color: #fff;
+}
+
+.p-tab.active {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
