@@ -253,6 +253,82 @@
     }
   }
 
+  // 3.5. REALTIME SYNC BUS (Đồng bộ tức thì đa tab / đa cửa sổ / PWA)
+  const SYNC_BUS = {
+    channel: (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('cvalms_sync_bus') : null,
+    init() {
+      if (this.channel) {
+        this.channel.onmessage = (event) => this.handleMessage(event.data);
+      }
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'cvalms_sync_event' && e.newValue) {
+          try {
+            const data = JSON.parse(e.newValue);
+            this.handleMessage(data);
+          } catch (err) {}
+        }
+      });
+      // Nếu Firebase sẵn sàng, lắng nghe session từ Firebase
+      if (db) {
+        try {
+          db.ref('activeSession').on('value', (snap) => {
+            const val = snap.val();
+            if (!val) return;
+            const state = STORE.getState();
+            if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
+              STORE.setState({ currentPhase: val.currentPhase });
+            }
+            if (val.machines) {
+              const occ = Object.assign({}, state.occupiedMachines);
+              Object.keys(val.machines).forEach(m => { occ[m] = true; });
+              STORE.setState({ occupiedMachines: occ });
+            }
+          });
+        } catch (e) {}
+      }
+      // Gửi tín hiệu thông báo máy đang online sau khi tải
+      setTimeout(() => {
+        const s = STORE.getState();
+        if (s.machineId) {
+          this.broadcast('MACHINE_JOINED', { machineId: s.machineId, classId: s.classId });
+        }
+      }, 300);
+    },
+    broadcast(type, payload) {
+      const msg = { type, payload, senderId: Math.random().toString(36).substring(7), timestamp: Date.now() };
+      if (this.channel) {
+        try { this.channel.postMessage(msg); } catch (e) {}
+      }
+      try {
+        localStorage.setItem('cvalms_sync_event', JSON.stringify(msg));
+      } catch (e) {}
+    },
+    handleMessage(data) {
+      if (!data || !data.type) return;
+      const state = STORE.getState();
+      if (data.type === 'PHASE_CHANGE') {
+        if (state.role === 'student') {
+          STORE.setState({ currentPhase: data.payload.phase });
+        }
+      } else if (data.type === 'MACHINE_JOINED') {
+        const mId = data.payload.machineId;
+        if (mId) {
+          const occ = Object.assign({}, state.occupiedMachines);
+          occ[mId] = true;
+          STORE.setState({ occupiedMachines: occ });
+        }
+      } else if (data.type === 'FORCE_RELOAD') {
+        if (state.role === 'student') {
+          window.location.reload();
+        }
+      } else if (data.type === 'SESSION_ENDED') {
+        if (state.role === 'student') {
+          STORE.setState({ currentPhase: 'waiting' });
+        }
+      }
+    }
+  };
+
   // 4. BỘ ĐIỀU KHIỂN GIAO DIỆN HỌC SINH (STUDENT CONTROLLER)
   const APP = {
     classes: EMBEDDED_CLASSES,
@@ -263,6 +339,7 @@
       STORE.loadSavedDeviceToken();
       STORE.checkAdminSession();
       STORE.subscribe(state => this.render(state));
+      SYNC_BUS.init();
       this.bindEvents();
       this.bindTeacherEvents();
       this.render(STORE.getState());
@@ -328,6 +405,9 @@
 
           const modal = document.getElementById('modal-confirm-machine');
           if (modal) modal.style.display = 'none';
+
+          // Phát sóng thông báo cho các máy khác và bảng giáo viên
+          SYNC_BUS.broadcast('MACHINE_JOINED', { machineId });
 
           // Đồng bộ Firebase nếu có
           if (db) {
@@ -532,6 +612,7 @@
               occupiedMachines: {}
             });
 
+            SYNC_BUS.broadcast('SESSION_ENDED', {});
             if (db) {
               db.ref('activeSession').remove().catch(()=>{});
             }
@@ -554,6 +635,7 @@
         btnF5All.addEventListener('click', () => {
           if (confirm('Gửi lệnh F5 cưỡng bức làm mới bộ nhớ toàn bộ 18 máy học sinh?')) {
             alert('Đã phát tín hiệu F5 cưỡng bức đến 18 máy phòng học!');
+            SYNC_BUS.broadcast('FORCE_RELOAD', {});
             if (db) {
               db.ref('remoteCommand').set({
                 action: 'forceReload',
@@ -920,23 +1002,30 @@
 
         // Render Classroom Radar 18 máy thu nhỏ
         const radarGrid = document.getElementById('radar-grid');
+        const radarCountLabel = document.getElementById('radar-count-label');
         if (radarGrid) {
           let radarHtml = '';
+          let connectedCount = 0;
           for (let i = 1; i <= 18; i++) {
             const isThis = (i === machineId);
-            const isAct = isThis || state.occupiedMachines[i];
+            const isAct = isThis || !!state.occupiedMachines[i];
+            if (isAct) connectedCount++;
+
             let cellClass = 'radar-cell';
-            if (isThis) cellClass += ' this-machine';
+            if (isThis) cellClass += ' this-machine active-desk';
             else if (isAct) cellClass += ' active-desk';
 
             radarHtml += `
-              <div class="${cellClass}">
+              <div class="${cellClass}" title="Máy ${String(i).padStart(2,'0')}: ${isThis ? 'Máy hiện tại của bạn (Trực tuyến)' : (isAct ? 'Đang trực tuyến' : 'Chưa vào')}">
                 <span class="rc-num">${String(i).padStart(2,'0')}</span>
                 <span class="rc-dot"></span>
               </div>
             `;
           }
           radarGrid.innerHTML = radarHtml;
+          if (radarCountLabel) {
+            radarCountLabel.textContent = `${connectedCount}/18 máy đang kết nối`;
+          }
         }
       }
 
@@ -1043,6 +1132,7 @@
 
   window.teacherSetPhase = function(phase) {
     STORE.setState({ currentPhase: phase, teacherPhase: phase });
+    SYNC_BUS.broadcast('PHASE_CHANGE', { phase });
     if (db) {
       db.ref('activeSession/currentPhase').set(phase).catch(()=>{});
     }

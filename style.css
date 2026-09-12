@@ -1,4 +1,4 @@
-﻿/* ==========================================================
+/* ==========================================================
  * STYLE.CSS — LMS PHÒNG MÁY TƯƠNG TÁC 18 MÁY (CHUẨN GDPT 2018)
  * Tối giản, tập trung, chống lóa mắt, tối ưu phòng máy trường học
  * ========================================================== */
@@ -819,7 +819,8 @@ body {
   background-color: #475569;
 }
 
-.radar-cell.active-desk .rc-dot {
+.radar-cell.active-desk .rc-dot,
+.radar-cell.this-machine .rc-dot {
   background-color: var(--success);
   box-shadow: 0 0 6px var(--success);
 }
