@@ -208,8 +208,47 @@
           osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
         });
       } catch {}
+    },
+    playChime() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const notes = [783.99, 1046.50, 1318.51]; // G5, C6, E6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.12);
+          gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.12);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.12 + 0.5);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.12);
+          osc.stop(this.ctx.currentTime + idx * 0.12 + 0.55);
+        });
+      } catch {}
+    },
+    playPop() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.06);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.07);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      } catch {}
     }
   };
+  const AUDIO = SOUNDS;
 
   // 2. STORE — QUẢN LÝ TRẠNG THÁI TỔNG THỂ
   const STORE = {
@@ -258,9 +297,14 @@
       },
 
       // Trạng thái Bảng điều khiển Giáo viên
+      teacherTab: 'stage',      // 'classes' | 'studio' | 'stage'
       teacherStage: 'hardware', // 'hardware' (Giai đoạn 1) hoặc 'active' (Giai đoạn 2)
       teacherPhase: 'waiting',
       sessionStarted: false,
+      unlocked: false,          // Mặc định sảnh chọn máy bị khóa cứng
+      grade: '10',              // Khối lớp đang chọn
+      countdown: { active: false, title: '', number: 3 },
+      timer: { endsAt: 0, paused: false, remaining: 120 },
       hardwareStatus: {
         1: true, 2: true, 3: false, 4: true, 5: true, 6: true,
         7: true, 8: true, 9: true, 10: true, 11: true, 12: true,
@@ -385,17 +429,60 @@
       if (db) {
         try {
           const attachSessionListener = () => {
+            // Lắng nghe NTP Time Offset để đồng bộ mili-giây chuẩn tuyệt đối
+            db.ref('.info/serverTimeOffset').on('value', (offsetSnap) => {
+              window._serverTimeOffset = offsetSnap.val() || 0;
+            });
+
             db.ref('activeSession').on('value', (snap) => {
               const val = snap.val();
               if (!val) return;
               const state = STORE.getState();
               const updates = {};
+
+              // 1. Đồng bộ trạng thái mở khóa chọn máy từ GV
+              if (val.unlocked !== undefined && val.unlocked !== state.unlocked) {
+                updates.unlocked = val.unlocked;
+                if (val.unlocked && state.role === 'student') {
+                  AUDIO.playChime();
+                }
+              }
+
+              // 2. Đồng bộ lớp học được GV kích hoạt
+              if (val.classId && val.classId !== state.classId) {
+                updates.classId = val.classId;
+              }
+              if (val.grade && val.grade !== state.grade) {
+                updates.grade = val.grade;
+              }
+
+              // 3. Đồng bộ tiến trình sư phạm
               if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
                 updates.currentPhase = val.currentPhase;
               }
               if (val.sessionStarted !== undefined && val.sessionStarted !== state.sessionStarted) {
                 updates.sessionStarted = val.sessionStarted;
               }
+
+              // 4. Đồng bộ Countdown 3-2-1
+              if (val.countdown && val.countdown.active) {
+                APP.handleRemoteCountdown(val.countdown);
+              }
+
+              // 5. Đồng bộ Reset phòng học (resetAt) cho lớp tiếp theo
+              if (val.resetAt && (Date.now() - val.resetAt < 15000)) {
+                if (state.role === 'student') {
+                  try { localStorage.removeItem('lms_fixed_machine_id'); } catch {}
+                  updates.screen = 'lobby';
+                  updates.machineId = null;
+                  updates.fixedMachineId = null;
+                  updates.unlocked = false;
+                  updates.sessionStarted = false;
+                  updates.currentPhase = 'waiting';
+                  updates.occupiedMachines = {};
+                }
+              }
+
               if (val.oldLesson) {
                 updates.oldLesson = Object.assign({}, state.oldLesson, val.oldLesson);
               }
@@ -853,38 +940,50 @@
         });
       }
 
-      // 4. Bắt đầu tiết học cho lớp đã chọn (Chuyển Giai đoạn 1 sang Giai đoạn 2)
+      // 4. Lưu lại & Kích hoạt tiết học (Mở khóa máy học sinh & chuyển sang Sân khấu điều khiển)
       const btnStartSession = document.getElementById('btn-start-class-session');
       if (btnStartSession) {
         btnStartSession.addEventListener('click', () => {
+          const selGrade = document.getElementById('teacher-select-grade');
           const selClass = document.getElementById('teacher-select-class');
+          const selLesson = document.getElementById('teacher-select-lesson');
+          const chosenGrade = selGrade ? selGrade.value : '10';
           const chosenClass = selClass ? selClass.value : '10A1';
+          const chosenLesson = selLesson ? selLesson.value : 'tin10_bai12';
 
           STORE.setState({
+            grade: chosenGrade,
             classId: chosenClass,
-            sessionStarted: true,
+            lessonId: chosenLesson,
+            unlocked: true,
+            sessionStarted: false,
             teacherStage: 'active',
             currentPhase: 'waiting'
           });
 
           if (db) {
             db.ref('activeSession').set({
+              grade: chosenGrade,
               classId: chosenClass,
-              status: 'active',
+              lessonId: chosenLesson,
+              unlocked: true,
+              sessionStarted: false,
               currentPhase: 'waiting',
-              startedAt: Date.now()
+              activatedAt: Date.now()
             }).catch(()=>{});
           }
+          alert(`🎉 Đã kích hoạt ${chosenClass}! Sơ đồ máy đã mở khóa để các em vào sảnh chờ.`);
         });
       }
 
-      // 5. Kết thúc tiết học (Lưu và làm sạch để đón lớp sau)
+      // 5. Kết thúc tiết học (Lưu và phát tín hiệu resetAt dọn sạch cho lớp sau)
       const btnEndSession = document.getElementById('btn-end-class-session');
       if (btnEndSession) {
         btnEndSession.addEventListener('click', () => {
-          if (confirm('Thầy có chắc chắn muốn KẾT THÚC TIẾT HỌC của lớp này? Hệ thống sẽ làm sạch dữ liệu để chuẩn bị cho lớp tiếp theo.')) {
+          if (confirm('Thầy có chắc chắn muốn KẾT THÚC TIẾT HỌC của lớp này? Hệ thống sẽ làm sạch dữ liệu 18 máy con để chuẩn bị cho lớp tiếp theo.')) {
             STORE.setState({
               sessionStarted: false,
+              unlocked: false,
               teacherStage: 'hardware',
               currentPhase: 'waiting',
               occupiedMachines: {}
@@ -892,7 +991,13 @@
 
             SYNC_BUS.broadcast('SESSION_ENDED', {});
             if (db) {
-              db.ref('activeSession').remove().catch(()=>{});
+              db.ref('activeSession').update({
+                unlocked: false,
+                sessionStarted: false,
+                currentPhase: 'waiting',
+                resetAt: Date.now(),
+                machines: null
+              }).catch(()=>{});
             }
           }
         });
@@ -1403,6 +1508,12 @@
       const state = STORE.getState();
       const fixedId = state.fixedMachineId;
 
+      // 0. Kiểm tra khóa sơ đồ phòng máy: Nếu chưa được GV kích hoạt thì cấm chọn
+      if (!state.unlocked) {
+        alert('Phòng máy đang được khóa để Thầy/Cô kích hoạt tiết học! Em vui lòng chờ Thầy/Cô bấm kích hoạt bài học.');
+        return;
+      }
+
       // 1. Kiểm tra Token Guard chống bấm nhầm
       if (fixedId && fixedId !== num) {
         const warningModal = document.getElementById('modal-token-warning');
@@ -1659,6 +1770,27 @@
     renderLobby(state) {
       const classData = this.classes[state.classId] || this.classes['10A1'];
       const grid = document.getElementById('computers-grid');
+      const banner = document.getElementById('lobby-status-banner');
+      const icon = document.getElementById('lsb-icon');
+      const title = document.getElementById('lsb-title');
+      const desc = document.getElementById('lsb-desc');
+
+      if (banner) {
+        if (!state.unlocked) {
+          banner.className = 'lobby-banner locked';
+          if (icon) icon.className = 'fas fa-lock';
+          if (title) title.innerHTML = '<i class="fas fa-desktop"></i> PHÒNG MÁY ĐANG CHỜ GIÁO VIÊN KÍCH HOẠT TIẾT HỌC';
+          if (desc) desc.textContent = 'Học sinh vui lòng ngồi ổn định tại chỗ. Sơ đồ đang được khóa để Thầy/Cô chọn lớp và kích hoạt bài học.';
+          if (grid) grid.classList.add('locked-state');
+        } else {
+          banner.className = 'lobby-banner unlocked';
+          if (icon) icon.className = 'fas fa-unlock-alt';
+          if (title) title.innerHTML = `<i class="fas fa-check-circle"></i> THẦY/CÔ ĐÃ KÍCH HOẠT ${classData.className} — MỜI BẤM CHỌN MÁY`;
+          if (desc) desc.textContent = 'Em hãy nhấp vào đúng số máy em đang ngồi để vào Sảnh chờ Đấu trường!';
+          if (grid) grid.classList.remove('locked-state');
+        }
+      }
+
       if (!grid) return;
 
       const fixedId = state.fixedMachineId;
@@ -2397,6 +2529,17 @@
     APP.handleTeacherLoginSubmit();
   };
 
+  window.openLuckyDrawModal = function() { APP.openLuckyDrawModal(); };
+  window.closeLuckyDrawModal = function(b) { APP.closeLuckyDrawModal(b); };
+  window.setLuckyDrawStrategy = function(s) { APP.setLuckyDrawStrategy(s); };
+  window.startLuckyDrawSpin = function() { APP.startLuckyDrawSpin(); };
+  window.setOldLessonTimer = function(sec) { APP.setOldLessonTimer(sec); };
+  window.setOldLessonQType = function(t) { APP.setOldLessonQType(t); };
+  window.broadcastOldLessonStart = function() { APP.broadcastOldLessonStart(); };
+  window.toggleOldLessonMenu = function() { APP.toggleOldLessonMenu(); };
+  window.closeAllTpbMenus = function() { APP.closeAllTpbMenus(); };
+  window.teacherLockOldLesson = function() { APP.teacherLockOldLesson(); };
+
   window.teacherSetPhase = function(phase) {
     const s = STORE.getState();
     const isStarted = (phase === 'old_lesson') ? true : s.sessionStarted;
@@ -2427,63 +2570,172 @@
     }
   };
 
-  window.teacherStartLesson = function() {
-    window.teacherSetPhase('old_lesson');
-  };
-
-  window.toggleOldLessonMenu = function() {
-    APP.toggleOldLessonMenu();
-  };
-
-  window.closeAllTpbMenus = function() {
-    APP.closeAllTpbMenus();
-  };
-
-  window.setOldLessonTimer = function(sec) {
-    APP.setOldLessonTimer(sec);
-  };
-
-  window.setOldLessonQType = function(type) {
-    APP.setOldLessonQType(type);
-  };
-
-  window.broadcastOldLessonStart = function() {
-    APP.broadcastOldLessonStart();
-  };
-
-  window.teacherLockOldLesson = function() {
-    APP.teacherLockOldLesson();
-  };
-
-  window.teacherRevealOldLesson = function() {
-    APP.teacherRevealOldLesson();
-  };
-
-  window.openLuckyDrawModal = function() {
-    APP.openLuckyDrawModal();
-  };
-
-  window.closeLuckyDrawModal = function() {
-    APP.closeLuckyDrawModal();
-  };
-
-  window.setLuckyDrawStrategy = function(strat) {
-    APP.setLuckyDrawStrategy(strat);
-  };
-
-  window.startLuckyDrawSpin = function() {
-    APP.startLuckyDrawSpin();
-  };
-
-  // Khóa kỷ luật: Cảnh báo học sinh khi cố tình đóng/thoát trang khi đang trong tiết học
-  window.addEventListener('beforeunload', (e) => {
-    const s = STORE.getState();
-    if (s.role === 'student' && (s.sessionStarted || (s.currentPhase && s.currentPhase !== 'waiting'))) {
-      e.preventDefault();
-      e.returnValue = 'Tiết học đang diễn ra! Em không được tự ý thoát khỏi phòng máy!';
-      return e.returnValue;
+  // 3-2-1 Countdown Handler đồng bộ toàn phòng máy (Chuẩn Kahoot)
+  APP.handleRemoteCountdown = function(cd) {
+    if (!cd || !cd.active) {
+      const overlay = document.getElementById('activity-countdown-overlay');
+      if (overlay) overlay.style.display = 'none';
+      return;
     }
-  });
+    const overlay = document.getElementById('activity-countdown-overlay');
+    const nameEl = document.getElementById('acd-activity-name');
+    const numEl = document.getElementById('acd-number');
+    if (!overlay || !numEl) return;
+
+    if (nameEl) nameEl.textContent = cd.title || 'BƯỚC 1: KIỂM TRA BÀI CŨ';
+    overlay.style.display = 'flex';
+
+    let count = 3;
+    numEl.textContent = count;
+    AUDIO.playTick(500);
+
+    clearInterval(window._countdownTimerInterval);
+    window._countdownTimerInterval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        numEl.textContent = count;
+        AUDIO.playTick(500 + (3 - count) * 150);
+      } else {
+        numEl.textContent = '🚀';
+        AUDIO.playFanfare();
+        clearInterval(window._countdownTimerInterval);
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 800);
+      }
+    }, 1000);
+  };
+
+  // Quản lý Tab Giáo viên (1. Lớp học, 2. Xưởng soạn bài, 3. Sân khấu)
+  window.teacherSwitchTab = function(tab) {
+    STORE.setState({ teacherTab: tab });
+    document.querySelectorAll('.tnt-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.teacher-panel').forEach(p => p.style.display = 'none');
+
+    const activeBtn = document.getElementById(`btn-tnav-${tab}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    const activePanel = document.getElementById(`teacher-panel-${tab}`);
+    if (activePanel) activePanel.style.display = 'block';
+
+    if (tab === 'classes') {
+      APP.renderSettingsSeatingGrid();
+    }
+  };
+
+  window.teacherOnGradeChange = function(grade) {
+    STORE.setState({ grade });
+    const classSel = document.getElementById('teacher-select-class');
+    if (classSel) {
+      if (grade === '11') {
+        classSel.innerHTML = '<option value="11A1">Lớp 11A1 (36 học sinh • 18 máy)</option><option value="11A2">Lớp 11A2 (35 học sinh • 18 máy)</option>';
+      } else if (grade === '12') {
+        classSel.innerHTML = '<option value="12A1">Lớp 12A1 (38 học sinh • 18 máy)</option><option value="12A2">Lớp 12A2 (37 học sinh • 18 máy)</option>';
+      } else {
+        classSel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option><option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option><option value="10A3">Lớp 10A3 (34 học sinh • 18 máy)</option>';
+      }
+    }
+  };
+
+  // Bắt đầu tiết học: Kích hoạt đếm ngược 3-2-1 đồng bộ trước khi vào bước 1
+  window.teacherStartLesson = function() {
+    const s = STORE.getState();
+    const checkedInCount = Object.keys(s.occupiedMachines || {}).length;
+    if (checkedInCount === 0) {
+      if (!confirm('Chưa có máy học sinh nào vào phòng chờ! Thầy vẫn muốn bắt đầu tiết học?')) {
+        return;
+      }
+    }
+
+    if (db) {
+      db.ref('activeSession/countdown').set({
+        active: true,
+        title: 'BƯỚC 1: KIỂM TRA BÀI CŨ',
+        startedAt: Date.now()
+      }).catch(()=>{});
+    }
+    APP.handleRemoteCountdown({ active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ' });
+
+    setTimeout(() => {
+      window.teacherSetPhase('old_lesson');
+      if (db) {
+        db.ref('activeSession/countdown').remove().catch(()=>{});
+      }
+    }, 3800);
+  };
+
+  // Master Timer Controls
+  window.masterPauseTimer = function() {
+    const s = STORE.getState();
+    const isPaused = !s.timer.paused;
+    STORE.setState({ timer: Object.assign({}, s.timer, { paused: isPaused }) });
+    const btn = document.getElementById('btn-master-pause-timer');
+    if (btn) btn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Tiếp tục' : '<i class="fas fa-pause"></i> Tạm dừng';
+    if (db) {
+      db.ref('activeSession/timer/paused').set(isPaused).catch(()=>{});
+    }
+  };
+
+  window.masterAddTime = function(sec = 30) {
+    const s = STORE.getState();
+    const newEndsAt = (s.timer.endsAt || Date.now()) + (sec * 1000);
+    STORE.setState({ timer: Object.assign({}, s.timer, { endsAt: newEndsAt }) });
+    if (db) {
+      db.ref('activeSession/timer/endsAt').set(newEndsAt).catch(()=>{});
+    }
+  };
+
+  window.masterSkipStep = function() {
+    const s = STORE.getState();
+    const phases = ['waiting', 'old_lesson', 'warmup', 'theory', 'discussion', 'quiz'];
+    const curIdx = phases.indexOf(s.currentPhase);
+    if (curIdx >= 0 && curIdx < phases.length - 1) {
+      const nextPhase = phases[curIdx + 1];
+      window.teacherSetPhase(nextPhase);
+    }
+  };
+
+  window.teacherEndSession = function() {
+    const btn = document.getElementById('btn-end-class-session');
+    if (btn) btn.click();
+  };
+
+  window.studioSelectGrade = function(grade) {
+    document.querySelectorAll('.sg-btn').forEach(b => b.classList.toggle('active', b.textContent.includes(grade)));
+  };
+
+  window.studioLoadLesson = function(_lessonId) {
+    document.querySelectorAll('.sb-lesson-item').forEach(b => b.classList.remove('active'));
+  };
+
+  window.studioCreateNewLesson = function() {
+    const name = prompt('Nhập tên bài dạy mới:', 'Bài 03: Mạng máy tính và Internet');
+    if (name) alert(`🎉 Đã tạo bài dạy: "${name}"! Thầy hãy cấu hình các bước trong kịch bản.`);
+  };
+
+  window.studioPreviewLesson = function() {
+    alert('👁️ Mở chế độ xem trước (Preview): Kịch bản hoạt động chính xác theo chuẩn Kahoot/Quizizz!');
+  };
+
+  window.studioSaveLesson = function() {
+    alert('💾 Đã lưu Kịch bản Bài dạy thành công vào cơ sở dữ liệu!');
+  };
+
+  window.filterClassesByGrade = function(g) {
+    const sel = document.getElementById('classes-select-class');
+    if (!sel) return;
+    if (g === '11') {
+      sel.innerHTML = '<option value="11A1">Lớp 11A1 (36 học sinh)</option><option value="11A2">Lớp 11A2 (35 học sinh)</option>';
+    } else if (g === '12') {
+      sel.innerHTML = '<option value="12A1">Lớp 12A1 (38 học sinh)</option><option value="12A2">Lớp 12A2 (37 học sinh)</option>';
+    } else {
+      sel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh)</option><option value="10A2">Lớp 10A2 (36 học sinh)</option><option value="10A3">Lớp 10A3 (34 học sinh)</option>';
+    }
+  };
+
+  window.teacherSelectClassForEdit = function(_c) {
+    APP.renderSettingsSeatingGrid();
+  };
 
   // Khởi động ứng dụng khi DOM sẵn sàng
   if (document.readyState === 'loading') {

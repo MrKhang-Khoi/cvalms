@@ -68,21 +68,26 @@
       </div>
     </header>
 
-    <!-- Thân Sảnh: Lưới 18 Máy Tính Trực Quan -->
+    <!-- Thân Sảnh: Lưới 18 Máy Tính Trực Quan (Tự động Khóa/Mở theo lệnh GV) -->
     <main class="lobby-body">
-      <div class="lobby-banner">
-        <h2><i class="fas fa-desktop"></i> SƠ ĐỒ CHỖ NGỒI PHÒNG MÁY</h2>
-        <p>Học sinh quan sát vị trí và nhấp vào <strong>Đúng số máy bạn đang ngồi</strong> để vào tiết học. Hệ thống tự động phân cặp theo sơ đồ lớp.</p>
+      <div class="lobby-banner locked" id="lobby-status-banner">
+        <div class="lsb-icon-wrap" id="lsb-icon-wrap">
+          <i class="fas fa-lock" id="lsb-icon"></i>
+        </div>
+        <div class="lsb-text-wrap">
+          <h2 id="lsb-title"><i class="fas fa-desktop"></i> PHÒNG MÁY ĐANG CHỜ GIÁO VIÊN KÍCH HOẠT TIẾT HỌC</h2>
+          <p id="lsb-desc">Học sinh vui lòng ngồi ổn định tại chỗ. Sơ đồ đang được khóa để Thầy/Cô chọn lớp và kích hoạt bài học.</p>
+        </div>
       </div>
 
       <div class="lobby-legend">
-        <span class="legend-item"><span class="legend-badge available"></span> Trống — Bấm để chọn</span>
+        <span class="legend-item"><span class="legend-badge available"></span> Trống — Sẵn sàng chọn</span>
         <span class="legend-item"><span class="legend-badge occupied"></span> Đã có bạn chọn (Khoá)</span>
-        <span class="legend-item"><span class="legend-badge my-device"></span> Vị trí đã lưu cho máy này</span>
+        <span class="legend-item"><span class="legend-badge my-device"></span> Vị trí máy của em</span>
       </div>
 
-      <!-- Lưới 18 máy tính -->
-      <div class="computers-grid" id="computers-grid">
+      <!-- Lưới 18 máy tính (Mặc định có class locked-state khi chưa mở khóa) -->
+      <div class="computers-grid locked-state" id="computers-grid">
         <!-- Render động 18 máy bởi JavaScript -->
       </div>
     </main>
@@ -126,52 +131,45 @@
     <!-- Không gian làm việc chính của Học sinh (Tự động chuyển view theo điều khiển của Giáo viên) -->
     <main class="student-main">
 
-      <!-- CHẶNG 0: PHÒNG CHỜ & SƠ ĐỒ LỚP RADAR -->
+      <!-- CHẶNG 0: SẢNH CHỜ ĐẤU TRƯỜNG KAHOOT (IMMERSIVE WAITING LOBBY) -->
       <section id="st-view-waiting" class="st-view active">
-        <div class="workspace-grid-2col">
-          <!-- Cột trái: Thẻ xác nhận & Thông tin bài học -->
-          <div class="lesson-brief-card">
-            <div class="lbc-header">
-              <span class="badge-tag">TIẾT HỌC HÔM NAY</span>
-              <h2 id="waiting-lesson-title">Bài 12: Kiểu dữ liệu xâu trong Python</h2>
-            </div>
-            <div class="lbc-body">
-              <div class="info-row">
-                <i class="fas fa-desktop"></i>
-                <div>
-                  <strong>Vị trí ngồi:</strong>
-                  <span id="waiting-desk-info">Máy bàn số 04</span>
-                </div>
-              </div>
-              <div class="info-row">
-                <i class="fas fa-user-friends"></i>
-                <div>
-                  <strong>Nhóm đôi:</strong>
-                  <span id="waiting-pair-info">Đỗ Gia Huy & Bùi Phương Mai</span>
-                </div>
-              </div>
-              <div class="info-row">
-                <i class="fas fa-bullseye"></i>
-                <div>
-                  <strong>Mục tiêu:</strong>
-                  <span>Hiểu khái niệm xâu, thành thạo phép cắt xâu (slicing) và tính chất bất biến.</span>
-                </div>
-              </div>
-            </div>
-            <div class="lbc-footer">
-              <div class="ready-badge"><i class="fas fa-check-circle"></i> Hai bạn đã sẵn sàng tại máy</div>
-              <p>Thầy đang kiểm tra kết nối và điểm danh lớp. Các em hãy hướng mắt lên bảng để chuẩn bị bắt đầu bài học nhé!</p>
-            </div>
-          </div>
+        <div class="kahoot-lobby-stage">
+          <!-- Background Cosmic Glow -->
+          <div class="kl-cosmic-glow"></div>
 
-          <!-- Cột phải: Sơ đồ phòng học trực quan thu nhỏ (Classroom Radar) -->
-          <div class="classroom-radar-card">
-            <div class="crc-header">
-              <h3><i class="fas fa-network-wired"></i> SƠ ĐỒ PHÒNG MÁY HIỆN TẠI (18 MÁY)</h3>
-              <span class="crc-count" id="radar-count-label">18 máy đang kết nối</span>
+          <div class="kl-center-box">
+            <div class="kl-badge-pulse">
+              <span class="kl-pulse-ring"></span>
+              <span class="kl-badge-text"><i class="fas fa-satellite-dish"></i> SẢNH CHỜ PHÒNG MÁY TƯƠNG TÁC</span>
             </div>
-            <div class="radar-grid" id="radar-grid">
-              <!-- Render 18 ô radar mini -->
+
+            <h1 class="kl-lesson-title" id="waiting-lesson-title">Bài 12: Kiểu dữ liệu xâu trong Python</h1>
+            <p class="kl-lesson-sub" id="waiting-lesson-sub">Môn Tin học • Thầy đang kiểm tra sĩ số và chuẩn bị phát lệnh bắt đầu</p>
+
+            <!-- Thẻ Danh Tính Học Sinh (Neon Hologram Card) -->
+            <div class="kl-student-card">
+              <div class="ksc-desk-badge" id="waiting-desk-info">MÁY BÀN SỐ 04</div>
+              <div class="ksc-name" id="waiting-pair-info">Đỗ Gia Huy & Bùi Phương Mai</div>
+              <div class="ksc-status">
+                <span class="pulse-dot green"></span>
+                <span>BẠN ĐÃ SẴN SÀNG TRONG PHÒNG CHỜ</span>
+              </div>
+            </div>
+
+            <!-- Tiến độ Sĩ số Đấu trường -->
+            <div class="kl-roster-status">
+              <div class="krs-header">
+                <span class="krs-label"><i class="fas fa-users"></i> TIẾN ĐỘ VÀO PHÒNG MÁY:</span>
+                <span class="krs-count" id="radar-count-label">18 máy đã kết nối</span>
+              </div>
+              <div class="krs-radar-chips" id="radar-grid">
+                <!-- Render 18 chip máy mini -->
+              </div>
+            </div>
+
+            <div class="kl-instruction-box">
+              <i class="fas fa-bolt"></i>
+              <span>Các em hãy hướng mắt lên bảng. Bài học sẽ mở màn với đếm ngược <strong>3... 2... 1... 🚀</strong></span>
             </div>
           </div>
         </div>
@@ -430,22 +428,26 @@ print(s[4:])</code></pre>
        MÀN HÌNH 3: BẢNG ĐIỀU KHIỂN GIÁO VIÊN (TEACHER DASHBOARD)
   ========================================================== -->
   <section id="screen-teacher" class="app-screen">
-    <!-- Header Giáo viên -->
+    <!-- Header Giáo viên: 3 Tab Điều Hướng Chuẩn Quốc Tế -->
     <header class="teacher-header">
       <div class="th-left">
-        <div class="th-brand-badge"><i class="fas fa-chalkboard-teacher"></i> BẢNG ĐIỀU KHIỂN GIÁO VIÊN</div>
-        <div class="th-session-title" id="th-session-title">Phòng Máy Tin Học • Tiêu chuẩn 18 Máy</div>
+        <div class="th-brand-badge"><i class="fas fa-chalkboard-teacher"></i> LMS COMMAND CENTER</div>
+        <div class="th-session-title" id="th-session-title">Hệ Thống Quản Trị & Giảng Dạy Phòng Máy</div>
       </div>
       <div class="th-center">
-        <div class="th-status-pill">
-          <span class="pulse-dot"></span>
-          <span id="th-online-label">Realtime Database: Sẵn sàng</span>
+        <div class="teacher-nav-tabs">
+          <button type="button" class="tnt-btn" id="btn-tnav-classes" onclick="window.teacherSwitchTab('classes')">
+            <i class="fas fa-users-cog"></i> 1. Quản lý Lớp & Sĩ số
+          </button>
+          <button type="button" class="tnt-btn" id="btn-tnav-studio" onclick="window.teacherSwitchTab('studio')">
+            <i class="fas fa-layer-group"></i> 2. Xưởng Soạn Kịch bản
+          </button>
+          <button type="button" class="tnt-btn active" id="btn-tnav-stage" onclick="window.teacherSwitchTab('stage')">
+            <i class="fas fa-play-circle"></i> 3. Bàn Điều Khiển Sân Khấu
+          </button>
         </div>
       </div>
       <div class="th-right">
-        <button type="button" class="btn-tool" id="btn-open-teacher-settings" title="Cài đặt danh sách học sinh theo lớp và phân bổ vào 18 máy">
-          <i class="fas fa-user-cog"></i> Cài đặt học sinh
-        </button>
         <button type="button" class="btn-tool" id="btn-remote-reload-all" title="Gửi lệnh F5 xóa cache toàn bộ 18 máy học sinh">
           <i class="fas fa-sync-alt"></i> F5 18 máy
         </button>
@@ -458,58 +460,287 @@ print(s[4:])</code></pre>
       </div>
     </header>
 
-    <!-- Khung nội dung Giáo viên: Giai đoạn 1 & Giai đoạn 2 -->
+    <!-- Khung nội dung Giáo viên: 3 Phân hệ chính -->
     <main class="teacher-main">
 
       <!-- ===================================================
-           GIAI ĐOẠN 1: KIỂM TRA PHẦN CỨNG 18 MÁY (CHƯA CHỌN LỚP)
+           PHÂN HỆ 1: QUẢN LÝ LỚP & SĨ SỐ (TAB CLASSES)
       ==================================================== -->
-      <section id="teacher-stage-hardware" class="teacher-stage active">
-        <div class="stage1-container">
-          <div class="stage1-action-bar">
+      <section id="teacher-panel-classes" class="teacher-panel" style="display:none;">
+        <div class="panel-classes-container">
+          <div class="pc-topbar">
+            <div class="pc-title">
+              <i class="fas fa-users-cog"></i> QUẢN LÝ DANH SÁCH LỚP HỌC & SƠ ĐỒ MÁY
+            </div>
+            <div class="pc-actions">
+              <button type="button" class="btn-action-excel" id="btn-tab-classes-download-template" onclick="document.getElementById('btn-download-excel-template')?.click()">
+                <i class="fas fa-file-excel"></i> Tải file mẫu Excel
+              </button>
+              <label class="btn-action-excel btn-import-label">
+                <i class="fas fa-file-upload"></i> Nhập từ Excel
+                <input type="file" onchange="document.getElementById('input-excel-file').files = this.files; document.getElementById('input-excel-file').dispatchEvent(new Event('change'));" accept=".xlsx, .xls, .csv" style="display:none;">
+              </label>
+              <button type="button" class="btn-action-excel" onclick="document.getElementById('btn-export-current-excel')?.click()">
+                <i class="fas fa-file-download"></i> Xuất Excel
+              </button>
+            </div>
+          </div>
+          <div class="pc-filter-row">
             <div class="s1-form-group">
-              <label for="teacher-select-class"><i class="fas fa-users-class"></i> 1. CHỌN LỚP DẠY:</label>
-              <select id="teacher-select-class" class="th-select">
-                <option value="10A1">Lớp 10A1 (37 học sinh • 18 máy)</option>
-                <option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option>
-                <option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option>
+              <label><i class="fas fa-layer-group"></i> KHỐI:</label>
+              <select id="classes-filter-grade" class="th-select" onchange="window.filterClassesByGrade(this.value)">
+                <option value="10">Khối 10 (THPT)</option>
+                <option value="11">Khối 11 (THPT)</option>
+                <option value="12">Khối 12 (THPT)</option>
               </select>
             </div>
-
             <div class="s1-form-group">
-              <label for="teacher-select-lesson"><i class="fas fa-book"></i> 2. CHỌN BÀI HỌC:</label>
-              <select id="teacher-select-lesson" class="th-select">
-                <option value="tin10_bai12">Bài 12: Kiểu dữ liệu xâu trong Python</option>
+              <label><i class="fas fa-users"></i> LỚP ĐANG CHỌN:</label>
+              <select id="classes-select-class" class="th-select" onchange="window.teacherSelectClassForEdit(this.value)">
+                <option value="10A1">Lớp 10A1 (35 học sinh)</option>
+                <option value="10A2">Lớp 10A2 (36 học sinh)</option>
+                <option value="10A3">Lớp 10A3 (34 học sinh)</option>
               </select>
             </div>
-
-            <button type="button" class="btn-start-session" id="btn-start-class-session">
-              <i class="fas fa-play-circle"></i> BẮT ĐẦU TIẾT HỌC CHO LỚP NÀY
-            </button>
           </div>
-
-          <div class="stage1-info-bar">
-            <div class="s1-summary-tag">
-              <i class="fas fa-info-circle"></i> <strong>TÌNH TRẠNG PHẦN CỨNG PHÒNG MÁY:</strong>
-              <span id="hardware-status-summary" style="color:#34d399;margin-left:6px;">18/18 máy sẵn sàng kết nối</span>
-            </div>
-            <p class="s1-hint-text">
-              * Đây là tín hiệu kết nối thiết bị PWA của 18 máy tính. Tên học sinh sẽ tự động được nạp sau khi Thầy chọn lớp và bấm nút <strong>"BẮT ĐẦU TIẾT HỌC"</strong>.
-            </p>
-          </div>
-
-          <!-- Lưới 18 máy kiểm tra phần cứng (Online / Offline) -->
-          <div class="hardware-grid-18" id="hardware-grid-18">
-            <!-- Render 18 máy bởi JS -->
+          <div class="pc-seating-preview" id="classes-seating-preview">
+            <!-- Render sơ đồ 18 máy của lớp đang chọn -->
           </div>
         </div>
       </section>
 
       <!-- ===================================================
-           GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC (ĐIỂM DANH & 4 CHẶNG)
+           PHÂN HỆ 2: XƯỞNG SOẠN KỊCH BẢN (TAB STUDIO)
+      ==================================================== -->
+      <section id="teacher-panel-studio" class="teacher-panel" style="display:none;">
+        <div class="panel-studio-container">
+          <div class="studio-layout">
+            <!-- Cột trái: Cây bài dạy theo khối -->
+            <div class="studio-sidebar">
+              <div class="sb-header"><i class="fas fa-book"></i> KHO BÀI DẠY GỐC</div>
+              <div class="sb-grade-picker">
+                <button type="button" class="sg-btn active" onclick="window.studioSelectGrade('10')">Khối 10</button>
+                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('11')">Khối 11</button>
+                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('12')">Khối 12</button>
+              </div>
+              <div class="sb-lesson-list" id="studio-lesson-list">
+                <div class="sb-lesson-item active" onclick="window.studioLoadLesson('tin10_bai12')">
+                  <div class="sli-title">Bài 12: Kiểu dữ liệu xâu</div>
+                  <div class="sli-meta">5 bước • Đã lưu</div>
+                </div>
+                <div class="sb-lesson-item" onclick="window.studioLoadLesson('tin10_bai1')">
+                  <div class="sli-title">Bài 01: Thông tin và xử lý thông tin</div>
+                  <div class="sli-meta">4 bước • Đã lưu</div>
+                </div>
+              </div>
+              <button type="button" class="btn-tool-sm btn-block" onclick="window.studioCreateNewLesson()">
+                <i class="fas fa-plus"></i> Soạn bài dạy mới
+              </button>
+            </div>
+
+            <!-- Cột phải: Dòng thời gian Timeline 5 bước có Bật/Tắt -->
+            <div class="studio-timeline-area">
+              <div class="sta-header">
+                <div>
+                  <h3 id="studio-lesson-title-head">KỊCH BẢN: Bài 12 - Kiểu dữ liệu xâu trong Python</h3>
+                  <p>Thầy có toàn quyền Bật / Tắt hoặc Xóa bất kỳ bước nào trong kịch bản.</p>
+                </div>
+                <div class="sta-actions">
+                  <button type="button" class="btn-tool-sm" onclick="window.studioPreviewLesson()">
+                    <i class="fas fa-eye"></i> Xem trước (Preview)
+                  </button>
+                  <button type="button" class="btn-primary" onclick="window.studioSaveLesson()">
+                    <i class="fas fa-save"></i> LƯU KỊCH BẢN
+                  </button>
+                </div>
+              </div>
+
+              <div class="studio-steps-list" id="studio-steps-list">
+                <!-- Bước 1 -->
+                <div class="studio-step-card" data-step="1">
+                  <div class="ssc-header">
+                    <div class="ssc-title"><i class="fas fa-history"></i> BƯỚC 1: KHỞI ĐỘNG & KIỂM TRA BÀI CŨ</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                      <input type="checkbox" checked id="step-toggle-1">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div class="ssc-body">
+                    <div class="ssc-row">
+                      <label>Công cụ:</label>
+                      <select class="th-select-sm" id="step-tool-1">
+                        <option value="wheel">Vòng quay may mắn (Lucky Wheel)</option>
+                        <option value="oral">Gọi trả lời miệng</option>
+                      </select>
+                      <label>Thời lượng:</label>
+                      <select class="th-select-sm" id="step-time-1">
+                        <option value="120">2 phút</option>
+                        <option value="180">3 phút</option>
+                        <option value="300">5 phút</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bước 2 -->
+                <div class="studio-step-card" data-step="2">
+                  <div class="ssc-header">
+                    <div class="ssc-title"><i class="fas fa-bolt"></i> BƯỚC 2: KHÁM PHÁ KIẾN THỨC</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                      <input type="checkbox" checked id="step-toggle-2">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div class="ssc-body">
+                    <div class="ssc-row">
+                      <label>Nhiệm vụ:</label>
+                      <input type="text" class="otc-input" id="step-task-2" value="Đọc SGK mục 1, thảo luận khái niệm xâu và phép cắt slicing">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bước 3 -->
+                <div class="studio-step-card" data-step="3">
+                  <div class="ssc-header">
+                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 3: ĐẤU TRƯỜNG KAHOOT (QUIZ)</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                      <input type="checkbox" checked id="step-toggle-3">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div class="ssc-body">
+                    <div class="ssc-row">
+                      <label>Bộ câu hỏi:</label>
+                      <span class="badge-tag">4 câu trắc nghiệm 4 màu</span>
+                      <label>Thời gian/câu:</label>
+                      <select class="th-select-sm" id="step-time-3">
+                        <option value="20">20 giây</option>
+                        <option value="30">30 giây</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bước 4 -->
+                <div class="studio-step-card" data-step="4">
+                  <div class="ssc-header">
+                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 4: THỰC HÀNH TRÊN MÁY</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                      <input type="checkbox" checked id="step-toggle-4">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div class="ssc-body">
+                    <div class="ssc-row">
+                      <label>Đề bài thực hành:</label>
+                      <input type="text" class="otc-input" id="step-task-4" value="Viết mã Python đảo ngược xâu họ tên và đếm ký tự">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Bước 5 -->
+                <div class="studio-step-card" data-step="5">
+                  <div class="ssc-header">
+                    <div class="ssc-title"><i class="fas fa-award"></i> BƯỚC 5: TỔNG KẾT & VINH DANH</div>
+                    <label class="switch-toggle" title="Bật/Tắt bước này">
+                      <input type="checkbox" checked id="step-toggle-5">
+                      <span class="slider round"></span>
+                    </label>
+                  </div>
+                  <div class="ssc-body">
+                    <p class="text-muted">Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 và tổng kết điểm thi đua.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================
+           PHÂN HỆ 3: BÀN ĐIỀU KHIỂN SÂN KHẤU (TAB STAGE)
+      ==================================================== -->
+      <section id="teacher-panel-stage" class="teacher-panel active">
+
+        <!-- Giai đoạn 1: Thiết lập & Kích hoạt Lớp học -->
+        <section id="teacher-stage-hardware" class="teacher-stage active">
+          <div class="stage1-container">
+            <div class="stage1-action-bar">
+              <div class="s1-form-group">
+                <label for="teacher-select-grade"><i class="fas fa-layer-group"></i> 1. KHỐI LỚP:</label>
+                <select id="teacher-select-grade" class="th-select" onchange="window.teacherOnGradeChange(this.value)">
+                  <option value="10">Khối 10 (THPT)</option>
+                  <option value="11">Khối 11 (THPT)</option>
+                  <option value="12">Khối 12 (THPT)</option>
+                </select>
+              </div>
+
+              <div class="s1-form-group">
+                <label for="teacher-select-class"><i class="fas fa-users-class"></i> 2. CHỌN LỚP DẠY:</label>
+                <select id="teacher-select-class" class="th-select">
+                  <option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option>
+                  <option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option>
+                  <option value="10A3">Lớp 10A3 (34 học sinh • 18 máy)</option>
+                </select>
+              </div>
+
+              <div class="s1-form-group">
+                <label for="teacher-select-lesson"><i class="fas fa-book"></i> 3. CHỌN BÀI DẠY:</label>
+                <select id="teacher-select-lesson" class="th-select">
+                  <option value="tin10_bai12">Bài 12: Kiểu dữ liệu xâu trong Python</option>
+                  <option value="tin10_bai1">Bài 01: Thông tin và xử lý thông tin</option>
+                </select>
+              </div>
+
+              <button type="button" class="btn-start-session" id="btn-start-class-session">
+                <i class="fas fa-play-circle"></i> LƯU LẠI & KÍCH HOẠT TIẾT HỌC
+              </button>
+            </div>
+
+            <div class="stage1-info-bar">
+              <div class="s1-summary-tag">
+                <i class="fas fa-info-circle"></i> <strong>TÌNH TRẠNG PHÒNG MÁY:</strong>
+                <span id="hardware-status-summary" style="color:#34d399;margin-left:6px;">18/18 máy sẵn sàng kết nối</span>
+              </div>
+              <p class="s1-hint-text">
+                * Khi Thầy bấm <strong>"LƯU LẠI & KÍCH HOẠT TIẾT HỌC"</strong>, dữ liệu lớp sẽ được truyền thẳng xuống 18 máy học sinh và mở khóa để học sinh chọn máy.
+              </p>
+            </div>
+
+            <!-- Lưới 18 máy kiểm tra phần cứng (Online / Offline) -->
+            <div class="hardware-grid-18" id="hardware-grid-18">
+              <!-- Render 18 máy bởi JS -->
+            </div>
+          </div>
+        </section>
+
+      <!-- ===================================================
+           GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC (ĐIỂM DANH & CÁC BƯỚC)
       ==================================================== -->
       <section id="teacher-stage-active" class="teacher-stage">
-        <!-- Thanh điều phối tiến trình sư phạm -->
+        <!-- Master Control Bar: Điều khiển Đồng hồ Master & Bỏ qua bước -->
+        <div class="teacher-master-control-bar">
+          <div class="tmc-timer-wrap">
+            <span class="tmc-label"><i class="fas fa-stopwatch"></i> ĐỒNG HỒ MASTER (NTP SYNC):</span>
+            <span class="tmc-timer-display" id="master-timer-display">02:00</span>
+            <button type="button" class="tmc-btn" id="btn-master-pause-timer" onclick="window.masterPauseTimer()" title="Tạm dừng/Tiếp tục đồng hồ">
+              <i class="fas fa-pause"></i> Tạm dừng
+            </button>
+            <button type="button" class="tmc-btn" id="btn-master-add-time" onclick="window.masterAddTime(30)" title="Cộng thêm 30 giây cho học sinh làm bài">
+              <i class="fas fa-plus"></i> +30s
+            </button>
+          </div>
+          <div class="tmc-actions-wrap">
+            <button type="button" class="tmc-btn tmc-btn-skip" id="btn-master-skip-step" onclick="window.masterSkipStep()" title="Bỏ qua bước này, chuyển ngay sang bước kế tiếp">
+              <i class="fas fa-forward"></i> BỎ QUA BƯỚC NÀY
+            </button>
+            <button type="button" class="btn-end-session" id="btn-end-class-session" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo" onclick="window.teacherEndSession()">
+              <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
+            </button>
+          </div>
+        </div>
+
+        <!-- Thanh điều phối tiến trình sư phạm (Click để nhảy bước) -->
         <div class="teacher-pace-bar">
           <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
             <span class="tpb-badge">0</span>
@@ -576,7 +807,7 @@ print(s[4:])</code></pre>
             <span>Live Quiz & Củng cố</span>
           </div>
 
-          <button type="button" class="btn-end-session" id="btn-end-class-session" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo">
+          <button type="button" class="btn-end-session" id="btn-end-class-session-legacy" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo" onclick="window.teacherEndSession()">
             <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
           </button>
         </div>
@@ -933,6 +1164,21 @@ print(s[4:])</code></pre>
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       OVERLAY: ĐẾM NGƯỢC ĐỒNG BỘ 3-2-1 TOÀN MÀN HÌNH (CHUẨN KAHOOT)
+  ========================================================== -->
+  <div id="activity-countdown-overlay" class="activity-countdown-overlay" style="display:none;">
+    <div class="acd-glow"></div>
+    <div class="acd-box">
+      <div class="acd-activity-tag"><i class="fas fa-bolt"></i> CHUẨN BỊ BƯỚC VÀO</div>
+      <div class="acd-title" id="acd-activity-name">BƯỚC 1: KIỂM TRA BÀI CŨ</div>
+      <div class="acd-circle">
+        <div class="acd-number" id="acd-number">3</div>
+      </div>
+      <div class="acd-sub">HÃY HƯỚNG MẮT LÊN MÀN HÌNH ĐẤU TRƯỜNG!</div>
     </div>
   </div>
 

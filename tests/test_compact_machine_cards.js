@@ -1,6 +1,5 @@
 const { chromium } = require('playwright');
 const path = require('path');
-const fs = require('fs');
 
 const HTML_PATH = 'file:///' + path.resolve(__dirname, '../index.html').replace(/\\/g, '/');
 const SCREENSHOT_DIR = path.resolve(__dirname, 'screenshots');

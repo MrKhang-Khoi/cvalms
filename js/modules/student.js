@@ -165,7 +165,7 @@ export const STUDENT_MODULE = {
 
   // Điều phối hiển thị giao diện theo chặng bài học
   render(state) {
-    const { currentPhase, fixedMachineId, machineId, students, classId, isSos } = state;
+    const { currentPhase, fixedMachineId, machineId, students, _classId, isSos } = state;
 
     // 1. Cập nhật thanh tiêu đề học sinh
     const machineBadge = document.getElementById('sh-machine-badge');
