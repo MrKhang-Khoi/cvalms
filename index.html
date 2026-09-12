@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -417,6 +417,9 @@ print(s[4:])</code></pre>
         </div>
       </div>
       <div class="th-right">
+        <button type="button" class="btn-tool" id="btn-open-teacher-settings" title="Cài đặt danh sách lớp và phân bổ học sinh vào 18 máy">
+          <i class="fas fa-sliders-h"></i> Cài đặt
+        </button>
         <button type="button" class="btn-tool" id="btn-remote-reload-all" title="Gửi lệnh F5 xóa cache toàn bộ 18 máy học sinh">
           <i class="fas fa-sync-alt"></i> F5 18 máy
         </button>
@@ -623,12 +626,83 @@ print(s[4:])</code></pre>
     </div>
   </div>
 
+  <!-- =========================================================
+       MODAL: CÀI ĐẶT DANH SÁCH LỚP & SƠ ĐỒ 18 MÁY (EXCEL IMPORT/EXPORT)
+  ========================================================== -->
+  <div class="modal-overlay modal-xl" id="modal-teacher-settings" style="display:none;">
+    <div class="modal-card settings-card">
+      <div class="modal-header settings-header">
+        <div class="sh-left">
+          <div class="modal-icon settings-icon"><i class="fas fa-sliders-h"></i></div>
+          <div>
+            <h3>CÀI ĐẶT DANH SÁCH LỚP & SƠ ĐỒ 18 MÁY</h3>
+            <p class="auth-sub">Tải file mẫu Excel • Nhập danh sách tự động • Hỗ trợ linh hoạt 1-4 học sinh/máy</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-settings" title="Đóng cài đặt">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div class="settings-toolbar">
+        <div class="st-group">
+          <label for="settings-select-class"><i class="fas fa-users"></i> Lớp học:</label>
+          <select id="settings-select-class" class="th-select">
+            <option value="10A1">Lớp 10A1</option>
+            <option value="9A1">Lớp 9A1</option>
+          </select>
+          <span class="badge-total-students" id="settings-student-count-badge">36 học sinh / 18 máy</span>
+        </div>
+
+        <div class="st-actions">
+          <button type="button" class="btn-action-excel" id="btn-download-excel-template" title="Tải file Excel mẫu về máy để điền danh sách">
+            <i class="fas fa-file-excel"></i> Tải file mẫu Excel
+          </button>
+          <label class="btn-action-excel btn-import-label" title="Chọn file Excel hoặc CSV từ máy tính để nhập vào sơ đồ">
+            <i class="fas fa-file-upload"></i> Nhập từ Excel/CSV
+            <input type="file" id="input-excel-file" accept=".xlsx, .xls, .csv" style="display:none;">
+          </label>
+          <button type="button" class="btn-action-excel" id="btn-export-current-excel" title="Xuất danh sách sơ đồ lớp này ra file Excel">
+            <i class="fas fa-file-download"></i> Xuất Excel
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-hint-box">
+        <i class="fas fa-info-circle"></i>
+        <span>Hệ thống hỗ trợ linh hoạt <strong>1, 2, 3 hoặc 4 học sinh/máy</strong>. Thầy có thể bấm <strong>[+ Thêm học sinh]</strong> ở từng máy bên dưới hoặc tải file Excel mẫu về chỉnh sửa rồi nạp lên.</span>
+      </div>
+
+      <!-- Lưới 18 máy có thể thao tác trực tiếp -->
+      <div class="settings-seating-grid" id="settings-seating-grid">
+        <!-- Render động 18 ô máy với danh sách học sinh -->
+      </div>
+
+      <div class="settings-footer">
+        <div class="sf-left">
+          <button type="button" class="btn-tool" id="btn-reset-default-class-data" title="Khôi phục lại danh sách lớp ban đầu">
+            <i class="fas fa-undo"></i> Khôi phục mặc định
+          </button>
+        </div>
+        <div class="sf-right">
+          <button type="button" class="btn-cancel" id="btn-cancel-settings">Đóng</button>
+          <button type="button" class="btn-confirm" id="btn-save-settings">
+            <i class="fas fa-save"></i> LƯU THAY ĐỔI VÀ ĐỒNG BỘ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SheetJS để xuất nhập file Excel chuyên nghiệp -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
+
   <!-- Firebase Compat v9 (Offline resilient) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
-  <script src="js/bundle.js?v=2.0.2"></script>
+  <script src="js/bundle.js?v=2.0.3"></script>
 </body>
 </html>
 

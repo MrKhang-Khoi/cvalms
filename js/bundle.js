@@ -16,7 +16,7 @@
       "seatingPlan": {
         "1": ["Lê Hoàng Nam", "Phạm Ngọc Ánh"],
         "2": ["Trần Bảo Long", "Nguyễn Thùy Linh"],
-        "3": ["Vũ Đức Minh", "Hoàng Kim Ngân"],
+        "3": ["Vũ Đức Minh", "Hoàng Kim Ngân", "Đặng Quốc Anh"],
         "4": ["Đỗ Gia Huy", "Bùi Phương Mai"],
         "5": ["Phan Thanh Tùng", "Đặng Thu Trang"],
         "6": ["Hồ Minh Trí", "Ngô Cẩm Tú"],
@@ -325,16 +325,32 @@
         if (state.role === 'student') {
           STORE.setState({ currentPhase: 'waiting' });
         }
+      } else if (data.type === 'CLASSES_UPDATED') {
+        if (data.payload && data.payload.classes) {
+          APP.classes = Object.assign({}, EMBEDDED_CLASSES, data.payload.classes);
+          STORE.setState({ classId: STORE.getState().classId });
+        }
       }
     }
   };
 
   // 4. BỘ ĐIỀU KHIỂN GIAO DIỆN HỌC SINH (STUDENT CONTROLLER)
   const APP = {
-    classes: EMBEDDED_CLASSES,
+    classes: JSON.parse(JSON.stringify(EMBEDDED_CLASSES)),
     lessons: EMBEDDED_LESSONS,
 
     init() {
+      // Nạp cấu hình các lớp tùy chỉnh từ localStorage nếu có
+      try {
+        const savedClasses = localStorage.getItem('lms_custom_classes');
+        if (savedClasses) {
+          const parsed = JSON.parse(savedClasses);
+          if (parsed && typeof parsed === 'object') {
+            this.classes = Object.assign({}, this.classes, parsed);
+          }
+        }
+      } catch (e) {}
+
       initFirebase();
       STORE.loadSavedDeviceToken();
       STORE.checkAdminSession();
@@ -657,6 +673,358 @@
           alert('🎲 KẾT QUẢ BỐC THĂM NGẪU NHIÊN:\n\n🖥️ MÁY SỐ ' + String(randNum).padStart(2, '0') + '!\n👥 ' + pair.join(' & '));
         });
       }
+
+      // 9. Mở Modal Cài đặt Lớp & Sơ đồ 18 máy
+      const btnOpenSettings = document.getElementById('btn-open-teacher-settings');
+      if (btnOpenSettings) {
+        btnOpenSettings.addEventListener('click', () => {
+          this.openSettingsModal();
+        });
+      }
+
+      // Đóng modal cài đặt
+      const btnCloseSettings = document.getElementById('btn-close-settings');
+      if (btnCloseSettings) {
+        btnCloseSettings.addEventListener('click', () => {
+          this.closeSettingsModal();
+        });
+      }
+
+      const btnCancelSettings = document.getElementById('btn-cancel-settings');
+      if (btnCancelSettings) {
+        btnCancelSettings.addEventListener('click', () => {
+          this.closeSettingsModal();
+        });
+      }
+
+      // Đổi lớp trong modal cài đặt
+      const selectSettingsCls = document.getElementById('settings-select-class');
+      if (selectSettingsCls) {
+        selectSettingsCls.addEventListener('change', () => {
+          this.renderSettingsSeatingGrid();
+        });
+      }
+
+      // Tải file mẫu Excel
+      const btnDlTemplate = document.getElementById('btn-download-excel-template');
+      if (btnDlTemplate) {
+        btnDlTemplate.addEventListener('click', () => {
+          this.downloadExcelTemplate();
+        });
+      }
+
+      // Xuất Excel lớp hiện tại
+      const btnExportCur = document.getElementById('btn-export-current-excel');
+      if (btnExportCur) {
+        btnExportCur.addEventListener('click', () => {
+          this.exportCurrentClassExcel();
+        });
+      }
+
+      // Nhập file Excel / CSV
+      const inputExcel = document.getElementById('input-excel-file');
+      if (inputExcel) {
+        inputExcel.addEventListener('change', (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            this.importExcelFile(e.target.files[0]);
+            e.target.value = '';
+          }
+        });
+      }
+
+      // Lưu cài đặt
+      const btnSaveSettings = document.getElementById('btn-save-settings');
+      if (btnSaveSettings) {
+        btnSaveSettings.addEventListener('click', () => {
+          this.saveSettings();
+        });
+      }
+
+      // Khôi phục mặc định
+      const btnResetDefault = document.getElementById('btn-reset-default-class-data');
+      if (btnResetDefault) {
+        btnResetDefault.addEventListener('click', () => {
+          this.resetDefaultClassData();
+        });
+      }
+    },
+
+    // CÁC HÀM QUẢN LÝ CÀI ĐẶT LỚP HỌC & MAP 18 MÁY (EXCEL)
+    openSettingsModal() {
+      const state = STORE.getState();
+      const selectCls = document.getElementById('settings-select-class');
+      if (selectCls) {
+        selectCls.value = state.classId || '10A1';
+      }
+      this.renderSettingsSeatingGrid();
+      const modal = document.getElementById('modal-teacher-settings');
+      if (modal) modal.style.display = 'flex';
+    },
+
+    closeSettingsModal() {
+      const modal = document.getElementById('modal-teacher-settings');
+      if (modal) modal.style.display = 'none';
+    },
+
+    renderSettingsSeatingGrid() {
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+      const grid = document.getElementById('settings-seating-grid');
+      const badge = document.getElementById('settings-student-count-badge');
+      if (!grid) return;
+
+      let totalStudents = 0;
+      let html = '';
+
+      for (let i = 1; i <= 18; i++) {
+        const students = classData.seatingPlan[i] || [];
+        totalStudents += students.length;
+
+        let chipsHtml = '';
+        if (students.length === 0) {
+          chipsHtml = '<span style="font-size:11px;color:#64748b;font-style:italic;padding:4px 0;">(Chưa có học sinh)</span>';
+        } else {
+          chipsHtml = students.map((name, idx) => `
+            <span class="student-chip">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</span>
+              <button type="button" class="chip-del" onclick="APP.removeStudentFromDesk(${i}, ${idx})" title="Xóa học sinh này">&times;</button>
+            </span>
+          `).join('');
+        }
+
+        html += `
+          <div class="settings-desk-card" data-desk="${i}">
+            <div class="sdc-header">
+              <span class="sdc-num">MÁY ${String(i).padStart(2, '0')}</span>
+              <span class="sdc-count">${students.length} bạn</span>
+            </div>
+            <div class="sdc-students-list">
+              ${chipsHtml}
+            </div>
+            <div class="sdc-add-row">
+              <input type="text" class="sdc-input" id="add-student-input-${i}" placeholder="+ Tên học sinh..." onkeydown="if(event.key==='Enter')APP.addStudentToDesk(${i})">
+              <button type="button" class="sdc-btn-add" onclick="APP.addStudentToDesk(${i})" title="Thêm học sinh vào máy này">Thêm</button>
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+      if (badge) {
+        badge.textContent = `${totalStudents} học sinh / 18 máy`;
+      }
+    },
+
+    addStudentToDesk(deskNum) {
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+      const input = document.getElementById(`add-student-input-${deskNum}`);
+      if (!input) return;
+
+      const name = input.value.trim();
+      if (!name) return;
+
+      if (!classData.seatingPlan[deskNum]) {
+        classData.seatingPlan[deskNum] = [];
+      }
+      classData.seatingPlan[deskNum].push(name);
+      input.value = '';
+      this.renderSettingsSeatingGrid();
+    },
+
+    removeStudentFromDesk(deskNum, idx) {
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+      if (classData && classData.seatingPlan[deskNum]) {
+        classData.seatingPlan[deskNum].splice(idx, 1);
+        this.renderSettingsSeatingGrid();
+      }
+    },
+
+    saveSettings() {
+      try {
+        localStorage.setItem('lms_custom_classes', JSON.stringify(this.classes));
+      } catch (e) {
+        console.warn('[Storage] Không lưu được lớp:', e);
+      }
+
+      const modal = document.getElementById('modal-teacher-settings');
+      if (modal) modal.style.display = 'none';
+
+      const state = STORE.getState();
+      STORE.setState({ classId: state.classId });
+      SYNC_BUS.broadcast('CLASSES_UPDATED', { classes: this.classes });
+
+      alert('✅ Đã lưu danh sách học sinh và sơ đồ 18 máy thành công!');
+    },
+
+    resetDefaultClassData() {
+      if (confirm('Khôi phục lại toàn bộ danh sách lớp và 18 máy về mặc định ban đầu?')) {
+        try {
+          localStorage.removeItem('lms_custom_classes');
+        } catch (e) {}
+        this.classes = JSON.parse(JSON.stringify(EMBEDDED_CLASSES));
+        this.renderSettingsSeatingGrid();
+        alert('Đã khôi phục dữ liệu lớp học mặc định thành công!');
+      }
+    },
+
+    downloadExcelTemplate() {
+      const rows = [
+        ["Số máy", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
+      ];
+      for (let i = 1; i <= 18; i++) {
+        const p = (this.classes['10A1'].seatingPlan[i] || []);
+        rows.push([
+          i,
+          p[0] || "",
+          p[1] || "",
+          p[2] || "",
+          p[3] || "",
+          `Máy bàn số ${String(i).padStart(2, '0')}`
+        ]);
+      }
+
+      if (typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "DanhSach18May");
+        XLSX.writeFile(wb, "Mau_Danh_Sach_18_May.xlsx");
+      } else {
+        let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "Mau_Danh_Sach_18_May.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    },
+
+    exportCurrentClassExcel() {
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+
+      const rows = [
+        ["Số máy", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
+      ];
+      for (let i = 1; i <= 18; i++) {
+        const p = (classData.seatingPlan[i] || []);
+        rows.push([
+          i,
+          p[0] || "",
+          p[1] || "",
+          p[2] || "",
+          p[3] || "",
+          `${classData.className} - Máy ${String(i).padStart(2, '0')}`
+        ]);
+      }
+
+      if (typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, clsId);
+        XLSX.writeFile(wb, `Danh_Sach_${clsId}_18_May.xlsx`);
+      } else {
+        let csvContent = "\uFEFF" + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", `Danh_Sach_${clsId}_18_May.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    },
+
+    importExcelFile(file) {
+      if (!file) return;
+      const selectCls = document.getElementById('settings-select-class');
+      const clsId = selectCls ? selectCls.value : '10A1';
+      const classData = this.classes[clsId] || this.classes['10A1'];
+
+      const isXlsx = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
+
+      if (isXlsx && typeof XLSX !== 'undefined') {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            this.processImportedRows(rows, classData);
+          } catch (err) {
+            alert('Lỗi đọc file Excel: ' + err.message);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const text = e.target.result;
+            const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+            const rows = lines.map(line => {
+              let delimiter = ',';
+              if (line.includes(';') && !line.includes(',')) delimiter = ';';
+              else if (line.includes('\t')) delimiter = '\t';
+              
+              const regex = new RegExp(`(?:^|${delimiter})(?:"([^"]*(?:""[^"]*)*)"|([^"${delimiter}]*))`, 'g');
+              let matches = [];
+              let match;
+              while ((match = regex.exec(line)) !== null) {
+                let val = match[1] ? match[1].replace(/""/g, '"') : match[2];
+                matches.push(val ? val.trim() : '');
+              }
+              return matches;
+            });
+            this.processImportedRows(rows, classData);
+          } catch (err) {
+            alert('Lỗi đọc file CSV: ' + err.message);
+          }
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+    },
+
+    processImportedRows(rows, classData) {
+      if (!rows || rows.length === 0) {
+        alert('File không có dữ liệu!');
+        return;
+      }
+
+      let importedCount = 0;
+      rows.forEach((row, idx) => {
+        if (idx === 0 && (String(row[0]).includes('Số') || String(row[0]).includes('Machine'))) {
+          return;
+        }
+
+        const rawNum = String(row[0] || '').replace(/[^\d]/g, '');
+        const machineNum = parseInt(rawNum, 10);
+        if (machineNum >= 1 && machineNum <= 18) {
+          const students = [];
+          for (let col = 1; col <= 4; col++) {
+            const name = String(row[col] || '').trim();
+            if (name && name !== 'undefined' && name !== 'null') {
+              students.push(name);
+            }
+          }
+          if (students.length > 0) {
+            classData.seatingPlan[machineNum] = students;
+            importedCount++;
+          }
+        }
+      });
+
+      this.renderSettingsSeatingGrid();
+      alert(`🎉 Đã nhập thành công danh sách học sinh cho ${importedCount} máy từ file!\nThầy hãy kiểm tra lại và bấm [LƯU THAY ĐỔI VÀ ĐỒNG BỘ] để áp dụng.`);
     },
 
     // Xử lý nộp form đăng nhập Admin
@@ -722,10 +1090,9 @@
       if (modalTitle) modalTitle.textContent = `XÁC NHẬN MÁY BÀN SỐ ${String(num).padStart(2,'0')}`;
       if (modalClass) modalClass.textContent = classData.className;
       if (modalTags) {
-        modalTags.innerHTML = `
-          <div class="pair-tag"><i class="fas fa-user-graduate"></i> 1. ${pair[0] || 'Chưa phân công'}</div>
-          <div class="pair-tag"><i class="fas fa-user-graduate"></i> 2. ${pair[1] || 'Chưa phân công'}</div>
-        `;
+        modalTags.innerHTML = pair.map((name, idx) => `
+          <div class="pair-tag"><i class="fas fa-user-graduate"></i> ${idx + 1}. ${name}</div>
+        `).join('');
       }
 
       const confirmModal = document.getElementById('modal-confirm-machine');
@@ -916,8 +1283,7 @@
               <span class="card-icon"><i class="fas fa-desktop"></i></span>
             </div>
             <div class="card-pair-list">
-              <div class="student-row"><i class="fas fa-user"></i> ${pair[0] || 'Trống'}</div>
-              <div class="student-row"><i class="fas fa-user"></i> ${pair[1] || 'Trống'}</div>
+              ${pair.map(name => `<div class="student-row" title="${name}"><i class="fas fa-user"></i> ${name}</div>`).join('')}
             </div>
             ${statusBadge}
           </div>
@@ -1118,6 +1484,7 @@
   };
 
   // Expose global methods for HTML onclick handlers
+  window.APP = APP;
   window.onSelectDesk = function(deskNum) {
     APP.onSelectMachine(deskNum);
   };

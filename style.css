@@ -2256,3 +2256,296 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* ==========================================================
+ * MODAL CÀI ĐẶT LỚP HỌC & MAP 18 MÁY (EXCEL IMPORT/EXPORT)
+ * ========================================================== */
+.modal-xl {
+  align-items: flex-start;
+  padding: 30px 20px;
+  overflow-y: auto;
+}
+
+.modal-xl .modal-card.settings-card {
+  max-width: 1200px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.settings-header .sh-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-icon {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.settings-header h3 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-close-modal:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.settings-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+
+.st-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.st-group label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-total-students {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-code);
+}
+
+.st-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-action-excel {
+  background-color: #0f766e;
+  color: #fff;
+  border: 1px solid #14b8a6;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-action-excel:hover {
+  background-color: #115e59;
+  box-shadow: 0 0 10px rgba(20, 184, 166, 0.4);
+}
+
+.btn-import-label {
+  background-color: #2563eb;
+  border-color: #3b82f6;
+  margin: 0;
+}
+
+.btn-import-label:hover {
+  background-color: #1d4ed8;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.settings-hint-box {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-left: 4px solid var(--primary);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #93c5fd;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.settings-seating-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 48vh;
+  padding: 6px 4px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+  .settings-seating-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.settings-desk-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.settings-desk-card:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.sdc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+}
+
+.sdc-num {
+  font-family: var(--font-code);
+  font-weight: 800;
+  font-size: 12px;
+  color: #60a5fa;
+}
+
+.sdc-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.sdc-students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 54px;
+}
+
+.student-chip {
+  background-color: var(--bg-input);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e2e8f0;
+  gap: 4px;
+}
+
+.chip-del {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.chip-del:hover {
+  color: #ef4444;
+}
+
+.sdc-add-row {
+  display: flex;
+  gap: 4px;
+  margin-top: auto;
+}
+
+.sdc-input {
+  flex: 1;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: #fff;
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.sdc-input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.sdc-btn-add {
+  background-color: #1e293b;
+  border: 1px solid var(--border-subtle);
+  color: #60a5fa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sdc-btn-add:hover {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 16px;
+}
+
+.sf-right {
+  display: flex;
+  gap: 12px;
+}
