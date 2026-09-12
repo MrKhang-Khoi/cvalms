@@ -163,6 +163,54 @@
     return (message === 'admin123' || message === 'ThayKhang@2026') ? VALID_PASSWORD_HASHES[0] : '';
   }
 
+  // Bộ phát âm thanh Web Audio API (Tự tạo sóng âm chân thực, không cần nạp file mp3 ngoài)
+  const SOUNDS = {
+    ctx: null,
+    init() {
+      if (!this.ctx && typeof (window.AudioContext || window.webkitAudioContext) !== 'undefined') {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+      }
+    },
+    playTick(freq = 600) {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      } catch(e) {}
+    },
+    playFanfare() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.09);
+          osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
+        });
+      } catch(e) {}
+    }
+  };
+
   // 2. STORE — QUẢN LÝ TRẠNG THÁI TỔNG THỂ
   const STORE = {
     state: {
@@ -179,7 +227,7 @@
         1: true,
         2: true
       },
-      currentPhase: 'waiting',  // 'waiting', 'warmup', 'theory', 'discussion', 'quiz'
+      currentPhase: 'waiting',  // 'waiting', 'old_lesson', 'warmup', 'theory', 'discussion', 'quiz'
       pollSelection: null,
       pollLocked: false,
       discStatus: 'working',
@@ -187,6 +235,27 @@
       quizSelection: null,
       quizAnswered: false,
       isSos: false,
+
+      // Trạng thái Bước 1: Kiểm tra bài cũ
+      oldLesson: {
+        timerSeconds: 120,
+        timeLeft: 120,
+        timerActive: false,
+        questionType: 'text',   // 'text' hoặc 'mcq'
+        questionText: 'Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?',
+        selectedMachine: null,
+        selectedStudent: null,
+        isLocked: false,
+        isRevealed: false,
+        studentAnswer: '',
+        submissions: {}
+      },
+      luckyDraw: {
+        strategy: 'slot_machine', // 'slot_machine' hoặc 'wheel_fortune'
+        isSpinning: false,
+        resultMachine: null,
+        resultStudent: null
+      },
 
       // Trạng thái Bảng điều khiển Giáo viên
       teacherStage: 'hardware', // 'hardware' (Giai đoạn 1) hoặc 'active' (Giai đoạn 2)
@@ -355,6 +424,41 @@
           APP.classes = Object.assign({}, EMBEDDED_CLASSES, data.payload.classes);
           STORE.setState({ classId: STORE.getState().classId });
         }
+      } else if (data.type === 'OLD_LESSON_START') {
+        const payload = data.payload || {};
+        const oldL = Object.assign({}, STORE.getState().oldLesson, {
+          timerSeconds: payload.timerSeconds || 120,
+          timeLeft: payload.timerSeconds || 120,
+          timerActive: true,
+          questionType: payload.questionType || 'text',
+          questionText: payload.questionText || '',
+          selectedMachine: payload.selectedMachine || null,
+          selectedStudent: payload.selectedStudent || null,
+          isLocked: false,
+          isRevealed: false
+        });
+        STORE.setState({ currentPhase: 'old_lesson', teacherPhase: 'old_lesson', oldLesson: oldL });
+        APP.startOldLessonCountdown();
+      } else if (data.type === 'OLD_LESSON_SUBMIT') {
+        const p = data.payload || {};
+        if (p.machineId) {
+          const subs = Object.assign({}, STORE.getState().oldLesson.submissions);
+          subs[p.machineId] = {
+            student: p.student,
+            answer: p.answer,
+            time: p.time
+          };
+          const oldL = Object.assign({}, STORE.getState().oldLesson, { submissions: subs });
+          STORE.setState({ oldLesson: oldL });
+        }
+      } else if (data.type === 'OLD_LESSON_LOCK') {
+        const oldL = Object.assign({}, STORE.getState().oldLesson, { isLocked: true, timerActive: false });
+        STORE.setState({ oldLesson: oldL });
+      } else if (data.type === 'OLD_LESSON_REVEAL') {
+        const oldL = Object.assign({}, STORE.getState().oldLesson, { isRevealed: true });
+        STORE.setState({ oldLesson: oldL });
+      } else if (data.type === 'LUCKY_DRAW_SPIN') {
+        APP.handleRemoteLuckyDrawSpin(data.payload);
       }
     }
   };
@@ -573,6 +677,82 @@
             } catch (err) {}
           }
         });
+      });
+
+      // 10. Bước 1: Học sinh gõ văn bản tự luận ngắn
+      const olTextInput = document.getElementById('ol-text-input');
+      const olCharCount = document.getElementById('ol-char-count');
+      if (olTextInput && olCharCount) {
+        olTextInput.addEventListener('input', () => {
+          olCharCount.textContent = `${olTextInput.value.length} ký tự`;
+        });
+      }
+
+      // 11. Bước 1: Học sinh bấm chọn đáp án trắc nghiệm A-B-C-D
+      document.querySelectorAll('.ol-mcq-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          const state = STORE.getState();
+          if (state.oldLesson && state.oldLesson.isLocked) return;
+          const choice = e.currentTarget.dataset.olChoice;
+          document.querySelectorAll('.ol-mcq-btn').forEach(b => b.classList.remove('selected'));
+          e.currentTarget.classList.add('selected');
+          const oldL = Object.assign({}, state.oldLesson, { studentAnswer: choice });
+          STORE.setState({ oldLesson: oldL });
+        });
+      });
+
+      // 12. Bước 1: Học sinh bấm nộp câu trả lời bài cũ
+      const btnSubmitOldLesson = document.getElementById('btn-submit-old-lesson');
+      if (btnSubmitOldLesson) {
+        btnSubmitOldLesson.addEventListener('click', () => {
+          const state = STORE.getState();
+          if (state.oldLesson && state.oldLesson.isLocked) {
+            alert('Đã hết thời gian nộp bài!');
+            return;
+          }
+
+          let ans = '';
+          if (state.oldLesson.questionType === 'mcq') {
+            ans = state.oldLesson.studentAnswer || '';
+            if (!ans) {
+              alert('Nhóm em hãy bấm chọn 1 phương án A, B, C hoặc D trước khi nộp bài!');
+              return;
+            }
+          } else {
+            const ta = document.getElementById('ol-text-input');
+            ans = ta ? ta.value.trim() : '';
+            if (!ans) {
+              alert('Nhóm em hãy gõ câu trả lời vào ô văn bản trước khi nộp!');
+              return;
+            }
+          }
+
+          const now = new Date();
+          const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+          const mId = state.machineId || 1;
+          const stuName = (state.students && state.students.length > 0) ? state.students.join(' & ') : `Máy ${mId}`;
+
+          SYNC_BUS.broadcast('OLD_LESSON_SUBMIT', {
+            machineId: mId,
+            student: stuName,
+            answer: ans,
+            time: timeStr
+          });
+
+          const statusMsg = document.getElementById('ol-status-msg');
+          if (statusMsg) {
+            statusMsg.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Đã nộp câu trả lời lúc <strong>${timeStr}</strong>: <em>"${ans}"</em>. Đang chờ Thầy chốt đáp án!`;
+          }
+
+          alert('🎉 Đã nộp câu trả lời thành công lên Bảng điều khiển của Thầy!');
+        });
+      }
+
+      // Đóng dropdown khi click ngoài
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.tpb-step-dropdown-wrapper')) {
+          this.closeAllTpbMenus();
+        }
       });
     },
 
@@ -1339,6 +1519,7 @@
       // Chuyển panel tác nghiệp bên phải
       const panels = {
         'waiting': document.getElementById('tw-panel-waiting'),
+        'old_lesson': document.getElementById('tw-panel-old-lesson'),
         'warmup': document.getElementById('tw-panel-warmup'),
         'theory': document.getElementById('tw-panel-theory'),
         'discussion': document.getElementById('tw-panel-discussion'),
@@ -1349,6 +1530,46 @@
         const p = panels[key];
         if (p) p.classList.toggle('active', key === state.currentPhase);
       });
+
+      // Nếu ở Bước 1: Kiểm tra bài cũ phía Giáo viên
+      if (state.currentPhase === 'old_lesson') {
+        const studentSpotlight = document.getElementById('ots-student-name');
+        if (studentSpotlight) {
+          if (state.oldLesson && state.oldLesson.selectedStudent) {
+            studentSpotlight.innerHTML = `<span style="color:#38bdf8;font-weight:800;">MÁY ${String(state.oldLesson.selectedMachine).padStart(2,'0')}:</span> <span style="color:#f59e0b;font-weight:800;">${state.oldLesson.selectedStudent}</span>`;
+          } else {
+            studentSpotlight.textContent = 'Chưa bốc thăm (Bấm nút [Bốc thăm] để chọn ngẫu nhiên)';
+          }
+        }
+        const timerDisplay = document.getElementById('ots-timer-display');
+        if (timerDisplay && state.oldLesson) {
+          const mins = Math.floor(state.oldLesson.timeLeft / 60);
+          const secs = state.oldLesson.timeLeft % 60;
+          timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+        const subList = document.getElementById('ol-submissions-list');
+        const subCount = document.getElementById('ol-submitted-count');
+        if (subList && subCount && state.oldLesson) {
+          const subs = Object.keys(state.oldLesson.submissions || {});
+          subCount.textContent = `Đã nộp: ${subs.length}/18 máy`;
+          if (subs.length === 0) {
+            subList.innerHTML = '<div style="color:#64748b;font-size:11.5px;padding:8px;text-align:center;">Chưa có máy nào nộp câu trả lời...</div>';
+          } else {
+            let html = '';
+            subs.forEach(mId => {
+              const item = state.oldLesson.submissions[mId];
+              html += `<div class="osb-item">
+                <div class="osb-item-left">
+                  <span class="osb-machine-badge">MÁY ${String(mId).padStart(2,'0')}</span>
+                  <span class="osb-ans-content">${item.student || ''}: <em>"${item.answer || ''}"</em></span>
+                </div>
+                <span class="osb-time">${item.time || ''}</span>
+              </div>`;
+            });
+            subList.innerHTML = html;
+          }
+        }
+      }
 
       // Nếu ở Chặng 1: Vẽ biểu đồ phân tích Quick Poll
       if (state.currentPhase === 'warmup') {
@@ -1463,6 +1684,7 @@
       // Chuyển view nội dung
       const views = {
         'waiting': document.getElementById('st-view-waiting'),
+        'old_lesson': document.getElementById('st-view-old-lesson'),
         'warmup': document.getElementById('st-view-warmup'),
         'theory': document.getElementById('st-view-theory'),
         'discussion': document.getElementById('st-view-discussion'),
@@ -1475,6 +1697,64 @@
       });
 
       // Render chi tiết từng view
+      if (currentPhase === 'old_lesson') {
+        const ol = state.oldLesson || {};
+        const timerEl = document.getElementById('ol-timer');
+        if (timerEl) {
+          const mins = Math.floor((ol.timeLeft || 0) / 60);
+          const secs = (ol.timeLeft || 0) % 60;
+          timerEl.innerHTML = `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        }
+
+        const spotlight = document.getElementById('ol-caller-spotlight');
+        const callerInfo = document.getElementById('ol-caller-info');
+        if (spotlight && callerInfo) {
+          const isThisMachine = (ol.selectedMachine === machineId);
+          spotlight.classList.toggle('highlighted', isThisMachine);
+          if (ol.selectedStudent) {
+            if (isThisMachine) {
+              callerInfo.innerHTML = `🎉 <strong>CHÚC MỪNG MÁY ${String(machineId).padStart(2,'0')}!</strong> Mời bạn <span style="color:#f59e0b;font-weight:800;">${ol.selectedStudent}</span> đại diện trả lời!`;
+            } else {
+              callerInfo.innerHTML = `🎯 <strong>MÁY ${String(ol.selectedMachine).padStart(2,'0')}</strong> — Bạn <span style="color:#38bdf8;font-weight:700;">${ol.selectedStudent}</span> đang trả lời bài cũ...`;
+            }
+          } else {
+            callerInfo.textContent = 'Đang chờ Thầy bốc thăm gọi học sinh...';
+          }
+        }
+
+        const qText = document.getElementById('ol-question-text');
+        if (qText && ol.questionText) qText.textContent = ol.questionText;
+
+        const qTypeBadge = document.getElementById('ol-q-type-badge');
+        if (qTypeBadge) qTypeBadge.textContent = ol.questionType === 'mcq' ? 'Trắc nghiệm A-B-C-D' : 'Tự luận ngắn';
+
+        const textWrap = document.getElementById('ol-answer-text-wrap');
+        const mcqWrap = document.getElementById('ol-answer-mcq-wrap');
+        if (textWrap && mcqWrap) {
+          textWrap.style.display = ol.questionType === 'mcq' ? 'none' : 'block';
+          mcqWrap.style.display = ol.questionType === 'mcq' ? 'block' : 'none';
+        }
+
+        const textarea = document.getElementById('ol-text-input');
+        const btnSubmit = document.getElementById('btn-submit-old-lesson');
+        if (textarea && btnSubmit) {
+          textarea.disabled = !!ol.isLocked;
+          btnSubmit.disabled = !!ol.isLocked;
+          if (ol.isLocked) {
+            btnSubmit.innerHTML = '<i class="fas fa-lock"></i> ĐÃ HẾT GIỜ / ĐÃ KHÓA';
+            btnSubmit.style.opacity = '0.6';
+          } else {
+            btnSubmit.innerHTML = '<i class="fas fa-paper-plane"></i> GỬI CÂU TRẢ LỜI';
+            btnSubmit.style.opacity = '1';
+          }
+        }
+
+        const revealBox = document.getElementById('ol-reveal-box');
+        if (revealBox) {
+          revealBox.style.display = ol.isRevealed ? 'flex' : 'none';
+        }
+      }
+
       if (currentPhase === 'waiting') {
         const deskInfo = document.getElementById('waiting-desk-info');
         if (deskInfo) deskInfo.textContent = `Máy bàn số ${String(machineId || 4).padStart(2,'0')}`;
@@ -1596,6 +1876,390 @@
           }
         }
       }
+    },
+
+    // -------------------------------------------------------------
+    // TÍNH NĂNG 1: BƯỚC KIỂM TRA BÀI CŨ & BỐC THĂM KỊCH TÍNH 2 TẦNG
+    // -------------------------------------------------------------
+    toggleOldLessonMenu() {
+      const menu = document.getElementById('tpb-menu-old-lesson');
+      if (menu) {
+        const isVisible = menu.style.display !== 'none';
+        menu.style.display = isVisible ? 'none' : 'block';
+      }
+    },
+
+    closeAllTpbMenus() {
+      const menu = document.getElementById('tpb-menu-old-lesson');
+      if (menu) menu.style.display = 'none';
+    },
+
+    setOldLessonTimer(sec) {
+      const state = STORE.getState();
+      const oldL = Object.assign({}, state.oldLesson, {
+        timerSeconds: sec,
+        timeLeft: sec
+      });
+      STORE.setState({ oldLesson: oldL });
+      document.querySelectorAll('.tdm-timer-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.sec, 10) === sec);
+      });
+    },
+
+    setOldLessonQType(type) {
+      const state = STORE.getState();
+      const oldL = Object.assign({}, state.oldLesson, { questionType: type });
+      STORE.setState({ oldLesson: oldL });
+      document.querySelectorAll('.tdm-type-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.qtype === type);
+      });
+    },
+
+    broadcastOldLessonStart() {
+      const qInput = document.getElementById('otc-question-input');
+      const qText = qInput ? qInput.value.trim() : '';
+      const state = STORE.getState();
+      const sec = state.oldLesson.timerSeconds || 120;
+
+      const oldL = Object.assign({}, state.oldLesson, {
+        questionText: qText || state.oldLesson.questionText,
+        timeLeft: sec,
+        timerActive: true,
+        isLocked: false,
+        isRevealed: false
+      });
+
+      STORE.setState({
+        currentPhase: 'old_lesson',
+        teacherPhase: 'old_lesson',
+        oldLesson: oldL
+      });
+
+      SYNC_BUS.broadcast('OLD_LESSON_START', {
+        timerSeconds: sec,
+        questionType: state.oldLesson.questionType,
+        questionText: oldL.questionText,
+        selectedMachine: state.oldLesson.selectedMachine,
+        selectedStudent: state.oldLesson.selectedStudent
+      });
+
+      if (db) {
+        db.ref('activeSession/currentPhase').set('old_lesson').catch(()=>{});
+        db.ref('activeSession/oldLesson').set(oldL).catch(()=>{});
+      }
+
+      this.startOldLessonCountdown();
+    },
+
+    teacherLockOldLesson() {
+      const state = STORE.getState();
+      const oldL = Object.assign({}, state.oldLesson, { isLocked: true, timerActive: false });
+      STORE.setState({ oldLesson: oldL });
+      SYNC_BUS.broadcast('OLD_LESSON_LOCK', {});
+      if (db) {
+        db.ref('activeSession/oldLesson/isLocked').set(true).catch(()=>{});
+      }
+    },
+
+    teacherRevealOldLesson() {
+      const state = STORE.getState();
+      const oldL = Object.assign({}, state.oldLesson, { isRevealed: true });
+      STORE.setState({ oldLesson: oldL });
+      SYNC_BUS.broadcast('OLD_LESSON_REVEAL', {});
+      if (db) {
+        db.ref('activeSession/oldLesson/isRevealed').set(true).catch(()=>{});
+      }
+    },
+
+    oldLessonTimerInterval: null,
+    startOldLessonCountdown() {
+      if (this.oldLessonTimerInterval) {
+        clearInterval(this.oldLessonTimerInterval);
+        this.oldLessonTimerInterval = null;
+      }
+
+      this.oldLessonTimerInterval = setInterval(() => {
+        const state = STORE.getState();
+        const oldL = state.oldLesson;
+        if (!oldL.timerActive || oldL.timeLeft <= 0) {
+          clearInterval(this.oldLessonTimerInterval);
+          this.oldLessonTimerInterval = null;
+          if (oldL.timeLeft <= 0 && !oldL.isLocked) {
+            STORE.setState({
+              oldLesson: Object.assign({}, oldL, { isLocked: true, timerActive: false })
+            });
+          }
+          return;
+        }
+
+        const newTime = oldL.timeLeft - 1;
+        STORE.setState({
+          oldLesson: Object.assign({}, oldL, { timeLeft: newTime })
+        });
+      }, 1000);
+    },
+
+    // BỐC THĂM KỊCH TÍNH (LUCKY DRAW 2 TẦNG)
+    openLuckyDrawModal() {
+      const modal = document.getElementById('modal-lucky-draw');
+      if (modal) modal.style.display = 'flex';
+      const banner = document.getElementById('ld-result-banner');
+      if (banner) banner.style.display = 'none';
+      const spinBtn = document.getElementById('btn-trigger-spin');
+      if (spinBtn) spinBtn.disabled = false;
+
+      this.initLuckyDrawViews();
+    },
+
+    closeLuckyDrawModal() {
+      const modal = document.getElementById('modal-lucky-draw');
+      if (modal) modal.style.display = 'none';
+    },
+
+    setLuckyDrawStrategy(strat) {
+      const state = STORE.getState();
+      const ld = Object.assign({}, state.luckyDraw, { strategy: strat });
+      STORE.setState({ luckyDraw: ld });
+
+      const btnSlot = document.getElementById('btn-strat-slot');
+      const btnWheel = document.getElementById('btn-strat-wheel');
+      const viewSlot = document.getElementById('ld-view-slot');
+      const viewWheel = document.getElementById('ld-view-wheel');
+
+      if (btnSlot) btnSlot.classList.toggle('active', strat === 'slot_machine');
+      if (btnWheel) btnWheel.classList.toggle('active', strat === 'wheel_fortune');
+      if (viewSlot) viewSlot.style.display = (strat === 'slot_machine') ? 'block' : 'none';
+      if (viewWheel) viewWheel.style.display = (strat === 'wheel_fortune') ? 'block' : 'none';
+
+      this.initLuckyDrawViews();
+    },
+
+    initLuckyDrawViews() {
+      const state = STORE.getState();
+      const strat = state.luckyDraw.strategy || 'slot_machine';
+
+      if (strat === 'slot_machine') {
+        const reelM = document.getElementById('slot-reel-machine');
+        const reelS = document.getElementById('slot-reel-student');
+        if (reelM) {
+          reelM.style.transform = 'translateY(0px)';
+          reelM.style.transition = 'none';
+          let html = '';
+          for (let r = 0; r < 4; r++) {
+            for (let i = 1; i <= 18; i++) {
+              html += `<div class="slot-item">MÁY ${String(i).padStart(2,'0')}</div>`;
+            }
+          }
+          reelM.innerHTML = html;
+        }
+        if (reelS) {
+          reelS.style.transform = 'translateY(0px)';
+          reelS.style.transition = 'none';
+          reelS.innerHTML = '<div class="slot-item">Đang chờ...</div>';
+        }
+      } else if (strat === 'wheel_fortune') {
+        this.drawWheelCanvas();
+        const flipper = document.getElementById('wheel-student-flipper');
+        const subbox = document.getElementById('wheel-student-subbox');
+        if (flipper) flipper.textContent = 'Đang chờ máy...';
+        if (subbox) subbox.style.display = 'none';
+      }
+    },
+
+    drawWheelCanvas() {
+      const canvas = document.getElementById('wheel-canvas');
+      if (!canvas || !canvas.getContext) return;
+      const ctx = canvas.getContext('2d');
+      const totalSlices = 18;
+      const sliceAngle = (2 * Math.PI) / totalSlices;
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const radius = cx - 8;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const colors = ['#059669', '#0284c7', '#7c3aed', '#db2777', '#d97706', '#0d9488'];
+
+      for (let i = 0; i < totalSlices; i++) {
+        const angle = i * sliceAngle;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, angle, angle + sliceAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#0f172a';
+        ctx.stroke();
+
+        // Vẽ nhãn M01..M18
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(angle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 13px Inter, sans-serif';
+        ctx.fillText(`M${String(i + 1).padStart(2,'0')}`, radius - 18, 5);
+        ctx.restore();
+      }
+
+      // Vòng tròn tâm
+      ctx.beginPath();
+      ctx.arc(cx, cy, 32, 0, 2 * Math.PI);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.stroke();
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('LMS', cx, cy + 4);
+    },
+
+    startLuckyDrawSpin() {
+      const state = STORE.getState();
+      const classData = this.classes[state.classId] || this.classes['10A1'];
+
+      // Chọn ngẫu nhiên máy từ 1..18
+      const targetMachine = Math.floor(Math.random() * 18) + 1;
+      const pair = classData.seatingPlan[targetMachine] || ["Học sinh A", "Học sinh B"];
+      // Chọn ngẫu nhiên đích danh 1 học sinh tại máy đó
+      const targetStudent = pair[Math.floor(Math.random() * pair.length)];
+
+      const spinBtn = document.getElementById('btn-trigger-spin');
+      if (spinBtn) spinBtn.disabled = true;
+
+      const payload = {
+        strategy: state.luckyDraw.strategy || 'slot_machine',
+        targetMachine: targetMachine,
+        targetStudent: targetStudent,
+        studentsList: pair,
+        duration: 3800
+      };
+
+      // Phát lệnh đồng bộ xuống toàn bộ 18 máy học sinh
+      SYNC_BUS.broadcast('LUCKY_DRAW_SPIN', payload);
+      if (db) {
+        db.ref('activeSession/luckyDraw').set({
+          payload,
+          timestamp: Date.now()
+        }).catch(()=>{});
+      }
+
+      this.executeLuckyDrawAnimation(payload, true);
+    },
+
+    handleRemoteLuckyDrawSpin(payload) {
+      if (!payload) return;
+      this.openLuckyDrawModal();
+      this.setLuckyDrawStrategy(payload.strategy || 'slot_machine');
+      const spinBtn = document.getElementById('btn-trigger-spin');
+      if (spinBtn) spinBtn.disabled = true;
+
+      this.executeLuckyDrawAnimation(payload, false);
+    },
+
+    executeLuckyDrawAnimation(payload, isInitiator) {
+      const { strategy, targetMachine, targetStudent, studentsList, duration } = payload;
+      const banner = document.getElementById('ld-result-banner');
+      if (banner) banner.style.display = 'none';
+
+      SOUNDS.init();
+      let tickCount = 0;
+      const tickInterval = setInterval(() => {
+        SOUNDS.playTick(500 + (tickCount % 6) * 50);
+        tickCount++;
+        if (tickCount > 25) clearInterval(tickInterval);
+      }, 130);
+
+      if (strategy === 'slot_machine') {
+        const reelM = document.getElementById('slot-reel-machine');
+        const reelS = document.getElementById('slot-reel-student');
+
+        if (reelM) {
+          const targetItemIdx = 18 * 2 + (targetMachine - 1);
+          reelM.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+          reelM.style.transform = `translateY(-${targetItemIdx * 100}px)`;
+        }
+
+        if (reelS) {
+          let sHtml = '';
+          const sList = studentsList || [targetStudent];
+          for (let r = 0; r < 8; r++) {
+            sList.forEach(name => {
+              sHtml += `<div class="slot-item">${name}</div>`;
+            });
+          }
+          reelS.innerHTML = sHtml;
+          const sTargetIdx = sList.length * 6 + sList.indexOf(targetStudent);
+          setTimeout(() => {
+            reelS.style.transition = `transform ${duration - 1000}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+            reelS.style.transform = `translateY(-${sTargetIdx * 100}px)`;
+          }, 1000);
+        }
+      } else if (strategy === 'wheel_fortune') {
+        const canvas = document.getElementById('wheel-canvas');
+        if (canvas) {
+          const sliceAngle = 360 / 18;
+          const targetSliceMid = (targetMachine - 1) * sliceAngle + sliceAngle / 2;
+          const rotateDegrees = (360 * 5) + (270 - targetSliceMid);
+          canvas.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.9, 0.2, 1.0)`;
+          canvas.style.transform = `rotate(${rotateDegrees}deg)`;
+        }
+
+        const subbox = document.getElementById('wheel-student-subbox');
+        const flipper = document.getElementById('wheel-student-flipper');
+        setTimeout(() => {
+          if (subbox) subbox.style.display = 'block';
+          if (flipper) {
+            let flipIdx = 0;
+            const sList = studentsList || [targetStudent];
+            const flipTimer = setInterval(() => {
+              flipper.textContent = sList[flipIdx % sList.length];
+              flipIdx++;
+            }, 80);
+            setTimeout(() => {
+              clearInterval(flipTimer);
+              flipper.textContent = targetStudent;
+              flipper.style.color = '#38bdf8';
+            }, 1200);
+          }
+        }, duration - 1200);
+      }
+
+      // Kết thúc bốc thăm
+      setTimeout(() => {
+        clearInterval(tickInterval);
+        SOUNDS.playFanfare();
+
+        if (typeof confetti === 'function') {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        }
+
+        if (banner) {
+          banner.style.display = 'block';
+          const mText = document.getElementById('lrb-machine-text');
+          const sText = document.getElementById('lrb-student-text');
+          if (mText) mText.textContent = `MÁY ${String(targetMachine).padStart(2,'0')}`;
+          if (sText) sText.textContent = `Em: ${targetStudent}`;
+        }
+
+        // Cập nhật vào Store
+        const state = STORE.getState();
+        const oldL = Object.assign({}, state.oldLesson, {
+          selectedMachine: targetMachine,
+          selectedStudent: targetStudent
+        });
+        STORE.setState({ oldLesson: oldL });
+
+        const spinBtn = document.getElementById('btn-trigger-spin');
+        if (spinBtn) spinBtn.disabled = false;
+      }, duration + 200);
     }
   };
 
@@ -1619,6 +2283,50 @@
     if (db) {
       db.ref('activeSession/currentPhase').set(phase).catch(()=>{});
     }
+  };
+
+  window.toggleOldLessonMenu = function() {
+    APP.toggleOldLessonMenu();
+  };
+
+  window.closeAllTpbMenus = function() {
+    APP.closeAllTpbMenus();
+  };
+
+  window.setOldLessonTimer = function(sec) {
+    APP.setOldLessonTimer(sec);
+  };
+
+  window.setOldLessonQType = function(type) {
+    APP.setOldLessonQType(type);
+  };
+
+  window.broadcastOldLessonStart = function() {
+    APP.broadcastOldLessonStart();
+  };
+
+  window.teacherLockOldLesson = function() {
+    APP.teacherLockOldLesson();
+  };
+
+  window.teacherRevealOldLesson = function() {
+    APP.teacherRevealOldLesson();
+  };
+
+  window.openLuckyDrawModal = function() {
+    APP.openLuckyDrawModal();
+  };
+
+  window.closeLuckyDrawModal = function() {
+    APP.closeLuckyDrawModal();
+  };
+
+  window.setLuckyDrawStrategy = function(strat) {
+    APP.setLuckyDrawStrategy(strat);
+  };
+
+  window.startLuckyDrawSpin = function() {
+    APP.startLuckyDrawSpin();
   };
 
   // Khởi động ứng dụng khi DOM sẵn sàng

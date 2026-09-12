@@ -201,7 +201,89 @@
         </div>
       </section>
 
-      <!-- CHẶNG 1: KHỞI ĐỘNG TỨC THÌ (QUICK POLL A-B-C-D) -->
+      <!-- CHẶNG 1: KIỂM TRA BÀI CŨ (TƯƠNG TÁC THCS) -->
+      <section id="st-view-old-lesson" class="st-view">
+        <div class="old-lesson-container">
+          <div class="ol-banner">
+            <span class="ol-phase-tag"><i class="fas fa-history"></i> BƯỚC 1: KIỂM TRA BÀI CŨ</span>
+            <div class="ol-timer" id="ol-timer"><i class="fas fa-stopwatch"></i> 02:00</div>
+          </div>
+
+          <!-- Thông báo gọi học sinh -->
+          <div class="ol-caller-spotlight" id="ol-caller-spotlight">
+            <div class="ol-cs-badge"><i class="fas fa-bullhorn"></i> LƯỢT TRẢ LỜI:</div>
+            <div class="ol-cs-title" id="ol-caller-info">Đang chờ Thầy bốc thăm gọi học sinh...</div>
+          </div>
+
+          <!-- Nội dung câu hỏi kiểm tra bài cũ -->
+          <div class="ol-question-card">
+            <div class="ol-q-header">
+              <span class="ol-q-badge">CÂU HỎI ÔN TẬP</span>
+              <span class="ol-q-type-badge" id="ol-q-type-badge">Tự luận ngắn</span>
+            </div>
+            <div class="ol-question-text" id="ol-question-text">
+              Em hãy cho biết: Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?
+            </div>
+
+            <!-- Khu vực trả lời dạng Tự Luận Ngắn -->
+            <div class="ol-answer-text-wrap" id="ol-answer-text-wrap">
+              <textarea class="ol-text-input" id="ol-text-input" placeholder="Gõ câu trả lời của nhóm hoặc bạn được gọi vào đây..."></textarea>
+              <div class="ol-input-footer">
+                <span class="ol-char-count" id="ol-char-count">0 ký tự</span>
+              </div>
+            </div>
+
+            <!-- Khu vực trả lời dạng Trắc Nghiệm (A-B-C-D) -->
+            <div class="ol-answer-mcq-wrap" id="ol-answer-mcq-wrap" style="display:none;">
+              <div class="ol-mcq-grid">
+                <button type="button" class="ol-mcq-btn" data-ol-choice="A">
+                  <span class="ol-mcq-key">A</span>
+                  <span class="ol-mcq-val" id="ol-opt-a">Bộ nhớ trong RAM</span>
+                </button>
+                <button type="button" class="ol-mcq-btn" data-ol-choice="B">
+                  <span class="ol-mcq-key">B</span>
+                  <span class="ol-mcq-val" id="ol-opt-b">Bộ xử lý trung tâm CPU</span>
+                </button>
+                <button type="button" class="ol-mcq-btn" data-ol-choice="C">
+                  <span class="ol-mcq-key">C</span>
+                  <span class="ol-mcq-val" id="ol-opt-c">Ổ đĩa cứng SSD/HDD</span>
+                </button>
+                <button type="button" class="ol-mcq-btn" data-ol-choice="D">
+                  <span class="ol-mcq-key">D</span>
+                  <span class="ol-mcq-val" id="ol-opt-d">Bộ nguồn máy tính PSU</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Nút nộp bài dùng chung cho cả Tự luận và Trắc nghiệm -->
+            <div class="ol-submit-bar" style="margin-top:14px;display:flex;justify-content:flex-end;">
+              <button type="button" class="btn-primary ol-btn-submit" id="btn-submit-old-lesson">
+                <i class="fas fa-paper-plane"></i> GỬI CÂU TRẢ LỜI
+              </button>
+            </div>
+
+            <!-- Hộp trạng thái nộp bài -->
+            <div class="ol-status-msg" id="ol-status-msg">
+              <i class="fas fa-info-circle"></i> Học sinh trao đổi và nhập câu trả lời trước khi hết giờ.
+            </div>
+
+            <!-- Banner Đáp Án Chuẩn Khi Thầy Công Bố -->
+            <div class="ol-reveal-box" id="ol-reveal-box" style="display:none;">
+              <div class="orb-header">
+                <i class="fas fa-check-circle"></i> ĐÁP ÁN CHUẨN CỦA THẦY:
+              </div>
+              <div class="orb-answer" id="ol-reveal-answer-text">
+                Bộ xử lý trung tâm (CPU - Central Processing Unit)
+              </div>
+              <div class="orb-explain" id="ol-reveal-explain-text">
+                Giải thích: CPU đóng vai trò như bộ não, thực hiện các phép tính số học, logic và điều phối mọi linh kiện trong máy tính.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CHẶNG 2: KHỞI ĐỘNG TỨC THÌ (QUICK POLL A-B-C-D) -->
       <section id="st-view-warmup" class="st-view">
         <div class="poll-container">
           <div class="poll-banner">
@@ -488,22 +570,66 @@ print(s[4:])</code></pre>
         <div class="teacher-pace-bar">
           <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
             <span class="tpb-badge">0</span>
-            <span>Sẵn sàng & Điểm danh</span>
+            <span>Điểm danh</span>
           </div>
+
+          <!-- BƯỚC 1: KIỂM TRA BÀI CŨ (Có Dropdown Menu Cài Đặt) -->
+          <div class="tpb-step-dropdown-wrapper">
+            <div class="tpb-step" data-tphase="old_lesson" id="tpb-step-old-lesson" onclick="window.teacherSetPhase('old_lesson')">
+              <span class="tpb-badge">1</span>
+              <span>Kiểm tra bài cũ</span>
+              <button type="button" class="btn-tpb-dropdown" id="btn-toggle-old-lesson-menu" title="Mở menu cài đặt kiểm tra bài cũ" onclick="event.stopPropagation(); window.toggleOldLessonMenu();">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+            </div>
+            <!-- Menu Xổ Xuống Cài Đặt -->
+            <div class="tpb-dropdown-menu" id="tpb-menu-old-lesson" style="display:none;">
+              <div class="tdm-header">
+                <i class="fas fa-sliders-h"></i> CÀI ĐẶT KIỂM TRA BÀI CŨ
+              </div>
+              <div class="tdm-section">
+                <label><i class="fas fa-dice"></i> Bốc thăm gọi học sinh:</label>
+                <button type="button" class="tdm-btn-action" onclick="window.openLuckyDrawModal(); window.closeAllTpbMenus();">
+                  <i class="fas fa-gift"></i> Mở bốc thăm kịch tính (Phương án A / B)
+                </button>
+              </div>
+              <div class="tdm-section">
+                <label><i class="fas fa-stopwatch"></i> Thời gian đếm ngược:</label>
+                <div class="tdm-timer-options">
+                  <button type="button" class="tdm-timer-btn active" data-sec="60" onclick="window.setOldLessonTimer(60)">1 phút</button>
+                  <button type="button" class="tdm-timer-btn" data-sec="120" onclick="window.setOldLessonTimer(120)">2 phút</button>
+                  <button type="button" class="tdm-timer-btn" data-sec="180" onclick="window.setOldLessonTimer(180)">3 phút</button>
+                </div>
+              </div>
+              <div class="tdm-section">
+                <label><i class="fas fa-tasks"></i> Dạng câu hỏi:</label>
+                <div class="tdm-type-options">
+                  <button type="button" class="tdm-type-btn active" data-qtype="text" onclick="window.setOldLessonQType('text')">Tự luận ngắn</button>
+                  <button type="button" class="tdm-type-btn" data-qtype="mcq" onclick="window.setOldLessonQType('mcq')">Trắc nghiệm</button>
+                </div>
+              </div>
+              <div class="tdm-actions">
+                <button type="button" class="tdm-btn-submit" onclick="window.broadcastOldLessonStart(); window.closeAllTpbMenus();">
+                  <i class="fas fa-paper-plane"></i> PHÁT ĐỀ BÀI CHO 18 MÁY
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="tpb-step" data-tphase="warmup" onclick="window.teacherSetPhase('warmup')">
-            <span class="tpb-badge">1</span>
-            <span>Khởi động Quick Poll</span>
+            <span class="tpb-badge">2</span>
+            <span>Khởi động</span>
           </div>
           <div class="tpb-step" data-tphase="theory" onclick="window.teacherSetPhase('theory')">
-            <span class="tpb-badge">2</span>
-            <span>Trạm Lý thuyết PWA</span>
+            <span class="tpb-badge">3</span>
+            <span>Khám phá SGK</span>
           </div>
           <div class="tpb-step" data-tphase="discussion" onclick="window.teacherSetPhase('discussion')">
-            <span class="tpb-badge">3</span>
-            <span>Thảo luận & Thực hành</span>
+            <span class="tpb-badge">4</span>
+            <span>Thực hành</span>
           </div>
           <div class="tpb-step" data-tphase="quiz" onclick="window.teacherSetPhase('quiz')">
-            <span class="tpb-badge">4</span>
+            <span class="tpb-badge">5</span>
             <span>Live Quiz & Củng cố</span>
           </div>
 
@@ -536,13 +662,70 @@ print(s[4:])</code></pre>
                   <div class="stat-item"><span class="stat-num" id="stat-checkedin">2</span><span>Máy đã vào</span></div>
                   <div class="stat-item"><span class="stat-num" id="stat-missing">16</span><span>Máy chưa vào</span></div>
                 </div>
-                <button type="button" class="btn-primary" onclick="window.teacherSetPhase('warmup')" style="margin-top:16px;">
-                  <i class="fas fa-bolt"></i> CHUYỂN SANG CHẶNG 1: KHỞI ĐỘNG NHANH
+                <button type="button" class="btn-primary" onclick="window.teacherSetPhase('old_lesson')" style="margin-top:16px;">
+                  <i class="fas fa-history"></i> CHUYỂN SANG BƯỚC 1: KIỂM TRA BÀI CŨ
                 </button>
               </div>
             </div>
 
-            <!-- Chặng 1: Live Analytics Quick Poll -->
+            <!-- BƯỚC 1: BẢNG TÁC NGHIỆP KIỂM TRA BÀI CŨ (THCS) -->
+            <div id="tw-panel-old-lesson" class="tw-panel">
+              <div class="tw-card">
+                <div class="twc-header">
+                  <h3><i class="fas fa-history"></i> BƯỚC 1: KIỂM TRA BÀI CŨ</h3>
+                  <div class="twc-tools">
+                    <button type="button" class="btn-tool-sm" id="btn-open-lucky-draw" onclick="window.openLuckyDrawModal()">
+                      <i class="fas fa-dice"></i> Bốc thăm gọi học sinh
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Thẻ thông tin học sinh được gọi -->
+                <div class="ol-teacher-spotlight" id="ol-teacher-spotlight">
+                  <div class="ots-icon"><i class="fas fa-user-check"></i></div>
+                  <div class="ots-info">
+                    <div class="ots-label">HỌC SINH ĐƯỢC CHỈ ĐỊNH:</div>
+                    <div class="ots-name" id="ots-student-name">Chưa bốc thăm (Bấm nút [Bốc thăm] để chọn ngẫu nhiên)</div>
+                  </div>
+                  <div class="ots-timer-wrap">
+                    <span class="ots-timer" id="ots-timer-display">02:00</span>
+                  </div>
+                </div>
+
+                <!-- Khung câu hỏi & Điều khiển giáo viên -->
+                <div class="ol-teacher-controls">
+                  <div class="otc-row">
+                    <label>Câu hỏi kiểm tra:</label>
+                    <input type="text" class="otc-input" id="otc-question-input" value="Trong máy tính, thiết bị nào đóng vai trò là 'bộ não' điều khiển mọi hoạt động?">
+                  </div>
+
+                  <div class="otc-actions-bar">
+                    <button type="button" class="btn-primary" id="btn-teacher-start-old-lesson" onclick="window.broadcastOldLessonStart()">
+                      <i class="fas fa-paper-plane"></i> PHÁT ĐỀ XUỐNG 18 MÁY
+                    </button>
+                    <button type="button" class="btn-tool" id="btn-teacher-lock-old-lesson" onclick="window.teacherLockOldLesson()">
+                      <i class="fas fa-lock"></i> KHÓA BÀI NGAY
+                    </button>
+                    <button type="button" class="btn-confirm" id="btn-teacher-reveal-old-lesson" onclick="window.teacherRevealOldLesson()">
+                      <i class="fas fa-bullhorn"></i> CÔNG BỐ ĐÁP ÁN CHUẨN
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Danh sách câu trả lời của 18 máy -->
+                <div class="ol-submissions-box">
+                  <div class="osb-header">
+                    <h4><i class="fas fa-list-alt"></i> CÂU TRẢ LỜI CỦA CÁC MÁY THEO THỜI GIAN THỰC</h4>
+                    <span class="osb-count" id="ol-submitted-count">Đã nộp: 0/18 máy</span>
+                  </div>
+                  <div class="ol-submissions-list" id="ol-submissions-list">
+                    <!-- Render động bài nộp của các máy -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chặng 2: Live Analytics Quick Poll -->
             <div id="tw-panel-warmup" class="tw-panel">
               <div class="tw-card">
                 <div class="twc-header">
@@ -694,6 +877,103 @@ print(s[4:])</code></pre>
           <button type="button" class="btn-cancel" id="btn-cancel-settings">Đóng</button>
           <button type="button" class="btn-confirm" id="btn-save-settings">
             <i class="fas fa-save"></i> LƯU THAY ĐỔI VÀ ĐỒNG BỘ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL: BỐC THĂM GỌI HỌC SINH KỊCH TÍNH (2 PHƯƠNG ÁN A/B)
+  ========================================================== -->
+  <div class="modal-overlay modal-xl" id="modal-lucky-draw" style="display:none;">
+    <div class="modal-card lucky-draw-card">
+      <div class="modal-header ld-header">
+        <div class="ldh-left">
+          <div class="modal-icon ld-icon"><i class="fas fa-dice"></i></div>
+          <div>
+            <h3>BỐC THĂM GỌI HỌC SINH KIỂM TRA BÀI CŨ</h3>
+            <p class="auth-sub">Cú đúp hồi hộp 2 tầng: Chọn Máy ➔ Chọn Đích danh 1 Học sinh • Đồng bộ 18 máy</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close-modal" id="btn-close-lucky-draw" onclick="window.closeLuckyDrawModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <!-- Thanh chọn phương án (A: Trục lăn Ma trận / B: Chiếc nón kỳ diệu) -->
+      <div class="ld-strategy-selector">
+        <span class="ld-strat-label"><i class="fas fa-magic"></i> Chế độ hiệu ứng:</span>
+        <div class="ld-strat-pills">
+          <button type="button" class="ld-strat-btn active" id="btn-strat-slot" onclick="window.setLuckyDrawStrategy('slot_machine')">
+            <i class="fas fa-bars"></i> Phương án A: Trục Lăn Ma Trận (Blooket / Quizizz)
+          </button>
+          <button type="button" class="ld-strat-btn" id="btn-strat-wheel" onclick="window.setLuckyDrawStrategy('wheel_fortune')">
+            <i class="fas fa-dharmachakra"></i> Phương án B: Chiếc Nón Kỳ Diệu
+          </button>
+        </div>
+      </div>
+
+      <!-- Sân khấu quay số trung tâm -->
+      <div class="ld-stage-container">
+        <!-- Vùng hiển thị Phương án A: Trục Lăn Ma Trận -->
+        <div class="ld-view-slot" id="ld-view-slot">
+          <div class="slot-machine-wrapper">
+            <!-- Cột 1: Chọn Số Máy -->
+            <div class="slot-column slot-col-machine">
+              <div class="slot-col-title"><i class="fas fa-desktop"></i> TẦNG 1: CHỌN SỐ MÁY</div>
+              <div class="slot-window">
+                <div class="slot-reel" id="slot-reel-machine">
+                  <!-- Render động các số máy -->
+                </div>
+                <div class="slot-pointer"></div>
+              </div>
+            </div>
+
+            <!-- Cột 2: Chọn Đích Danh Học Sinh Trong Máy -->
+            <div class="slot-column slot-col-student">
+              <div class="slot-col-title"><i class="fas fa-user-graduate"></i> TẦNG 2: CHỌN HỌC SINH TẠI MÁY</div>
+              <div class="slot-window">
+                <div class="slot-reel" id="slot-reel-student">
+                  <!-- Render động tên học sinh -->
+                </div>
+                <div class="slot-pointer"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vùng hiển thị Phương án B: Chiếc Nón Kỳ Diệu (Canvas Wheel) -->
+        <div class="ld-view-wheel" id="ld-view-wheel" style="display:none;">
+          <div class="wheel-stage-wrapper">
+            <div class="wheel-outer-box">
+              <div class="wheel-pointer-arrow"></div>
+              <canvas id="wheel-canvas" width="400" height="400"></canvas>
+            </div>
+            <!-- Hộp lật tên học sinh tầng 2 của Chiếc nón -->
+            <div class="wheel-student-subbox" id="wheel-student-subbox" style="display:none;">
+              <div class="wss-badge">TẦNG 2: CHỌN HỌC SINH TẠI MÁY</div>
+              <div class="wss-flipper" id="wheel-student-flipper">Đang chọn...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Chúc mừng Kết quả bùng nổ -->
+        <div class="ld-result-banner" id="ld-result-banner" style="display:none;">
+          <div class="lrb-badge"><i class="fas fa-trophy"></i> ĐÃ CHỌN ĐƯỢC HỌC SINH LÊN SÓNG!</div>
+          <div class="lrb-machine" id="lrb-machine-text">MÁY 03</div>
+          <div class="lrb-student" id="lrb-student-text">Em: Hoàng Kim Ngân</div>
+        </div>
+      </div>
+
+      <div class="ld-footer">
+        <div class="ld-footer-left">
+          <span class="ld-sound-status"><i class="fas fa-volume-up"></i> Âm thanh Web Audio chân thực</span>
+        </div>
+        <div class="ld-footer-right">
+          <button type="button" class="btn-cancel" onclick="window.closeLuckyDrawModal()">Đóng</button>
+          <button type="button" class="btn-confirm btn-lg" id="btn-trigger-spin" onclick="window.startLuckyDrawSpin()">
+            <i class="fas fa-play"></i> BẮT ĐẦU QUAY SỐ (ĐỒNG BỘ 18 MÁY)
           </button>
         </div>
       </div>
