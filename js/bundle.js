@@ -1104,11 +1104,12 @@
         }
       } else if (data.type === 'OLD_LESSON_SPOTLIGHT') {
         if (data.payload) {
-          const oldL = Object.assign({}, STORE.getState().oldLesson, {
+          const curOld = STORE.getState().oldLesson || {};
+          const oldL = Object.assign({}, curOld, {
             selectedMachine: data.payload.selectedMachine,
             selectedStudent: data.payload.selectedStudent,
-            questionText: data.payload.questionText || data.payload.question,
-            questionRevealed: false
+            questionText: data.payload.questionText || data.payload.question || curOld.questionText,
+            questionRevealed: curOld.questionRevealed || false
           });
           STORE.setState({ oldLesson: oldL });
         }
@@ -1142,6 +1143,11 @@
           }
         }
       } else if (data.type === 'OLD_LESSON_START') {
+        if (window.APP) {
+          window.APP.clearTimer('lucky_draw_end');
+          window.APP.clearTimer('lucky_draw_modal_close');
+          window.APP.clearTimer('lucky_draw_tick');
+        }
         const modal = document.getElementById('modal-lucky-draw');
         if (modal) modal.style.display = 'none';
         const payload = data.payload || {};
@@ -1264,6 +1270,34 @@
   const APP = {
     classes: JSON.parse(JSON.stringify(EMBEDDED_CLASSES)),
     lessons: EMBEDDED_LESSONS,
+
+    // =========================================================================
+    // QUẢN LÝ THỜI GIAN KHOA HỌC (SCIENTIFIC LIFECYCLE TIMERS REGISTRY)
+    // Ngăn chặn triệt để xung đột timeout, race condition giữa các hoạt động
+    // =========================================================================
+    _lifecycleTimers: {},
+    registerTimer(key, timerId) {
+      if (this._lifecycleTimers[key]) {
+        clearTimeout(this._lifecycleTimers[key]);
+        clearInterval(this._lifecycleTimers[key]);
+      }
+      this._lifecycleTimers[key] = timerId;
+      return timerId;
+    },
+    clearTimer(key) {
+      if (this._lifecycleTimers[key]) {
+        clearTimeout(this._lifecycleTimers[key]);
+        clearInterval(this._lifecycleTimers[key]);
+        delete this._lifecycleTimers[key];
+      }
+    },
+    clearAllTimers() {
+      Object.keys(this._lifecycleTimers).forEach(k => {
+        clearTimeout(this._lifecycleTimers[k]);
+        clearInterval(this._lifecycleTimers[k]);
+      });
+      this._lifecycleTimers = {};
+    },
 
     init() {
       // Nạp cấu hình các lớp tùy chỉnh từ localStorage nếu có
@@ -1672,7 +1706,9 @@
             pollAnswers: {},
             discussionAnswers: {},
             quizAnswers: {},
-            occupiedMachines: {}
+            occupiedMachines: {},
+            finishedActivities: {},
+            lastFinishedActivity: null
           });
 
           if (db) {
@@ -1688,6 +1724,8 @@
               pollAnswers: {},
               discussionAnswers: {},
               quizAnswers: {},
+              finishedActivities: {},
+              lastFinishedActivity: null,
               activatedAt: Date.now()
             }).catch(()=>{});
           }
@@ -3745,6 +3783,14 @@
         return;
       }
 
+      // 1. Quản lý thời gian khoa học: Hủy triệt để mọi timer dở dang của bốc thăm để chống race condition
+      this.clearTimer('lucky_draw_end');
+      this.clearTimer('lucky_draw_modal_close');
+      this.clearTimer('lucky_draw_tick');
+
+      const modal = document.getElementById('modal-lucky-draw');
+      if (modal) modal.style.display = 'none';
+
       const qInput = document.getElementById('otc-question-input');
       const qText = qInput ? qInput.value.trim() : '';
       const sec = (state.oldLesson && state.oldLesson.timerSeconds) || 120;
@@ -3956,6 +4002,11 @@
       const cleanAll = !!options.cleanAll;
       const storeUpdates = {};
 
+      // 0. Quản lý thời gian khoa học: Hủy sạch các timers đang chạy dở khi về sảnh chờ hoặc reset toàn bộ
+      if (cleanAll || targetPhase === 'waiting') {
+        this.clearAllTimers();
+      }
+
       // 1. Luôn đóng tất cả modals & overlays nổi
       const modalsToClose = [
         'modal-lucky-draw',
@@ -3970,8 +4021,8 @@
         if (el) el.style.display = 'none';
       });
 
-      // 2. Làm sạch Kiểm tra bài cũ
-      if (cleanAll || !targetPhase || targetPhase === 'waiting' || targetPhase === 'old_lesson') {
+      // 2. Làm sạch Kiểm tra bài cũ (Chỉ khi cleanAll HOẶC chuyển hẳn về sảnh chờ waiting hoặc sang phase khác)
+      if (cleanAll || targetPhase === 'waiting' || (targetPhase && targetPhase !== 'old_lesson')) {
         const defaultOldL = {
           timerSeconds: 120,
           timeLeft: 120,
@@ -4692,7 +4743,7 @@
       }
 
       // Kết thúc bốc thăm
-      setTimeout(() => {
+      APP.registerTimer('lucky_draw_end', setTimeout(() => {
         SOUNDS.playFanfare();
 
         if (typeof confetti === 'function') {
@@ -4750,24 +4801,25 @@
         if (spinBtn) spinBtn.disabled = false;
 
         // Đóng modal bốc thăm sau 2.5s trên mọi máy để hiển thị hộp thoại neon vinh danh 1 học sinh được gọi
-        setTimeout(() => {
+        APP.registerTimer('lucky_draw_modal_close', setTimeout(() => {
           const modal = document.getElementById('modal-lucky-draw');
           if (modal) modal.style.display = 'none';
 
-          // Hiển thị hộp thoại Neon vinh danh duy nhất 1 em học sinh và số máy bàn (chuẩn ảnh mẫu Thầy giao)
-          APP.renderNeonLuckyCard(targetMachine, targetStudent, false);
-
           const curState = STORE.getState();
+          const isQRevealed = !!(curState.oldLesson && curState.oldLesson.questionRevealed);
+
+          // Hiển thị hộp thoại Neon vinh danh duy nhất 1 em học sinh và số máy bàn (giữ nguyên trạng thái câu hỏi)
+          APP.renderNeonLuckyCard(targetMachine, targetStudent, isQRevealed);
+
           STORE.setState({
             oldLesson: Object.assign({}, curState.oldLesson, {
               selectedMachine: targetMachine,
-              selectedStudent: targetStudent,
-              questionRevealed: false
+              selectedStudent: targetStudent
             })
           });
           APP.updateOldLessonStepButtons();
-        }, 2500);
-      }, duration + 300);
+        }, 2500));
+      }, duration + 300));
     }
   };
 

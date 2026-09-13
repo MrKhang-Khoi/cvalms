@@ -406,6 +406,25 @@ async function runVerification() {
       throw new Error('LỖI: Câu hỏi chưa bung ra sau khi bấm Nút 2!');
     }
 
+    // KIỂM TRA ĐẶC BIỆT: CHỐNG RACE CONDITION (ĐỢI 3.5S ĐỂ CHỨNG MINH CÂU HỎI KHÔNG BỊ ẨN MẤT)
+    console.log('  [WAIT] Đợi 3.5 giây kiểm tra câu hỏi có bị timeout cũ ẩn mất không...');
+    await teacherPage.waitForTimeout(3500);
+    await studentPage.waitForTimeout(500);
+
+    const questionStillVisible = await studentPage.evaluate(() => {
+      const qText = document.getElementById('ol-question-text');
+      const banner = document.getElementById('ol-question-standby-banner');
+      return {
+        qVisible: qText ? qText.style.display !== 'none' : false,
+        standbyHidden: banner ? banner.style.display === 'none' : false,
+        qContent: qText ? qText.textContent.trim() : ''
+      };
+    });
+    console.log('  [PASS] Sau 3.5s, câu hỏi vẫn hiển thị ổn định 100%, không bị ẩn mất:', questionStillVisible);
+    if (!questionStillVisible.qVisible || !questionStillVisible.standbyHidden) {
+      throw new Error('LỖI NGHIÊM TRỌNG: Câu hỏi bị ẩn mất sau khi phát đề!');
+    }
+
     await studentPage.screenshot({ path: path.join(outputDir, '03_question_revealed_and_timer_active.png') });
 
     // Bấm Nút 3: Công bố đáp án chuẩn
