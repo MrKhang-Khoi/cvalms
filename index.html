@@ -457,7 +457,16 @@
             <div class="ol-timer" id="ol-timer"><i class="fas fa-stopwatch"></i> 02:00</div>
           </div>
 
-          <!-- Thông báo gọi học sinh -->
+          <!-- Thông báo gọi học sinh: Hộp Thoại Neon Chuẩn Ảnh Thầy Giao (1 Học Sinh Duy Nhất) -->
+          <div class="neon-lucky-card" id="neon-lucky-card" style="display:none;">
+            <div class="nlc-desk" id="nlc-desk-text">Máy bàn số 01</div>
+            <div class="nlc-name" id="nlc-student-name">Lê Hoàng Nam</div>
+            <div class="nlc-status-pill">
+              <span class="pulse-dot green"></span>
+              <span id="nlc-status-text">ĐÃ ĐƯỢC CHỈ ĐỊNH — CHỜ THẦY PHÁT ĐỀ</span>
+            </div>
+          </div>
+
           <div class="ol-caller-spotlight" id="ol-caller-spotlight">
             <div class="ol-cs-badge"><i class="fas fa-bullhorn"></i> LƯỢT TRẢ LỜI:</div>
             <div class="ol-cs-title" id="ol-caller-info">Đang chờ Thầy bốc thăm gọi học sinh...</div>
@@ -878,9 +887,21 @@ print(s[4:])</code></pre>
                       <label class="studio-field-label"><i class="fas fa-book-reader"></i> Nhiệm vụ học tập / Hướng dẫn đọc SGK:</label>
                       <textarea class="studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
                     </div>
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
-                      <input type="text" class="studio-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
+                    <div class="studio-form-row">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
+                        <input type="text" class="studio-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
+                      </div>
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng đọc & khám phá:</label>
+                        <select class="studio-select" id="step-time-2">
+                          <option value="120">2 phút</option>
+                          <option value="180">3 phút</option>
+                          <option value="300" selected>5 phút</option>
+                          <option value="420">7 phút</option>
+                          <option value="600">10 phút</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -952,9 +973,21 @@ print(s[4:])</code></pre>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-tag"></i> Tiêu đề bài thực hành:</label>
-                      <input type="text" class="studio-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                    <div class="studio-form-row">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-tag"></i> Tiêu đề bài thực hành:</label>
+                        <input type="text" class="studio-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                      </div>
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng thực hành:</label>
+                        <select class="studio-select" id="step-time-4">
+                          <option value="300">5 phút</option>
+                          <option value="600" selected>10 phút</option>
+                          <option value="720">12 phút</option>
+                          <option value="900">15 phút</option>
+                          <option value="1200">20 phút</option>
+                        </select>
+                      </div>
                     </div>
                     <div class="studio-form-group">
                       <label class="studio-field-label"><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
@@ -1499,6 +1532,17 @@ print("2. Cắt xâu:", s[10:17])
     </div>
   </div>
 
+  <!-- TOAST: CHUYỂN CẢNH SƯ PHẠM MƯỢT MÀ 1.5S (FADE-OUT TRÁNH VỀ ĐỘT NGỘT) -->
+  <div id="activity-finishing-toast" class="activity-finishing-toast" style="display:none;">
+    <div class="aft-content">
+      <div class="aft-spinner"><i class="fas fa-check-circle"></i></div>
+      <div class="aft-text">
+        <h4 id="aft-title">HOÀN THÀNH HOẠT ĐỘNG!</h4>
+        <p id="aft-desc">Đang lưu dữ liệu và chuyển về phòng chờ...</p>
+      </div>
+    </div>
+  </div>
+
   <!-- SheetJS để xuất nhập file Excel chuyên nghiệp -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
 
@@ -1507,8 +1551,8 @@ print("2. Cắt xâu:", s[10:17])
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.0 Cache-Busted) -->
-  <script src="js/bundle.js?v=2.9.0"></script>
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.1 Cache-Busted) -->
+  <script src="js/bundle.js?v=2.9.1"></script>
 </body>
 </html>
 

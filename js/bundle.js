@@ -753,17 +753,42 @@
                 }
               }
 
+              // 4b. Đồng bộ hiệu ứng chuyển cảnh sư phạm kết thúc hoạt động 1.5s
+              const toast = document.getElementById('activity-finishing-toast');
+              if (val.finishingTransition && val.finishingTransition.active) {
+                const ft = val.finishingTransition;
+                if (Date.now() - (ft.timestamp || 0) < 3500) {
+                  const toastTitle = document.getElementById('aft-title');
+                  const toastDesc = document.getElementById('aft-desc');
+                  if (toast) {
+                    if (toastTitle) toastTitle.textContent = `HOÀN THÀNH: ${(ft.actTitle || 'HOẠT ĐỘNG').toUpperCase()}!`;
+                    if (toastDesc) toastDesc.textContent = 'Thầy/Cô đang nhận xét và chuyển nhẹ nhàng về phòng chờ...';
+                    toast.style.display = 'block';
+                  }
+                } else if (toast) {
+                  toast.style.display = 'none';
+                }
+              } else if (toast && toast.style.display !== 'none') {
+                toast.style.display = 'none';
+              }
+
               // 5. Đồng bộ Reset phòng học (resetAt) cho lớp tiếp theo
               if (val.resetAt && (Date.now() - val.resetAt < 15000)) {
                 if (state.role === 'student') {
                   try { localStorage.removeItem('lms_fixed_machine_id'); } catch {}
+                  if (window.APP && window.APP.resetAndCleanActivity) {
+                    window.APP.resetAndCleanActivity('waiting', { cleanAll: true });
+                  }
                   updates.screen = 'lobby';
                   updates.machineId = null;
                   updates.fixedMachineId = null;
+                  updates.students = [];
                   updates.unlocked = false;
                   updates.sessionStarted = false;
                   updates.currentPhase = 'waiting';
                   updates.occupiedMachines = {};
+                  updates.finishedActivities = {};
+                  updates.lastFinishedActivity = null;
                 }
               }
 
@@ -892,6 +917,9 @@
             }
           }
           STORE.setState(updates);
+          if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student' && STORE.getState().screen === 'student') {
+            window.APP.renderStudentWorkspace(STORE.getState());
+          }
         }
       } else if (data.type === 'TIMER_SYNC') {
         if (data.payload) {
@@ -899,6 +927,19 @@
           if (window.APP && window.APP.syncMasterCountdown) {
             window.APP.syncMasterCountdown(data.payload);
           }
+        }
+      } else if (data.type === 'ACTIVITY_FINISHING') {
+        const toast = document.getElementById('activity-finishing-toast');
+        const toastTitle = document.getElementById('aft-title');
+        const toastDesc = document.getElementById('aft-desc');
+        const actTitle = (data.payload && data.payload.actTitle) || 'Hoạt động';
+        if (toast) {
+          if (toastTitle) toastTitle.textContent = `HOÀN THÀNH: ${actTitle.toUpperCase()}!`;
+          if (toastDesc) toastDesc.textContent = 'Thầy/Cô đang nhận xét và chuyển nhẹ nhàng về phòng chờ...';
+          toast.style.display = 'block';
+          setTimeout(() => {
+            toast.style.display = 'none';
+          }, 1600);
         }
       } else if (data.type === 'START_COUNTDOWN') {
         APP.handleRemoteCountdown(data.payload);
@@ -941,7 +982,8 @@
           const oldL = Object.assign({}, STORE.getState().oldLesson, {
             selectedMachine: data.payload.selectedMachine,
             selectedStudent: data.payload.selectedStudent,
-            questionText: data.payload.questionText || data.payload.question
+            questionText: data.payload.questionText || data.payload.question,
+            questionRevealed: false
           });
           STORE.setState({ oldLesson: oldL });
         }
@@ -982,15 +1024,19 @@
           timerSeconds: payload.timerSeconds || 120,
           timeLeft: payload.timerSeconds || 120,
           timerActive: true,
+          questionRevealed: true,
           questionType: payload.questionType || 'text',
-          questionText: payload.questionText || '',
-          selectedMachine: payload.selectedMachine || null,
-          selectedStudent: payload.selectedStudent || null,
+          questionText: payload.questionText || STORE.getState().oldLesson.questionText || '',
+          selectedMachine: payload.selectedMachine || STORE.getState().oldLesson.selectedMachine || null,
+          selectedStudent: payload.selectedStudent || STORE.getState().oldLesson.selectedStudent || null,
           isLocked: false,
           isRevealed: false
         });
         STORE.setState({ currentPhase: 'old_lesson', teacherPhase: 'old_lesson', oldLesson: oldL });
         APP.startOldLessonCountdown();
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
       } else if (data.type === 'LUCKY_DRAW_CLOSE') {
         const modal = document.getElementById('modal-lucky-draw');
         if (modal) modal.style.display = 'none';
@@ -1012,10 +1058,20 @@
       } else if (data.type === 'OLD_LESSON_REVEAL') {
         const oldL = Object.assign({}, STORE.getState().oldLesson, { isRevealed: true });
         STORE.setState({ oldLesson: oldL });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
       } else if (data.type === 'OLD_LESSON_QUESTION_REVEAL') {
         const curState = STORE.getState();
-        const oldL = Object.assign({}, curState.oldLesson, { questionRevealed: true });
+        const qText = (data.payload && data.payload.questionText) || curState.oldLesson?.questionText || '';
+        const oldL = Object.assign({}, curState.oldLesson, {
+          questionRevealed: true,
+          questionText: qText || curState.oldLesson?.questionText
+        });
         STORE.setState({ oldLesson: oldL });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
       } else if (data.type === 'LUCKY_DRAW_SPIN') {
         APP.handleRemoteLuckyDrawSpin(data.payload);
       } else if (data.type === 'POLL_ANSWER') {
@@ -2191,6 +2247,8 @@
       if (task2) task2.value = lesson.theoryTask || (lesson.theory && lesson.theory[0] && lesson.theory[0].summary) || '';
       const doc2 = document.getElementById('studio-theory-doc');
       if (doc2) doc2.value = lesson.theoryDoc || (lesson.theory && lesson.theory[0] && lesson.theory[0].title) || '';
+      const time2 = document.getElementById('step-time-2');
+      if (time2) time2.value = String(lesson.theoryTimeLimit || 300);
       const tog2 = document.getElementById('step-toggle-2');
       if (tog2) tog2.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[2] !== false : true);
 
@@ -2215,6 +2273,8 @@
       // Bước 4: Thực hành
       const dTitle = document.getElementById('studio-disc-title');
       if (dTitle && lesson.discussion) dTitle.value = lesson.discussion.title || '';
+      const time4 = document.getElementById('step-time-4');
+      if (time4) time4.value = String((lesson.discussion && lesson.discussion.timeLimit) || 600);
       const dTask = document.getElementById('studio-disc-task');
       if (dTask && lesson.discussion) dTask.value = lesson.discussion.task || '';
       const dStart = document.getElementById('studio-disc-starter');
@@ -2240,6 +2300,7 @@
 
       const task2 = document.getElementById('studio-theory-task')?.value.trim() || '';
       const doc2 = document.getElementById('studio-theory-doc')?.value.trim() || '';
+      const time2 = parseInt(document.getElementById('step-time-2')?.value || '300', 10);
 
       const time3 = parseInt(document.getElementById('step-time-3')?.value || '20', 10);
       const cor3 = document.getElementById('studio-quiz-correct')?.value || 'B';
@@ -2250,6 +2311,7 @@
       const optD = document.getElementById('studio-quiz-opt-d')?.value.trim() || '';
 
       const dTitle = document.getElementById('studio-disc-title')?.value.trim() || 'Nhiệm vụ Thảo luận & Thực hành';
+      const time4 = parseInt(document.getElementById('step-time-4')?.value || '600', 10);
       const dTask = document.getElementById('studio-disc-task')?.value.trim() || '';
       const dStart = document.getElementById('studio-disc-starter')?.value || '';
 
@@ -2272,6 +2334,7 @@
         },
         theoryTask: task2,
         theoryDoc: doc2,
+        theoryTimeLimit: time2,
         theory: (existing.theory && existing.theory.length) ? existing.theory.map((t, idx) => {
           if (idx === 0) return Object.assign({}, t, { summary: task2, title: doc2 || t.title });
           return t;
@@ -2291,7 +2354,7 @@
           title: dTitle,
           task: dTask,
           placeholder: dStart,
-          timeLimit: existing.discussion?.timeLimit || 720
+          timeLimit: time4
         },
         stepsEnabled: stepsEnabled
       };
@@ -2578,7 +2641,7 @@
           key: 'warmup',
           index: idx++,
           title: 'Khởi động & Khám phá',
-          duration: 180,
+          duration: lesson.theoryTimeLimit || 300,
           icon: 'fa-bolt',
           panelId: 'tw-panel-warmup'
         });
@@ -2718,10 +2781,23 @@
         const targetPanel = document.getElementById('tw-panel-' + actKey.replace('_', '-'));
         if (targetPanel) targetPanel.classList.add('active');
 
-        // Bắt đầu Master Timer
-        this.startMasterCountdown(act.duration, actKey, () => {
-          window.handleFinishActivity(actKey);
-        });
+        if (actKey === 'old_lesson') {
+          // BÀI CŨ: ĐỒNG HỒ ĐỨNG YÊN (CHƯA ĐẾM GIỜ), CÂU HỎI KHÓA RỖNG, CHỜ BỐC THĂM!
+          this.stopMasterTimer();
+          this.updateMasterTimerDisplay(act.duration);
+          STORE.setState({
+            oldLesson: Object.assign({}, STORE.getState().oldLesson, {
+              questionRevealed: false,
+              selectedMachine: null,
+              selectedStudent: null,
+              timerSeconds: act.duration,
+              timeLeft: act.duration
+            })
+          });
+        } else {
+          // CÁC HOẠT ĐỘNG KHÁC: BẮT ĐẦU TÍNH GIỜ THEO CÀI ĐẶT
+          this.startMasterCountdown(act.duration, actKey);
+        }
 
         this.renderDynamicStagePipeline();
       }, 3500);
@@ -3138,6 +3214,29 @@
       }
     },
 
+    renderNeonLuckyCard(targetMachine, targetStudent, isRevealed = false) {
+      const neonCard = document.getElementById('neon-lucky-card');
+      const deskText = document.getElementById('nlc-desk-text');
+      const studentName = document.getElementById('nlc-student-name');
+      const statusText = document.getElementById('nlc-status-text');
+
+      if (!neonCard) return;
+
+      if (targetMachine && targetStudent) {
+        neonCard.style.display = 'block';
+        if (deskText) deskText.textContent = `Máy bàn số ${String(targetMachine).padStart(2, '0')}`;
+        // LƯU Ý SƯ PHẠM: CHỈ HIỂN THỊ TÊN DUY NHẤT 1 HỌC SINH ĐƯỢC GỌI (CẤM GHÉP CẶP &)
+        if (studentName) studentName.textContent = targetStudent;
+        if (statusText) {
+          statusText.textContent = isRevealed
+            ? 'ĐÃ PHÁT ĐỀ — ĐANG TÍNH GIỜ LÀM BÀI'
+            : 'ĐÃ ĐƯỢC CHỈ ĐỊNH — CHỜ THẦY PHÁT ĐỀ';
+        }
+      } else {
+        neonCard.style.display = 'none';
+      }
+    },
+
     renderStudentWorkspace(state) {
       const { machineId, students, isSos, currentPhase, lessonData } = state;
 
@@ -3215,6 +3314,9 @@
           const secs = (ol.timeLeft || 0) % 60;
           timerEl.innerHTML = `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
         }
+
+        // Cập nhật hộp thoại Neon vinh danh duy nhất 1 em học sinh (Chuẩn ảnh mẫu Thầy giao)
+        this.renderNeonLuckyCard(ol.selectedMachine, ol.selectedStudent, ol.questionRevealed);
 
         const spotlight = document.getElementById('ol-caller-spotlight');
         const callerInfo = document.getElementById('ol-caller-info');
@@ -3481,10 +3583,11 @@
       const qInput = document.getElementById('otc-question-input');
       const qText = qInput ? qInput.value.trim() : '';
       const state = STORE.getState();
-      const sec = state.oldLesson.timerSeconds || 120;
+      const sec = (state.oldLesson && state.oldLesson.timerSeconds) || 120;
 
       const oldL = Object.assign({}, state.oldLesson, {
         questionText: qText || state.oldLesson.questionText,
+        questionRevealed: true,
         timeLeft: sec,
         timerActive: true,
         isLocked: false,
@@ -3501,16 +3604,18 @@
         timerSeconds: sec,
         questionType: state.oldLesson.questionType,
         questionText: oldL.questionText,
+        questionRevealed: true,
         selectedMachine: state.oldLesson.selectedMachine,
         selectedStudent: state.oldLesson.selectedStudent
       });
+      SYNC_BUS.broadcast('OLD_LESSON_QUESTION_REVEAL', {
+        questionText: oldL.questionText
+      });
 
-      if (db) {
-        db.ref('activeSession/currentPhase').set('old_lesson').catch(()=>{});
-        db.ref('activeSession/oldLesson').set(oldL).catch(()=>{});
-      }
+      safeFirebaseUpdate('activeSession/oldLesson', oldL).catch(()=>{});
 
-      this.startOldLessonCountdown();
+      // BẮT ĐẦU TÍNH GIỜ CHO HOẠT ĐỘNG BÀI CŨ
+      this.startMasterCountdown(sec, 'old_lesson');
     },
 
     teacherLockOldLesson() {
@@ -3600,10 +3705,16 @@
           clearInterval(this.syncTimerInterval);
           this.syncTimerInterval = null;
           this.updateMasterTimerDisplay(0);
+          AUDIO.playFanfare();
+          if (curPhase === 'old_lesson') {
+            STORE.setState({
+              oldLesson: Object.assign({}, STORE.getState().oldLesson, { isLocked: true, timerActive: false })
+            });
+          }
+          // LƯU Ý SƯ PHẠM: HẾT GIỜ ĐỒNG HỒ DỪNG Ở 00:00, GIỮ NGUYÊN MÀN HÌNH ĐỂ THẦY NHẬN XÉT & CÔNG BỐ ĐÁP ÁN.
+          // CẤM TUYỆT ĐỐI TỰ ĐỘNG THOÁT VỀ PHÒNG CHỜ!
           if (typeof onExpire === 'function') {
             onExpire();
-          } else if (STORE.getState().role === 'teacher') {
-            this.onActivityAutoFinished();
           }
         }
       };
@@ -3644,8 +3755,6 @@
       this.syncMasterCountdown(timerObj, () => {
         if (typeof onExpire === 'function') {
           onExpire();
-        } else {
-          this.onActivityAutoFinished();
         }
       });
     },
@@ -3693,6 +3802,7 @@
           timerSeconds: 120,
           timeLeft: 120,
           timerActive: false,
+          questionRevealed: false,
           questionType: 'text',
           questionText: 'Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?',
           selectedMachine: null,
@@ -3712,6 +3822,13 @@
         };
         storeUpdates.oldLesson = Object.assign({}, state.oldLesson, defaultOldL);
         storeUpdates.luckyDraw = Object.assign({}, state.luckyDraw, defaultLucky);
+
+        const neonCard = document.getElementById('neon-lucky-card');
+        if (neonCard) neonCard.style.display = 'none';
+        const standbyBanner = document.getElementById('ol-question-standby-banner');
+        if (standbyBanner) standbyBanner.style.display = 'block';
+        const qText = document.getElementById('ol-question-text');
+        if (qText) qText.style.display = 'none';
 
         const canvas = document.getElementById('wheel-canvas');
         if (canvas) {
@@ -4243,22 +4360,23 @@
         const spinBtn = document.getElementById('btn-trigger-spin');
         if (spinBtn) spinBtn.disabled = false;
 
-        // Tự động đóng modal sau 2.5s trên mọi máy (cả GV và HS) để hiển thị spotlight học sinh!
+        // Đóng modal bốc thăm sau 2.5s trên mọi máy để hiển thị hộp thoại neon vinh danh 1 học sinh được gọi
         setTimeout(() => {
           const modal = document.getElementById('modal-lucky-draw');
           if (modal) modal.style.display = 'none';
 
-          // Spotlight tôn vinh học sinh được chọn 2.5s, sau đó mới chiếu câu hỏi!
-          setTimeout(() => {
-            const curState = STORE.getState();
-            STORE.setState({
-              oldLesson: Object.assign({}, curState.oldLesson, { questionRevealed: true })
-            });
-            if (isInitiator) {
-              SYNC_BUS.broadcast('OLD_LESSON_QUESTION_REVEAL', {});
-              if (db) db.ref('activeSession/oldLesson/questionRevealed').set(true).catch(()=>{});
-            }
-          }, 2500);
+          // Hiển thị hộp thoại Neon vinh danh duy nhất 1 em học sinh và số máy bàn (chuẩn ảnh mẫu Thầy giao)
+          APP.renderNeonLuckyCard(targetMachine, targetStudent, false);
+
+          // LƯU Ý SƯ PHẠM: CÂU HỎI VẪN BỊ KHÓA RỖNG, CHỜ THẦY BẤM [ 🚀 PHÁT ĐỀ & BẮT ĐẦU TÍNH GIỜ ]
+          const curState = STORE.getState();
+          STORE.setState({
+            oldLesson: Object.assign({}, curState.oldLesson, {
+              selectedMachine: targetMachine,
+              selectedStudent: targetStudent,
+              questionRevealed: false
+            })
+          });
         }, 2500);
       }, duration + 200);
     }
@@ -4358,17 +4476,15 @@
       APP.resetAndCleanActivity(phase, { cleanAll: (phase === 'waiting') });
     }
 
-    // Xác định thời lượng cho bước này
+    // Xác định thời lượng cho bước này từ kịch bản xưởng soạn
     const lesson = s.lessonData || EMBEDDED_LESSONS[s.lessonId] || {};
     let duration = 120;
     if (phase === 'old_lesson') {
       duration = (lesson.oldLesson && lesson.oldLesson.timeLimit) ? lesson.oldLesson.timeLimit : 120;
-    } else if (phase === 'warmup') {
-      duration = 180;
-    } else if (phase === 'theory') {
-      duration = 300;
+    } else if (phase === 'warmup' || phase === 'theory') {
+      duration = lesson.theoryTimeLimit || 300;
     } else if (phase === 'discussion') {
-      duration = (lesson.discussion && lesson.discussion.timeLimit) ? lesson.discussion.timeLimit : 720;
+      duration = (lesson.discussion && lesson.discussion.timeLimit) ? lesson.discussion.timeLimit : 600;
     } else if (phase === 'quiz') {
       duration = (lesson.quiz && lesson.quiz.timeLimit) ? lesson.quiz.timeLimit : 20;
     }
@@ -4394,7 +4510,7 @@
         pollAnswers: null,
         discussionAnswers: null,
         quizAnswers: null,
-        oldLesson: { selectedMachine: null, selectedStudent: null, isRevealed: false, isLocked: false, submissions: null },
+        oldLesson: { selectedMachine: null, selectedStudent: null, questionRevealed: false, isRevealed: false, isLocked: false, submissions: null },
         luckyDraw: { spinning: false, modalOpen: false, resultMachine: null, resultStudent: null }
       };
       safeFirebaseUpdate('activeSession', fbData).then(() => {
@@ -4421,9 +4537,13 @@
         console.warn('[Firebase] teacherSetPhase error:', err);
       });
 
-      APP.startMasterCountdown(duration, phase, () => {
-        APP.onActivityAutoFinished();
-      });
+      if (phase === 'old_lesson') {
+        // BÀI CŨ: ĐỒNG HỒ ĐỨNG YÊN TẠI MỨC CÀI ĐẶT, CÂU HỎI KHÓA, CHỜ BỐC THĂM VÀ THẦY PHÁT ĐỀ
+        APP.stopMasterTimer();
+        APP.updateMasterTimerDisplay(duration);
+      } else {
+        APP.startMasterCountdown(duration, phase);
+      }
     }
   };
 
@@ -4789,16 +4909,52 @@
   };
 
   window.handleFinishActivity = function(actKey) {
-    const state = STORE.getState();
-    const curFinished = Object.assign({}, state.finishedActivities || {}, { [actKey]: true });
-    STORE.setState({ finishedActivities: curFinished });
+    const toast = document.getElementById('activity-finishing-toast');
+    const toastTitle = document.getElementById('aft-title');
+    const toastDesc = document.getElementById('aft-desc');
+    const phaseNames = {
+      'old_lesson': 'Kiểm tra bài cũ',
+      'warmup': 'Khởi động & Khám phá',
+      'theory': 'Khám phá SGK',
+      'discussion': 'Thực hành - Thảo luận',
+      'quiz': 'Đấu trường Live Quiz'
+    };
+    const actTitle = phaseNames[actKey] || 'Hoạt động';
 
-    // Đưa 18 máy về phòng chờ
-    window.teacherSetPhase('waiting');
+    if (toast) {
+      if (toastTitle) toastTitle.textContent = `HOÀN THÀNH: ${actTitle.toUpperCase()}!`;
+      if (toastDesc) toastDesc.textContent = 'Đang lưu dữ liệu và chuyển nhẹ nhàng về phòng chờ...';
+      toast.style.display = 'block';
+    }
 
-    // Render lại pipeline thẻ
-    APP.renderDynamicStagePipeline();
     AUDIO.playChime();
+    SYNC_BUS.broadcast('ACTIVITY_FINISHING', { actKey, actTitle });
+    safeFirebaseUpdate('activeSession/finishingTransition', {
+      active: true,
+      actKey: actKey,
+      actTitle: actTitle,
+      timestamp: Date.now()
+    }).catch(()=>{});
+
+    // Độ trễ sư phạm 1500ms (1.5 giây) giúp chuyển cảnh mượt mà, tránh quay về đột ngột gây sốc thị giác
+    setTimeout(() => {
+      if (toast) toast.style.display = 'none';
+
+      const state = STORE.getState();
+      const curFinished = Object.assign({}, state.finishedActivities || {}, { [actKey]: true });
+      STORE.setState({ finishedActivities: curFinished });
+
+      // Đưa 18 máy về phòng chờ
+      window.teacherSetPhase('waiting');
+
+      // Render lại pipeline thẻ
+      APP.renderDynamicStagePipeline();
+
+      safeFirebaseUpdate('activeSession/finishingTransition', {
+        active: false,
+        timestamp: Date.now()
+      }).catch(()=>{});
+    }, 1500);
   };
 
   window.onSelectDesk = window.onSelectMachine = function(num) {
