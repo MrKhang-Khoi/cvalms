@@ -6419,3 +6419,86 @@ input:checked + .slider:before {
   border-color: rgba(56, 189, 248, 0.35) !important;
 }
 
+/* =====================================================
+   STUDIO DELETE & RESTORE ACTIVITIES / SECTIONS
+===================================================== */
+.btn-delete-sub-act {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s;
+}
+
+.btn-delete-sub-act:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #fff;
+  border-color: #ef4444;
+}
+
+.sub-act-deleted-placeholder {
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+.sadp-text {
+  font-size: 12.5px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sadp-text strong {
+  color: #f1f5f9;
+}
+
+.btn-restore-sub-act {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-restore-sub-act:hover {
+  background: rgba(16, 185, 129, 0.3);
+  color: #fff;
+  border-color: #10b981;
+}
+
+.empty-quizzes-notice {
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12.5px;
+  margin-bottom: 10px;
+}
+
+

@@ -2646,6 +2646,13 @@
       if (tog4) tog4.checked = (lesson.stepsEnabled ? (lesson.stepsEnabled[4] !== false) : true);
 
       // Điền các mục bài học (Sections) nếu có
+      const sec2Card = document.getElementById('studio-sec-card-2');
+      if (lesson.sections && lesson.sections.length === 1) {
+        if (sec2Card) sec2Card.style.display = 'none';
+      } else if (sec2Card) {
+        sec2Card.style.display = 'block';
+      }
+
       if (lesson.sections && lesson.sections[0]) {
         const s1 = lesson.sections[0];
         const s1TitleEl = document.getElementById('studio-sec1-title');
@@ -2655,7 +2662,25 @@
         const s1QuizAnsEl = document.getElementById('studio-sec1-quiz-correct');
         if (s1QuizAnsEl && s1.quiz && s1.quiz.correct) s1QuizAnsEl.value = s1.quiz.correct;
         this.renderStudioSectionQuizzes(1, s1.quizzes || (s1.quiz ? [s1.quiz] : []));
+
+        // Trạng thái bật / tắt hoạt động con Mục 1
+        if (s1.theory && s1.theory.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(1, 'theory');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(1, 'theory');
+        }
+        if (s1.quiz && s1.quiz.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(1, 'quiz');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(1, 'quiz');
+        }
+        if (s1.practice && s1.practice.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(1, 'practice');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(1, 'practice');
+        }
       }
+
       if (lesson.sections && lesson.sections[1]) {
         const s2 = lesson.sections[1];
         const s2TitleEl = document.getElementById('studio-sec2-title');
@@ -2671,6 +2696,23 @@
         const s2PracTaskEl = document.getElementById('studio-sec2-prac-task');
         if (s2PracTaskEl && s2.practice && s2.practice.task) s2PracTaskEl.value = s2.practice.task;
         this.renderStudioSectionQuizzes(2, s2.quizzes || (s2.quiz ? [s2.quiz] : []));
+
+        // Trạng thái bật / tắt hoạt động con Mục 2
+        if (s2.theory && s2.theory.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(2, 'theory');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(2, 'theory');
+        }
+        if (s2.quiz && s2.quiz.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(2, 'quiz');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(2, 'quiz');
+        }
+        if (s2.practice && s2.practice.enabled === false) {
+          if (typeof window.studioRemoveSubActivity === 'function') window.studioRemoveSubActivity(2, 'practice');
+        } else {
+          if (typeof window.studioRestoreSubActivity === 'function') window.studioRestoreSubActivity(2, 'practice');
+        }
       }
 
       // Bước 5: Vinh danh
@@ -2682,14 +2724,14 @@
       const container = document.getElementById(`sec${secId}-quizzes-container`);
       if (!container) return;
       if (!quizzes || quizzes.length === 0) {
-        quizzes = [{
-          id: `q${secId}_1`,
-          type: 'single_choice',
-          question: '',
-          options: { A: 'A', B: 'B', C: 'C', D: 'D' },
-          correct: 'A',
-          timeLimit: 60
-        }];
+        container.innerHTML = `
+          <div class="empty-quizzes-notice">
+            <i class="fas fa-info-circle"></i> Mục này hiện không có câu hỏi trắc nghiệm nào. Thầy hãy bấm nút <strong>[+ Thêm câu hỏi trắc nghiệm]</strong> bên dưới nếu muốn bổ sung!
+          </div>
+        `;
+        const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
+        return;
       }
 
       const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
@@ -2716,7 +2758,7 @@
                   <option value="true_false" ${qType === 'true_false' ? 'selected' : ''}>Đúng / Sai 4 mệnh đề</option>
                   <option value="short_answer" ${qType === 'short_answer' ? 'selected' : ''}>Điền kết quả ngắn</option>
                 </select>
-                ${!isFirst ? `<button type="button" class="btn-tool-sm btn-tool-danger" onclick="window.studioRemoveQuizQuestion(this)" style="padding:3px 8px;font-size:11px;border-radius:4px;"><i class="fas fa-trash"></i> Xóa</button>` : ''}
+                <button type="button" class="btn-tool-sm btn-tool-danger" onclick="window.studioRemoveQuizQuestion(this)" style="padding:3px 8px;font-size:11px;border-radius:4px;"><i class="fas fa-trash"></i> Xóa</button>
               </div>
             </div>
             <div class="studio-form-row">
@@ -2772,14 +2814,11 @@
 
     readSectionQuizzesFromDOM(secId) {
       const container = document.getElementById(`sec${secId}-quizzes-container`);
-      if (!container) {
-        const q = document.getElementById(`studio-sec${secId}-quiz-q`)?.value.trim() || 'Câu hỏi';
-        const cor = document.getElementById(`studio-sec${secId}-quiz-correct`)?.value || 'A';
-        const time = parseInt(document.getElementById(`studio-sec${secId}-quiz-time`)?.value || '60', 10);
-        return [{ id: `q${secId}_1`, type: 'single_choice', question: q, correct: cor, timeLimit: time, options: { A: 'A', B: 'B', C: 'C', D: 'D' } }];
-      }
+      if (!container) return [];
 
       const cards = container.querySelectorAll('.studio-quiz-item-card');
+      if (cards.length === 0) return [];
+
       const list = [];
       cards.forEach((c, idx) => {
         const type = c.querySelector('.sqic-type-select')?.value || 'single_choice';
@@ -2814,16 +2853,6 @@
         }
       });
 
-      if (list.length === 0) {
-        list.push({
-          id: `q${secId}_1`,
-          type: 'single_choice',
-          question: document.getElementById(`studio-sec${secId}-quiz-q`)?.value.trim() || 'Câu hỏi',
-          options: { A: 'A', B: 'B', C: 'C', D: 'D' },
-          correct: document.getElementById(`studio-sec${secId}-quiz-correct`)?.value || 'A',
-          timeLimit: 60
-        });
-      }
       return list;
     },
 
@@ -3012,21 +3041,44 @@
         5: document.getElementById('step-toggle-5')?.checked !== false
       };
 
-      const sec1Title = document.getElementById('studio-sec1-title')?.value.trim() || 'Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự';
-      const sec1Quizzes = this.readSectionQuizzesFromDOM(1);
-      const sec1QuizQ = sec1Quizzes[0]?.question || document.getElementById('studio-sec1-quiz-q')?.value.trim() || '';
-      const sec1QuizAns = sec1Quizzes[0]?.correct || document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
-      const sec1QuizTime = sec1Quizzes[0]?.timeLimit || parseInt(document.getElementById('studio-sec1-quiz-time')?.value || '60', 10);
+      // Quét động danh sách các Mục bài học (Sections) trong Studio
+      const secCards = document.querySelectorAll('#studio-sections-container .studio-section-card');
+      const dynamicSections = [];
 
-      const sec2Title = document.getElementById('studio-sec2-title')?.value.trim() || 'Mục 2: Phép Cắt Xâu Ký Tự (Slicing)';
-      const sec2TheoryTask = document.getElementById('studio-sec2-theory-task')?.value.trim() || '';
-      const sec2TheoryDoc = document.getElementById('studio-sec2-theory-doc')?.value.trim() || '';
-      const sec2TheoryTime = parseInt(document.getElementById('studio-sec2-theory-time')?.value || '300', 10);
-      const sec2Quizzes = this.readSectionQuizzesFromDOM(2);
-      const sec2QuizQ = sec2Quizzes[0]?.question || document.getElementById('studio-sec2-quiz-q')?.value.trim() || '';
-      const sec2QuizAns = sec2Quizzes[0]?.correct || document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
-      const sec2QuizTime = sec2Quizzes[0]?.timeLimit || parseInt(document.getElementById('studio-sec2-quiz-time')?.value || '60', 10);
-      const sec2PracTask = document.getElementById('studio-sec2-prac-task')?.value.trim() || '';
+      secCards.forEach((card, idx) => {
+        if (card.style.display === 'none') return;
+        const secId = parseInt(card.getAttribute('data-sec') || (idx + 1), 10);
+        const secTitle = document.getElementById(`studio-sec${secId}-title`)?.value.trim() || `Mục ${idx + 1}`;
+
+        const thCard = document.getElementById(`sub-act-${secId}-1`);
+        const qCard = document.getElementById(`sub-act-${secId}-2`);
+        const prCard = document.getElementById(`sub-act-${secId}-3`);
+
+        const isThEnabled = thCard ? thCard.style.display !== 'none' : true;
+        const isQEnabled = qCard ? qCard.style.display !== 'none' : true;
+        const isPrEnabled = prCard ? prCard.style.display !== 'none' : true;
+
+        const secThTask = (secId === 1) ? task2 : (document.getElementById(`studio-sec${secId}-theory-task`)?.value.trim() || '');
+        const secThDoc = (secId === 1) ? doc2 : (document.getElementById(`studio-sec${secId}-theory-doc`)?.value.trim() || '');
+        const secThTime = (secId === 1) ? time2 : parseInt(document.getElementById(`studio-sec${secId}-theory-time`)?.value || '300', 10);
+
+        const secQuizzes = isQEnabled ? this.readSectionQuizzesFromDOM(secId) : [];
+        const firstQ = secQuizzes[0] || {};
+
+        const secPrTitle = (secId === 1) ? dTitle : `Thực hành Mục ${secId}`;
+        const secPrTask = (secId === 1) ? dTask : (document.getElementById(`studio-sec${secId}-prac-task`)?.value.trim() || '');
+        const secPrStart = (secId === 1) ? dStart : '';
+        const secPrTime = (secId === 1) ? time3 : 600;
+
+        dynamicSections.push({
+          id: secId,
+          title: secTitle,
+          theory: isThEnabled ? { enabled: true, task: secThTask, doc: secThDoc, timeLimit: secThTime } : { enabled: false },
+          quiz: isQEnabled ? { enabled: true, question: firstQ.question || '', correct: firstQ.correct || 'A', timeLimit: firstQ.timeLimit || 60 } : { enabled: false },
+          quizzes: secQuizzes,
+          practice: isPrEnabled ? { enabled: true, title: secPrTitle, task: secPrTask, placeholder: secPrStart, timeLimit: secPrTime } : { enabled: false }
+        });
+      });
 
       const updatedLesson = {
         id: lessonId,
@@ -3065,22 +3117,14 @@
           subItems: subItems,
           shortAnswer: shortAns
         },
-        sections: [
+        sections: dynamicSections.length > 0 ? dynamicSections : [
           {
             id: 1,
-            title: sec1Title,
-            theory: { task: task2, doc: doc2, timeLimit: time2 },
-            quiz: { question: sec1QuizQ, correct: sec1QuizAns, timeLimit: sec1QuizTime },
-            quizzes: sec1Quizzes,
-            practice: { title: dTitle, task: dTask, placeholder: dStart, timeLimit: time3 }
-          },
-          {
-            id: 2,
-            title: sec2Title,
-            theory: { task: sec2TheoryTask, doc: sec2TheoryDoc, timeLimit: sec2TheoryTime },
-            quiz: { question: sec2QuizQ, correct: sec2QuizAns, timeLimit: sec2QuizTime },
-            quizzes: sec2Quizzes,
-            practice: { title: 'Thực hành Cắt và Ghép xâu', task: sec2PracTask, timeLimit: 600 }
+            title: 'Mục 1',
+            theory: { enabled: true, task: task2, doc: doc2, timeLimit: time2 },
+            quiz: { enabled: true, question: '', correct: 'A', timeLimit: 60 },
+            quizzes: [],
+            practice: { enabled: true, title: dTitle, task: dTask, placeholder: dStart, timeLimit: time3 }
           }
         ],
         stepsEnabled: stepsEnabled
@@ -3218,11 +3262,146 @@
         return `${Math.round(s / 60)} phút`;
       };
 
+      // Quét động các Mục (Sections) và Hoạt động con trong Studio
+      const secCards = Array.from(document.querySelectorAll('#studio-sections-container .studio-section-card'))
+        .filter(c => c.style.display !== 'none');
+
+      let totalActivities = 1; // Khởi động & Bài cũ
+      let totalSeconds = parseInt(oldLessonTime, 10) || 120;
+
+      let sectionsTableHtml = '';
+
+      secCards.forEach((card, sIdx) => {
+        const secId = parseInt(card.getAttribute('data-sec') || (sIdx + 1), 10);
+        const secTitle = document.getElementById(`studio-sec${secId}-title`)?.value.trim() || `Mục ${sIdx + 1}`;
+
+        const thCard = document.getElementById(`sub-act-${secId}-1`);
+        const qCard = document.getElementById(`sub-act-${secId}-2`);
+        const prCard = document.getElementById(`sub-act-${secId}-3`);
+
+        const isThEnabled = thCard ? thCard.style.display !== 'none' : true;
+        const isQEnabled = qCard ? qCard.style.display !== 'none' : true;
+        const isPrEnabled = prCard ? prCard.style.display !== 'none' : true;
+
+        const subActs = [];
+
+        if (isThEnabled) {
+          const task = (secId === 1) ? sec1TheoryTask : (document.getElementById(`studio-sec${secId}-theory-task`)?.value.trim() || 'Đọc SGK');
+          const doc = (secId === 1) ? sec1TheoryDoc : (document.getElementById(`studio-sec${secId}-theory-doc`)?.value.trim() || 'SGK');
+          const time = (secId === 1) ? parseInt(sec1TheoryTime, 10) : parseInt(document.getElementById(`studio-sec${secId}-theory-time`)?.value || '300', 10);
+          totalActivities++;
+          totalSeconds += time;
+          subActs.push({
+            icon: 'fa-book-reader',
+            iconColor: '#38bdf8',
+            title: `HĐ ${sIdx + 1}.1: Khám phá SGK & Thẻ Tri Thức`,
+            contentHtml: `
+              <div style="font-size:13px;color:#cbd5e1;">${task}</div>
+              <div style="font-size:11.5px;color:#38bdf8;margin-top:3px;"><i class="fas fa-bookmark"></i> ${doc}</div>
+            `,
+            timeStr: formatTime(time),
+            chips: ['1. Giao nhiệm vụ', '2. Bắt đầu đọc', '3. Chốt kiến thức', '4. Sảnh chờ']
+          });
+        }
+
+        if (isQEnabled) {
+          const secQuizzes = this.readSectionQuizzesFromDOM(secId);
+          const firstTime = secQuizzes[0]?.timeLimit || 60;
+          totalActivities++;
+          totalSeconds += firstTime;
+
+          let qContentHtml = '';
+          if (secQuizzes.length > 1) {
+            qContentHtml = `<div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:4px;"><i class="fas fa-layer-group"></i> Gói ${secQuizzes.length} câu trắc nghiệm:</div>`;
+            secQuizzes.forEach((q, i) => {
+              const tName = q.type === 'true_false' ? 'Đúng/Sai' : (q.type === 'short_answer' ? 'Điền code' : '4 Lựa chọn');
+              qContentHtml += `<div style="font-size:12px;color:#cbd5e1;margin-bottom:3px;"><span style="color:#10b981;font-weight:700;">${i + 1}. [${tName}]</span> ${q.question}</div>`;
+            });
+          } else if (secQuizzes.length === 1) {
+            qContentHtml = `
+              <div style="font-size:13px;color:#cbd5e1;">${secQuizzes[0].question}</div>
+              <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án: <strong>${secQuizzes[0].correct || 'A'}</strong></div>
+            `;
+          } else {
+            qContentHtml = `<div style="font-size:12.5px;color:#94a3b8;font-style:italic;"><i class="fas fa-info-circle"></i> (Chưa có câu hỏi trắc nghiệm)</div>`;
+          }
+
+          subActs.push({
+            icon: 'fa-check-double',
+            iconColor: '#10b981',
+            title: `HĐ ${sIdx + 1}.2: Trắc nghiệm củng cố`,
+            contentHtml: qContentHtml,
+            timeStr: formatTime(firstTime),
+            chips: ['1. Chuẩn bị', '2. Phát đề', '3. Công bố Đ/A', '4. Sảnh chờ']
+          });
+        }
+
+        if (isPrEnabled) {
+          const prTitle = (secId === 1) ? sec1PracTitle : `Thực hành Mục ${sIdx + 1}`;
+          const prTask = (secId === 1) ? sec1PracTask : (document.getElementById(`studio-sec${secId}-prac-task`)?.value.trim() || 'Bài tập thực hành');
+          const prTime = (secId === 1) ? parseInt(sec1PracTime, 10) : 600;
+          totalActivities++;
+          totalSeconds += prTime;
+
+          subActs.push({
+            icon: 'fa-laptop-code',
+            iconColor: '#a855f7',
+            title: `HĐ ${sIdx + 1}.3: ${prTitle}`,
+            contentHtml: `
+              <div style="font-size:13px;color:#cbd5e1;font-weight:600;">${prTitle}</div>
+              <div style="font-size:12px;color:#94a3b8;white-space:pre-line;margin-top:2px;">${prTask}</div>
+            `,
+            timeStr: formatTime(prTime),
+            chips: ['1. Giao đề bài', '2. Mở code', '3. Thu bài & Mẫu', '4. Sảnh chờ']
+          });
+        }
+
+        if (subActs.length === 0) {
+          sectionsTableHtml += `
+            <tr>
+              <td style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
+                <span class="bp-stage-badge bp-stage-blue">🔷 ${secTitle}</span>
+              </td>
+              <td colspan="4" style="color:#94a3b8;font-style:italic;padding:12px 16px;">
+                <i class="fas fa-info-circle"></i> (Mục này hiện đã tắt toàn bộ các hoạt động con)
+              </td>
+            </tr>
+          `;
+        } else {
+          subActs.forEach((act, actIdx) => {
+            sectionsTableHtml += `
+              <tr>
+                ${actIdx === 0 ? `
+                  <td rowspan="${subActs.length}" style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
+                    <span class="bp-stage-badge bp-stage-blue">🔷 ${secTitle}</span>
+                  </td>
+                ` : ''}
+                <td><i class="fas ${act.icon}" style="color:${act.iconColor};"></i> <strong>${act.title}</strong></td>
+                <td>${act.contentHtml}</td>
+                <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${act.timeStr}</span></td>
+                <td>
+                  <div class="bp-seq-table-flow">
+                    <span class="bp-seq-chip c1">${act.chips[0]}</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                    <span class="bp-seq-chip c2">${act.chips[1]}</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                    <span class="bp-seq-chip c3">${act.chips[2]}</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                    <span class="bp-seq-chip c4">${act.chips[3]}</span>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+        }
+      });
+
+      // Thêm hoạt động Tổng kết Kahoot
+      totalActivities++; // Kahoot
+      totalSeconds += parseInt(quizTime, 10) || 20;
+
       if (summaryTags) {
         summaryTags.innerHTML = `
-          <span class="bp-stage-badge bp-stage-blue"><i class="fas fa-layer-group"></i> 2 Mục bài học</span>
-          <span class="bp-stage-badge bp-stage-gold"><i class="fas fa-tasks"></i> 8 Hoạt động</span>
-          <span class="bp-stage-badge bp-stage-red"><i class="fas fa-stopwatch"></i> Tổng ~35 phút</span>
+          <span class="bp-stage-badge bp-stage-blue"><i class="fas fa-layer-group"></i> ${secCards.length} Mục bài học</span>
+          <span class="bp-stage-badge bp-stage-gold"><i class="fas fa-tasks"></i> ${totalActivities} Hoạt động</span>
+          <span class="bp-stage-badge bp-stage-red"><i class="fas fa-stopwatch"></i> Tổng ~${Math.round(totalSeconds / 60)} phút</span>
         `;
       }
 
@@ -3259,144 +3438,8 @@
               </td>
             </tr>
 
-            <!-- MỤC 1: HĐ 1.1 -->
-            <tr>
-              <td rowspan="3" style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
-                <span class="bp-stage-badge bp-stage-blue">🔷 ${sec1Title}</span>
-              </td>
-              <td><i class="fas fa-book-reader" style="color:#38bdf8;"></i> <strong>HĐ 1.1: Khám phá SGK</strong></td>
-              <td>
-                <div style="font-size:13px;color:#cbd5e1;">${sec1TheoryTask}</div>
-                <div style="font-size:11.5px;color:#38bdf8;margin-top:3px;"><i class="fas fa-bookmark"></i> ${sec1TheoryDoc} (kèm thẻ NotebookLM)</div>
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1TheoryTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Giao nhiệm vụ</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Bắt đầu đọc</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Chốt kiến thức</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- MỤC 1: HĐ 1.2 -->
-            <tr>
-              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 1.2: Trắc nghiệm củng cố</strong></td>
-              <td>
-                ${(() => {
-                  const sec1Quizzes = this.readSectionQuizzesFromDOM(1);
-                  if (sec1Quizzes && sec1Quizzes.length > 1) {
-                    let h = `<div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:4px;"><i class="fas fa-layer-group"></i> Gói ${sec1Quizzes.length} câu trắc nghiệm:</div>`;
-                    sec1Quizzes.forEach((q, i) => {
-                      const tName = q.type === 'true_false' ? 'Đúng/Sai' : (q.type === 'short_answer' ? 'Điền code' : '4 Lựa chọn');
-                      h += `<div style="font-size:12px;color:#cbd5e1;margin-bottom:3px;"><span style="color:#10b981;font-weight:700;">${i + 1}. [${tName}]</span> ${q.question}</div>`;
-                    });
-                    return h;
-                  }
-                  return `
-                    <div style="font-size:13px;color:#cbd5e1;">${sec1QuizQ}</div>
-                    <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec1QuizAns}</strong></div>
-                  `;
-                })()}
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1QuizTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Chuẩn bị</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Phát đề</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Công bố Đ/A</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- MỤC 1: HĐ 1.3 -->
-            <tr>
-              <td><i class="fas fa-laptop-code" style="color:#a855f7;"></i> <strong>HĐ 1.3: Thực hành code</strong></td>
-              <td>
-                <div style="font-size:13px;color:#cbd5e1;font-weight:600;">${sec1PracTitle}</div>
-                <div style="font-size:12px;color:#94a3b8;white-space:pre-line;margin-top:2px;">${sec1PracTask}</div>
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1PracTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Giao đề bài</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Mở code</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Thu bài & Mẫu</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- MỤC 2: HĐ 2.1 -->
-            <tr>
-              <td rowspan="3" style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
-                <span class="bp-stage-badge bp-stage-blue">🔷 ${sec2Title}</span>
-              </td>
-              <td><i class="fas fa-book-reader" style="color:#38bdf8;"></i> <strong>HĐ 2.1: Khám phá cú pháp</strong></td>
-              <td>
-                <div style="font-size:13px;color:#cbd5e1;">${sec2TheoryTask}</div>
-                <div style="font-size:11.5px;color:#38bdf8;margin-top:3px;"><i class="fas fa-bookmark"></i> ${sec2TheoryDoc}</div>
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2TheoryTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Giao nhiệm vụ</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Bắt đầu đọc</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Chốt kiến thức</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- MỤC 2: HĐ 2.2 -->
-            <tr>
-              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 2.2: Trắc nghiệm code</strong></td>
-              <td>
-                ${(() => {
-                  const sec2Quizzes = this.readSectionQuizzesFromDOM(2);
-                  if (sec2Quizzes && sec2Quizzes.length > 1) {
-                    let h = `<div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:4px;"><i class="fas fa-layer-group"></i> Gói ${sec2Quizzes.length} câu trắc nghiệm:</div>`;
-                    sec2Quizzes.forEach((q, i) => {
-                      const tName = q.type === 'true_false' ? 'Đúng/Sai' : (q.type === 'short_answer' ? 'Điền code' : '4 Lựa chọn');
-                      h += `<div style="font-size:12px;color:#cbd5e1;margin-bottom:3px;"><span style="color:#10b981;font-weight:700;">${i + 1}. [${tName}]</span> ${q.question}</div>`;
-                    });
-                    return h;
-                  }
-                  return `
-                    <div style="font-size:13px;color:#cbd5e1;">${sec2QuizQ}</div>
-                    <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec2QuizAns}</strong></div>
-                  `;
-                })()}
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2QuizTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Chuẩn bị</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Phát đề</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Công bố Đ/A</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
-
-            <!-- MỤC 2: HĐ 2.3 -->
-            <tr>
-              <td><i class="fas fa-laptop-code" style="color:#a855f7;"></i> <strong>HĐ 2.3: Thực hành nhóm</strong></td>
-              <td>
-                <div style="font-size:13px;color:#cbd5e1;">${sec2PracTask}</div>
-              </td>
-              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2PracTime)}</span></td>
-              <td>
-                <div class="bp-seq-table-flow">
-                  <span class="bp-seq-chip c1">1. Giao đề bài</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c2">2. Mở code</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c3">3. Thu bài & Mẫu</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
-                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
-                </div>
-              </td>
-            </tr>
+            <!-- CÁC MỤC BÀI HỌC ĐỘNG -->
+            ${sectionsTableHtml}
 
             <!-- TỔNG KẾT: KAHOOT & PODIUM -->
             <tr>
@@ -7330,6 +7373,11 @@
   window.studioAddQuizQuestion = function(secId) {
     const container = document.getElementById(`sec${secId}-quizzes-container`);
     if (!container) return;
+
+    // Xóa empty notice nếu đang có
+    const emptyNotice = container.querySelector('.empty-quizzes-notice');
+    if (emptyNotice) emptyNotice.remove();
+
     const currentCards = container.querySelectorAll('.studio-quiz-item-card');
     const nextIdx = currentCards.length;
     const card = document.createElement('div');
@@ -7401,21 +7449,86 @@
   window.studioRemoveQuizQuestion = function(btn) {
     const card = btn.closest('.studio-quiz-item-card');
     if (!card) return;
-    const container = card.closest('.studio-quizzes-wrapper');
+    const container = card.closest('.studio-quizzes-wrapper') || card.parentElement;
     card.remove();
 
     if (container) {
       const secId = container.id.includes('sec1') ? 1 : 2;
       const cards = container.querySelectorAll('.studio-quiz-item-card');
-      cards.forEach((c, idx) => {
-        c.setAttribute('data-q-idx', String(idx));
-        const titleSpan = c.querySelector('.sqic-header span');
-        if (titleSpan) titleSpan.innerHTML = `<i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:`;
-        const qLabel = c.querySelector('.studio-form-col:first-child .studio-field-label');
-        if (qLabel) qLabel.innerHTML = `<i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:`;
-      });
-      const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-      if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${cards.length} câu trắc nghiệm`;
+      if (cards.length === 0) {
+        container.innerHTML = `
+          <div class="empty-quizzes-notice">
+            <i class="fas fa-info-circle"></i> Mục này hiện không có câu hỏi trắc nghiệm nào. Thầy hãy bấm nút <strong>[+ Thêm câu hỏi trắc nghiệm]</strong> bên dưới nếu muốn bổ sung!
+          </div>
+        `;
+        const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
+      } else {
+        cards.forEach((c, idx) => {
+          c.setAttribute('data-q-idx', String(idx));
+          const titleSpan = c.querySelector('.sqic-header span');
+          if (titleSpan) titleSpan.innerHTML = `<i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:`;
+          const qLabel = c.querySelector('.studio-form-col:first-child .studio-field-label');
+          if (qLabel) qLabel.innerHTML = `<i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:`;
+        });
+        const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${cards.length} câu trắc nghiệm`;
+      }
+    }
+  };
+
+  // -------------------------------------------------------------
+  // XÓA / BẬT-TẮT HOẠT ĐỘNG CON VÀ XÓA MỤC BÀI HỌC
+  // -------------------------------------------------------------
+  window.studioRemoveSubActivity = function(secId, actType) {
+    const actNum = actType === 'theory' ? '1' : (actType === 'quiz' ? '2' : '3');
+    const card = document.getElementById(`sub-act-${secId}-${actNum}`);
+    const placeholder = document.getElementById(`sub-act-placeholder-${secId}-${actType}`);
+    if (card) card.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'flex';
+
+    const secCard = document.getElementById(`studio-sec-card-${secId}`);
+    if (secCard) {
+      const activeCount = secCard.querySelectorAll('.sub-activity-card:not([style*="display: none"]):not([style*="display:none"])').length;
+      const tag = secCard.querySelector('.sec-act-count-tag');
+      if (tag) tag.textContent = `${activeCount} Hoạt động con`;
+    }
+  };
+
+  window.studioRestoreSubActivity = function(secId, actType) {
+    const actNum = actType === 'theory' ? '1' : (actType === 'quiz' ? '2' : '3');
+    const card = document.getElementById(`sub-act-${secId}-${actNum}`);
+    const placeholder = document.getElementById(`sub-act-placeholder-${secId}-${actType}`);
+    if (card) card.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'none';
+
+    const secCard = document.getElementById(`studio-sec-card-${secId}`);
+    if (secCard) {
+      const activeCount = secCard.querySelectorAll('.sub-activity-card:not([style*="display: none"]):not([style*="display:none"])').length;
+      const tag = secCard.querySelector('.sec-act-count-tag');
+      if (tag) tag.textContent = `${activeCount} Hoạt động con`;
+    }
+  };
+
+  window.studioRemoveSection = function(btn) {
+    const card = btn.closest('.studio-section-card');
+    if (!card) return;
+    const container = document.getElementById('studio-sections-container');
+    const totalSecs = container ? Array.from(container.querySelectorAll('.studio-section-card')).filter(c => c.style.display !== 'none').length : 1;
+    if (totalSecs <= 1) {
+      alert('⚠️ Bài dạy cần có ít nhất 1 Mục nội dung. Thầy không thể xóa hết toàn bộ các mục!');
+      return;
+    }
+    if (confirm('Thầy có chắc chắn muốn XÓA TOÀN BỘ Mục này cùng các hoạt động bên trong?')) {
+      card.remove();
+      if (container) {
+        const remaining = Array.from(container.querySelectorAll('.studio-section-card')).filter(c => c.style.display !== 'none');
+        remaining.forEach((c, idx) => {
+          const num = idx + 1;
+          const tag = c.querySelector('.section-diamond-tag');
+          if (tag) tag.textContent = `🔷 ${num}`;
+        });
+      }
     }
   };
 
