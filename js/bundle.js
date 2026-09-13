@@ -679,10 +679,12 @@
                     updates.machineId = mId;
                     updates.fixedMachineId = mId;
                     updates.students = pair;
+                    const overlay = document.getElementById('activity-countdown-overlay');
+                    if (overlay) overlay.style.display = 'none';
                   }
                 }
               }
-              if (val.returnToLobby && state.role === 'student') {
+              if (val.returnToLobby && val.currentPhase === 'waiting' && state.role === 'student') {
                 updates.screen = 'lobby';
                 updates.currentPhase = 'waiting';
               }
@@ -701,7 +703,18 @@
 
               // 4. Đồng bộ Countdown 3-2-1
               if (val.countdown && val.countdown.active) {
-                APP.handleRemoteCountdown(val.countdown);
+                const elapsed = Date.now() - (val.countdown.startedAt || 0);
+                if (elapsed < 4200) {
+                  APP.handleRemoteCountdown(val.countdown);
+                } else {
+                  const overlay = document.getElementById('activity-countdown-overlay');
+                  if (overlay) overlay.style.display = 'none';
+                }
+              } else {
+                const overlay = document.getElementById('activity-countdown-overlay');
+                if (overlay && overlay.style.display !== 'none') {
+                  overlay.style.display = 'none';
+                }
               }
 
               // 5. Đồng bộ Reset phòng học (resetAt) cho lớp tiếp theo
@@ -818,6 +831,8 @@
               updates.machineId = mId;
               updates.fixedMachineId = mId;
               updates.students = pair;
+              const overlay = document.getElementById('activity-countdown-overlay');
+              if (overlay) overlay.style.display = 'none';
             }
           } else if (data.payload.resetByTeacher || data.payload.returnToLobby) {
             updates.screen = 'lobby';
@@ -3834,7 +3849,9 @@
         const fbData = {
           currentPhase: phase,
           sessionStarted: isStarted,
-          lastUpdated: Date.now()
+          returnToLobby: (phase === 'waiting'),
+          lastUpdated: Date.now(),
+          countdown: { active: false, startedAt: 0 }
         };
         if (phase === 'old_lesson') {
           fbData.oldLesson = STORE.getState().oldLesson || {};
@@ -3854,14 +3871,27 @@
     }
   };
 
-  // 3-2-1 Countdown Handler đồng bộ toàn phòng máy (Chuẩn Kahoot)
+  // 3-2-1 Countdown Handler đồng bộ toàn phòng máy (Chuẩn Kahoot, có Failsafe chống kẹt số 3)
   APP.handleRemoteCountdown = function(cd) {
+    const overlay = document.getElementById('activity-countdown-overlay');
     if (!cd || !cd.active) {
-      const overlay = document.getElementById('activity-countdown-overlay');
       if (overlay) overlay.style.display = 'none';
       return;
     }
-    const overlay = document.getElementById('activity-countdown-overlay');
+
+    // Nếu countdown đã bắt đầu từ trước quá 4.2 giây -> Không mở lại và đóng ngay overlay
+    if (cd.startedAt && (Date.now() - cd.startedAt > 4200)) {
+      if (overlay) overlay.style.display = 'none';
+      return;
+    }
+
+    // Chống loop: Nếu cùng 1 startedAt đang đếm ngược dở -> không reset lại từ 3
+    if (cd.startedAt && window._currentCountdownStartedAt === cd.startedAt && window._countdownTimerRunning) {
+      return;
+    }
+    window._currentCountdownStartedAt = cd.startedAt || Date.now();
+    window._countdownTimerRunning = true;
+
     const nameEl = document.getElementById('acd-activity-name');
     const numEl = document.getElementById('acd-number');
     if (!overlay || !numEl) return;
@@ -3869,20 +3899,49 @@
     if (nameEl) nameEl.textContent = cd.title || 'BƯỚC 1: KIỂM TRA BÀI CŨ';
     overlay.style.display = 'flex';
 
+    // Failsafe 100%: Sau tối đa 4.2 giây, BẮT BUỘC ẩn overlay dù có bất cứ điều gì xảy ra
+    clearTimeout(window._countdownFailsafeTimeout);
+    window._countdownFailsafeTimeout = setTimeout(() => {
+      window._countdownTimerRunning = false;
+      if (overlay) overlay.style.display = 'none';
+      const curState = STORE.getState();
+      if (curState.role === 'student' && curState.screen === 'lobby') {
+        let mId = curState.machineId || curState.fixedMachineId;
+        if (!mId) {
+          try {
+            const saved = localStorage.getItem('lms_fixed_machine_id');
+            if (saved) mId = parseInt(saved, 10);
+          } catch {}
+        }
+        if (mId) {
+          const classData = APP.classes[curState.classId] || APP.classes['10A1'];
+          const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+          STORE.setState({
+            screen: 'student',
+            machineId: mId,
+            fixedMachineId: mId,
+            students: pair,
+            currentPhase: curState.currentPhase || 'old_lesson'
+          });
+        }
+      }
+    }, 4200);
+
     let count = 3;
     numEl.textContent = count;
-    AUDIO.playTick(500);
+    try { AUDIO.playTick(500); } catch {}
 
     clearInterval(window._countdownTimerInterval);
     window._countdownTimerInterval = setInterval(() => {
       count--;
       if (count > 0) {
         numEl.textContent = count;
-        AUDIO.playTick(500 + (3 - count) * 150);
+        try { AUDIO.playTick(500 + (3 - count) * 150); } catch {}
       } else {
         numEl.textContent = '🚀';
-        AUDIO.playFanfare();
+        try { AUDIO.playFanfare(); } catch {}
         clearInterval(window._countdownTimerInterval);
+        window._countdownTimerRunning = false;
 
         // Học sinh từ sảnh chờ tự động vào giao diện của mình (mỗi máy 1 giao diện)
         const curState = STORE.getState();
@@ -3962,15 +4021,16 @@
       }
     }
 
-    SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ' });
+    const now = Date.now();
+    SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
     if (db) {
       db.ref('activeSession/countdown').set({
         active: true,
         title: 'BƯỚC 1: KIỂM TRA BÀI CŨ',
-        startedAt: Date.now()
+        startedAt: now
       }).catch(()=>{});
     }
-    APP.handleRemoteCountdown({ active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ' });
+    APP.handleRemoteCountdown({ active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
 
     setTimeout(() => {
       window.teacherSetPhase('old_lesson');

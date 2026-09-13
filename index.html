@@ -18,7 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.5.0">
+  <link rel="stylesheet" href="style.css?v=2.6.0">
 
   <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
@@ -1515,7 +1515,7 @@ print("2. Cắt xâu:", s[10:17])
   <!-- =========================================================
        OVERLAY: ĐẾM NGƯỢC ĐỒNG BỘ 3-2-1 TOÀN MÀN HÌNH (CHUẨN KAHOOT)
   ========================================================== -->
-  <div id="activity-countdown-overlay" class="activity-countdown-overlay" style="display:none;">
+  <div id="activity-countdown-overlay" class="activity-countdown-overlay" style="display:none;" onclick="this.style.display='none';" title="Nhấp để đóng">
     <div class="acd-glow"></div>
     <div class="acd-box">
       <div class="acd-activity-tag"><i class="fas fa-bolt"></i> CHUẨN BỊ BƯỚC VÀO</div>
@@ -1535,8 +1535,8 @@ print("2. Cắt xâu:", s[10:17])
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS -->
-  <script src="js/bundle.js?v=2.3.0"></script>
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.6.0 Cache-Busted) -->
+  <script src="js/bundle.js?v=2.6.0"></script>
 </body>
 </html>
 
