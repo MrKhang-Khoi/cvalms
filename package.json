@@ -3,8 +3,12 @@
   "version": "2.0.1",
   "description": "LMS Phong may tuong tac 18 may",
   "scripts": {
-    "test": "node tests/test_student_ui.js",
-    "lint": "oxlint js/ -D correctness -A no-unused-vars"
+    "test": "node tests/verify_pedagogical_spin_and_timers.js",
+    "test:mesh18": "node tests/test_full_mesh_18_seats.js",
+    "test:resilience": "node tests/test_network_resilience_cdp.js",
+    "test:visual": "node tests/test_visual_and_layout_responsiveness.js",
+    "test:all": "node tests/verify_pedagogical_spin_and_timers.js && node tests/test_full_mesh_18_seats.js && node tests/test_network_resilience_cdp.js && node tests/test_visual_and_layout_responsiveness.js",
+    "lint": "npx --yes oxlint js/ -D correctness -A no-unused-vars"
   },
   "devDependencies": {
     "playwright": "^1.63.0"

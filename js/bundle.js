@@ -1694,10 +1694,15 @@
             classId: chosenClass,
             lessonId: chosenLesson,
             lessonData: lessonObj,
-            oldLesson: Object.assign({}, STORE.getState().oldLesson, {
-              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || STORE.getState().oldLesson.questionText,
+            oldLesson: {
+              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || '',
+              questionRevealed: false,
+              isRevealed: false,
+              isLocked: false,
+              selectedMachine: null,
+              selectedStudent: null,
               submissions: {}
-            }),
+            },
             unlocked: true,
             sessionStarted: false,
             teacherStage: 'active',
@@ -1711,12 +1716,23 @@
             lastFinishedActivity: null
           });
 
+          this.updateOldLessonStepButtons();
+
           if (db) {
             db.ref('activeSession').set({
               grade: chosenGrade,
               classId: chosenClass,
               lessonId: chosenLesson,
               lessonData: lessonObj,
+              oldLesson: {
+                questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || '',
+                questionRevealed: false,
+                isRevealed: false,
+                isLocked: false,
+                selectedMachine: null,
+                selectedStudent: null,
+                submissions: {}
+              },
               unlocked: true,
               sessionStarted: false,
               currentPhase: 'waiting',
