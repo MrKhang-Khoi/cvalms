@@ -443,6 +443,27 @@ async function runVerification() {
       throw new Error('LỖI: Bấm Nút 4 không đưa học sinh về sảnh chờ an toàn!');
     }
 
+    // Kiểm tra bàn điều khiển Giáo viên: Thẻ 1 chuyển màu xám (disabled) và Nút Hero chuyển sang Bước 2
+    const teacherPipelineAfterStep4 = await teacherPage.evaluate(() => {
+      const card1 = document.getElementById('pac-old_lesson');
+      const card1Btn = card1 ? card1.querySelector('.btn-pac-action') : null;
+      const heroBtn = document.getElementById('btn-start-lesson-hero');
+      return {
+        card1Finished: card1 ? card1.classList.contains('finished') : false,
+        card1BtnDisabled: card1Btn ? card1Btn.disabled : false,
+        card1BtnText: card1Btn ? card1Btn.textContent.trim() : '',
+        heroBtnText: heroBtn ? heroBtn.textContent.trim() : ''
+      };
+    });
+    console.log('  [PASS] Thẻ HĐ 1 chuyển xám và Nút Hero chuyển sang Bước 2:', teacherPipelineAfterStep4);
+    if (!teacherPipelineAfterStep4.card1Finished || !teacherPipelineAfterStep4.card1BtnDisabled) {
+      throw new Error('LỖI: Thẻ HĐ 1 chưa chuyển sang trạng thái xám disabled sau khi hoàn thành!');
+    }
+    if (!teacherPipelineAfterStep4.heroBtnText.includes('BƯỚC 2') && !teacherPipelineAfterStep4.heroBtnText.includes('KHỞI ĐỘNG')) {
+      throw new Error('LỖI: Nút Hero dưới sảnh chờ chưa chuyển sang Bước 2 (Khởi động & Khám phá)! Text: ' + teacherPipelineAfterStep4.heroBtnText);
+    }
+
+    await teacherPage.screenshot({ path: path.join(outputDir, '06_activity_card_disabled.png') });
     await studentPage.screenshot({ path: path.join(outputDir, '05_student_back_to_lobby_rescued.png') });
 
     // -------------------------------------------------------------

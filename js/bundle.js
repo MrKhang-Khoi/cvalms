@@ -949,8 +949,14 @@
               if (val.quizAnswers !== undefined) {
                 updates.quizAnswers = val.quizAnswers || {};
               }
+              if (val.finishedActivities !== undefined) {
+                updates.finishedActivities = val.finishedActivities || {};
+              }
               if (Object.keys(updates).length > 0) {
                 STORE.setState(updates);
+                if (state.role === 'teacher' && updates.finishedActivities && APP.renderDynamicStagePipeline) {
+                  APP.renderDynamicStagePipeline();
+                }
               }
             }, (err) => {
               console.warn('[Firebase RTDB Listen Error]:', err);
@@ -2898,6 +2904,28 @@
       });
 
       container.innerHTML = html;
+
+      // Đồng bộ nội dung nút Hero dưới sảnh chờ theo hoạt động tiếp theo
+      const heroBtn = document.getElementById('btn-start-lesson-hero');
+      if (heroBtn) {
+        const nextAct = activities.find(a => !finishedActs[a.key]);
+        if (!nextAct) {
+          heroBtn.innerHTML = '<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH TẤT CẢ HOẠT ĐỘNG TIẾT HỌC — TỔNG KẾT';
+          heroBtn.style.background = 'linear-gradient(135deg, #059669, #047857)';
+          heroBtn.disabled = true;
+          heroBtn.style.cursor = 'default';
+        } else if (finishedActs['old_lesson']) {
+          heroBtn.innerHTML = `<i class="fas fa-arrow-right"></i> TIẾP TỤC TIẾT HỌC — CHUYỂN SANG BƯỚC ${nextAct.index}: ${nextAct.title.toUpperCase()}`;
+          heroBtn.style.background = 'linear-gradient(135deg, #0284c7, #6366f1)';
+          heroBtn.disabled = false;
+          heroBtn.style.cursor = 'pointer';
+        } else {
+          heroBtn.innerHTML = '<i class="fas fa-rocket"></i> ĐIỂM DANH XONG — BẮT ĐẦU BÀI HỌC (CHUYỂN SANG BƯỚC 1: KIỂM TRA BÀI CŨ)';
+          heroBtn.style.background = '';
+          heroBtn.disabled = false;
+          heroBtn.style.cursor = 'pointer';
+        }
+      }
     },
 
     executeStartActivity(actKey) {
@@ -4482,12 +4510,15 @@
       const spinBtn = document.getElementById('btn-trigger-spin');
       if (spinBtn) spinBtn.disabled = true;
 
+      const strat = state.luckyDraw.strategy || 'slot_machine';
+      const drawDuration = (strat === 'wheel_fortune') ? 7000 : 3800;
+
       const payload = {
-        strategy: state.luckyDraw.strategy || 'slot_machine',
+        strategy: strat,
         targetMachine: targetMachine,
         targetStudent: targetStudent,
         studentsList: pair,
-        duration: 3800
+        duration: drawDuration
       };
 
       // Phát lệnh đồng bộ xuống toàn bộ 18 máy học sinh
@@ -4602,21 +4633,22 @@
           let delta = targetDeg - currentRotMod;
           if (delta <= 0) delta += 360;
 
-          const extraRounds = 360 * 5;
+          const extraRounds = 360 * 9;
           const startRot = this.wheelCurrentRotation || 0;
           const endRot = startRot + extraRounds + delta;
           this.wheelCurrentRotation = endRot;
 
           // Animation thời gian thực bằng requestAnimationFrame để cập nhật HUD & Gảy kim
           const startTime = performance.now();
-          const animDuration = duration || 3800;
+          const animDuration = duration || 7000;
           let lastSlice = -1;
 
           const step = (now) => {
             const elapsed = now - startTime;
             const progress = Math.min(1, elapsed / animDuration);
-            // Ease out quartic: 1 - (1 - t)^4
-            const ease = 1 - Math.pow(1 - progress, 4);
+            // Chuẩn Game Show Chiếc Nón Kỳ Diệu: Ban đầu vút cực nhanh (9 vòng xé gió), sau đó giảm tốc mượt mà,
+            // 2.5s cuối cùng bò chậm từng nấc hồi hộp (Suspense Crawl) trước khi dừng đúng máy đích
+            const ease = 1 - Math.pow(1 - progress, 4.5);
             const currentDeg = startRot + (endRot - startRot) * ease;
 
             canvas.style.transform = `rotate(${currentDeg}deg)`;
@@ -4773,27 +4805,36 @@
       APP.resetAndCleanActivity('waiting', { cleanAll: true });
     }
 
+    const state = STORE.getState();
+    const curFinished = Object.assign({}, state.finishedActivities || {}, { old_lesson: true });
+
     STORE.setState({
       currentPhase: 'waiting',
       teacherPhase: 'waiting',
-      lastFinishedActivity: lastFinished
+      lastFinishedActivity: lastFinished,
+      finishedActivities: curFinished
     });
+
+    APP.renderDynamicStagePipeline();
 
     SYNC_BUS.broadcast('OLD_LESSON_DONE_RETURN_LOBBY', {
       phase: 'waiting',
       returnToLobby: true,
-      lastFinished: lastFinished
+      lastFinished: lastFinished,
+      finishedActivities: curFinished
     });
     SYNC_BUS.broadcast('PHASE_CHANGE', {
       phase: 'waiting',
       returnToLobby: true,
-      lastFinished: lastFinished
+      lastFinished: lastFinished,
+      finishedActivities: curFinished
     });
 
     safeFirebaseUpdate('activeSession', {
       currentPhase: 'waiting',
       returnToLobby: true,
       lastFinishedActivity: lastFinished,
+      finishedActivities: curFinished,
       countdown: { active: false, startedAt: 0 },
       pollLocked: false,
       pollAnswers: null,
@@ -4803,7 +4844,7 @@
       luckyDraw: { spinning: false, modalOpen: false, resultMachine: null, resultStudent: null },
       lastUpdated: Date.now()
     }).then(() => {
-      console.log('[Firebase] Đã chốt bài cũ và đưa 18 máy về sảnh chờ thành công!');
+      console.log('[Firebase] Đã chốt bài cũ, lưu finishedActivities và đưa 18 máy về sảnh chờ thành công!');
     }).catch(err => {
       console.warn('[Firebase] teacherFinishOldLessonToLobby error:', err);
     });
@@ -5049,7 +5090,7 @@
     }
   };
 
-  // Bắt đầu tiết học: Kích hoạt đếm ngược 3-2-1 đồng bộ trước khi vào bước 1
+  // Bắt đầu hoặc tiếp tục tiết học: Kích hoạt hoạt động tiếp theo trong chu trình bài dạy
   window._impl_teacherStartLesson = window.teacherStartLesson = function() {
     const s = STORE.getState();
     const checkedInCount = Object.keys(s.occupiedMachines || {}).length;
@@ -5059,24 +5100,14 @@
       return;
     }
 
-    const now = Date.now();
-    SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
-    safeFirebaseUpdate('activeSession', {
-      countdown: {
-        active: true,
-        title: 'BƯỚC 1: KIỂM TRA BÀI CŨ',
-        startedAt: now
-      },
-      returnToLobby: false
-    }).catch(()=>{});
-    APP.handleRemoteCountdown({ active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
+    const lesson = s.lessonData || APP.getLesson(s.lessonId);
+    const activities = APP.getLessonActivities(lesson);
+    const finishedActs = s.finishedActivities || {};
+    const nextAct = activities.find(a => !finishedActs[a.key]) || activities[0];
 
-    setTimeout(() => {
-      window.teacherSetPhase('old_lesson');
-      if (db) {
-        db.ref('activeSession/countdown').remove().catch(()=>{});
-      }
-    }, 3800);
+    if (nextAct) {
+      window.handleStartActivity(nextAct.key);
+    }
   };
 
   // Master Timer Controls với Lockstep NTP Sync
@@ -5325,6 +5356,11 @@
 
       // Render lại pipeline thẻ
       APP.renderDynamicStagePipeline();
+
+      safeFirebaseUpdate('activeSession', {
+        finishedActivities: curFinished,
+        lastUpdated: Date.now()
+      }).catch(()=>{});
 
       safeFirebaseUpdate('activeSession/finishingTransition', {
         active: false,
