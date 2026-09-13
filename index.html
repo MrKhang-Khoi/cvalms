@@ -833,10 +833,18 @@ print(s[4:])</code></pre>
               </div>
 
               <div class="studio-steps-list" id="studio-steps-list">
-                <!-- Bước 1: KHỞI ĐỘNG & BÀI CŨ -->
-                <div class="studio-step-card" data-step="1">
-                  <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-history"></i> BƯỚC 1: KHỞI ĐỘNG & KIỂM TRA BÀI CŨ</div>
+                <!-- 🔴 PHẦN 1: KHỞI ĐỘNG & BÀI CŨ -->
+                <div class="studio-step-card" data-step="1" id="studio-step-card-old-lesson" style="border-left:5px solid #ef4444;">
+                  <div class="ssc-header" style="background:rgba(239,68,68,0.08);">
+                    <div class="ssc-title">
+                      <span style="color:#ef4444;margin-right:6px;">🔴</span> <strong>KHỞI ĐỘNG & BÀI CŨ</strong>
+                    </div>
+                    <div class="seq-badge-flow">
+                      <span class="seq-chip">1. Bốc thăm</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">2. Câu hỏi</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">3. Đáp án</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">4. Sảnh chờ</span>
+                    </div>
                     <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-1">
                       <span class="slider round"></span>
@@ -869,88 +877,262 @@ print(s[4:])</code></pre>
                   </div>
                 </div>
 
-                <!-- Bước 2: KHÁM PHÁ KIẾN THỨC -->
-                <div class="studio-step-card" data-step="2">
-                  <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-bolt"></i> BƯỚC 2: KHÁM PHÁ KIẾN THỨC (SGK)</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
-                      <input type="checkbox" checked id="step-toggle-2">
-                      <span class="slider round"></span>
-                    </label>
-                  </div>
-                  <div class="ssc-body">
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-book-reader"></i> Nhiệm vụ học tập / Hướng dẫn đọc SGK:</label>
-                      <textarea class="studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
-                    </div>
-                    <div class="studio-form-row">
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-link"></i> Tài liệu / Slide đính kèm (URL hoặc Trang SGK):</label>
-                        <input type="text" class="studio-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
+                <!-- 🔷 PHẦN 2: CÁC MỤC BÀI HỌC (SECTIONS CONTAINER) -->
+                <div id="studio-sections-container">
+                  <!-- MỤC 1 -->
+                  <div class="studio-section-card" id="studio-sec-card-1" data-sec="1">
+                    <div class="section-card-header">
+                      <div class="section-header-title">
+                        <div class="section-diamond-tag">🔷 1</div>
+                        <input type="text" class="section-title-input" id="studio-sec1-title" value="Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự" placeholder="Tên mục 1...">
                       </div>
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng đọc & khám phá:</label>
-                        <select class="studio-select" id="step-time-2">
-                          <option value="120">2 phút</option>
-                          <option value="180">3 phút</option>
-                          <option value="300" selected>5 phút</option>
-                          <option value="420">7 phút</option>
-                          <option value="600">10 phút</option>
-                        </select>
-                      </div>
+                      <span style="font-size:12px;color:#38bdf8;font-weight:700;background:rgba(2,132,199,0.2);padding:4px 10px;border-radius:6px;">3 Hoạt động con</span>
                     </div>
-                  </div>
-                </div>
+                    <div class="section-sub-activities">
+                      <!-- HĐ 1.1: Khám phá SGK -->
+                      <div class="sub-activity-card" id="sub-act-1-1">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-book-open" style="color:#38bdf8;"></i> HĐ 1.1: Khám phá SGK & Thẻ Tri Thức Số
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Giao nhiệm vụ</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Bắt đầu đọc</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Chốt kiến thức</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-group">
+                          <label class="studio-field-label"><i class="fas fa-tasks"></i> Nhiệm vụ học tập / Đọc SGK Mục 1:</label>
+                          <textarea class="studio-textarea" id="studio-theory-task" rows="2" placeholder="Nhập nhiệm vụ đọc SGK...">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</textarea>
+                        </div>
+                        <div class="studio-form-row">
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-bookmark"></i> Tài liệu đính kèm / Trang SGK:</label>
+                            <input type="text" class="studio-input" id="studio-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 1 Trang 92" placeholder="Ví dụ: SGK Tin học 10 - Trang 92...">
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng đọc & khám phá:</label>
+                            <select class="studio-select" id="step-time-2">
+                              <option value="120">2 phút</option>
+                              <option value="180">3 phút</option>
+                              <option value="300" selected>5 phút</option>
+                              <option value="420">7 phút</option>
+                            </select>
+                          </div>
+                        </div>
+                        <!-- Thẻ tóm tắt NotebookLM -->
+                        <div style="margin-top:10px;padding:10px 14px;background:rgba(2,132,199,0.08);border:1px dashed rgba(56,189,248,0.3);border-radius:8px;">
+                          <div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:6px;"><i class="fas fa-sticky-note"></i> Thẻ lý thuyết chốt kiến thức:</div>
+                          <div style="font-size:12px;color:#cbd5e1;line-height:1.5;">
+                            • Thẻ 1: Khái niệm Xâu ký tự (chuỗi đặt trong nháy đơn/kép)<br>
+                            • Thẻ 2: Chỉ số Index (tính từ 0 trái qua phải, từ -1 phải qua trái)
+                          </div>
+                        </div>
+                      </div>
 
-                <!-- Bước 3: THỰC HÀNH & THẢO LUẬN TRÊN MÁY -->
-                <div class="studio-step-card" data-step="3">
-                  <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 3: THỰC HÀNH & THẢO LUẬN (CODE PYTHON)</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
-                      <input type="checkbox" checked id="step-toggle-3">
-                      <span class="slider round"></span>
-                    </label>
-                  </div>
-                  <div class="ssc-body">
-                    <div class="studio-form-row">
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-tag"></i> Tiêu đề bài thực hành:</label>
-                        <input type="text" class="studio-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                      <!-- HĐ 1.2: Trắc nghiệm nhanh -->
+                      <div class="sub-activity-card" id="sub-act-1-2">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 1.2: Trắc nghiệm nhanh củng cố Mục 1
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Chuẩn bị</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Phát đề</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Công bố đáp án</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-row">
+                          <div class="studio-form-col" style="flex:2;">
+                            <label class="studio-field-label"><i class="fas fa-question"></i> Câu hỏi trắc nghiệm nhanh:</label>
+                            <input type="text" class="studio-input" id="studio-sec1-quiz-q" value="Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?" placeholder="Câu hỏi nhanh...">
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                            <select class="studio-select" id="studio-sec1-quiz-correct">
+                              <option value="A" selected>A (Chỉ số 0)</option>
+                              <option value="B">B (Chỉ số 1)</option>
+                              <option value="C">C (Chỉ số -1)</option>
+                              <option value="D">D (Tùy chọn)</option>
+                            </select>
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                            <select class="studio-select" id="studio-sec1-quiz-time">
+                              <option value="30">30 giây</option>
+                              <option value="60" selected>1 phút</option>
+                              <option value="90">1.5 phút</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng thực hành:</label>
-                        <select class="studio-select" id="step-time-3">
-                          <option value="300">5 phút</option>
-                          <option value="600" selected>10 phút</option>
-                          <option value="720">12 phút</option>
-                          <option value="900">15 phút</option>
-                          <option value="1200">20 phút</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
-                      <textarea class="studio-textarea" id="studio-disc-task" rows="3" placeholder="Yêu cầu đề bài thực hành...">Cho xâu ký tự: s = 'chuc mung nam moi 2026'
+
+                      <!-- HĐ 1.3: Thực hành code -->
+                      <div class="sub-activity-card" id="sub-act-1-3">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-laptop-code" style="color:#a855f7;"></i> HĐ 1.3: Thực hành code Python Mục 1
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Giao đề bài</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Mở code</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Thu bài & Mẫu</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-row">
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-tag"></i> Tiêu đề bài thực hành:</label>
+                            <input type="text" class="studio-input" id="studio-disc-title" value="Nhiệm vụ Thảo luận & Thực hành Nhóm đôi" placeholder="Tên bài thực hành...">
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng thực hành:</label>
+                            <select class="studio-select" id="step-time-3">
+                              <option value="300">5 phút</option>
+                              <option value="600" selected>10 phút</option>
+                              <option value="720">12 phút</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div class="studio-form-group">
+                          <label class="studio-field-label"><i class="fas fa-file-code"></i> Yêu cầu đề bài thực hành:</label>
+                          <textarea class="studio-textarea" id="studio-disc-task" rows="2" placeholder="Yêu cầu đề bài thực hành...">Cho xâu ký tự: s = 'chuc mung nam moi 2026'
 Hai em hãy thảo luận và viết các câu lệnh Python để thực hiện:
 1. In ra độ dài của xâu s.
-2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.
-3. Đếm số lượng ký tự khoảng trắng có trong xâu s.</textarea>
-                    </div>
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-code"></i> Mã Python gợi ý ban đầu (Code Template):</label>
-                      <textarea class="studio-textarea code-font" id="studio-disc-starter" rows="3" placeholder="Mã Python gợi ý..."># Gợi ý bài thực hành xâu ký tự:
+2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.</textarea>
+                        </div>
+                        <div class="studio-form-group">
+                          <label class="studio-field-label"><i class="fas fa-code"></i> Mã Python gợi ý ban đầu (Code Template):</label>
+                          <textarea class="studio-textarea code-font" id="studio-disc-starter" rows="2" placeholder="Mã Python gợi ý..."># Gợi ý bài thực hành xâu ký tự:
 s = 'chuc mung nam moi 2026'
 print("1. Độ dài xâu:", len(s))
-print("2. Cắt xâu:", s[10:17])
-</textarea>
+print("2. Cắt xâu:", s[10:17])</textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- MỤC 2 -->
+                  <div class="studio-section-card" id="studio-sec-card-2" data-sec="2">
+                    <div class="section-card-header">
+                      <div class="section-header-title">
+                        <div class="section-diamond-tag">🔷 2</div>
+                        <input type="text" class="section-title-input" id="studio-sec2-title" value="Mục 2: Phép Cắt Xâu Ký Tự (Slicing)" placeholder="Tên mục 2...">
+                      </div>
+                      <span style="font-size:12px;color:#38bdf8;font-weight:700;background:rgba(2,132,199,0.2);padding:4px 10px;border-radius:6px;">3 Hoạt động con</span>
+                    </div>
+                    <div class="section-sub-activities">
+                      <!-- HĐ 2.1: Khám phá cú pháp -->
+                      <div class="sub-activity-card" id="sub-act-2-1">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-book-open" style="color:#38bdf8;"></i> HĐ 2.1: Khám phá cú pháp Cắt Xâu (Slicing)
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Giao nhiệm vụ</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Bắt đầu đọc</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Chốt kiến thức</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-group">
+                          <label class="studio-field-label"><i class="fas fa-tasks"></i> Nhiệm vụ học tập / Đọc SGK Mục 2:</label>
+                          <textarea class="studio-textarea" id="studio-sec2-theory-task" rows="2" placeholder="Nhiệm vụ đọc SGK mục 2...">Đọc SGK mục 2 (trang 94), thảo luận cú pháp cắt xâu s[start:stop] và tính chất bất biến (immutable) của xâu.</textarea>
+                        </div>
+                        <div class="studio-form-row">
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-bookmark"></i> Tài liệu đính kèm:</label>
+                            <input type="text" class="studio-input" id="studio-sec2-theory-doc" value="SGK Tin học 10 Cánh Diều - Mục 2 Trang 94" placeholder="Tài liệu...">
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng đọc:</label>
+                            <select class="studio-select" id="studio-sec2-theory-time">
+                              <option value="180">3 phút</option>
+                              <option value="300" selected>5 phút</option>
+                              <option value="420">7 phút</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- HĐ 2.2: Trắc nghiệm code -->
+                      <div class="sub-activity-card" id="sub-act-2-2">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 2.2: Trắc nghiệm code cắt xâu
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Chuẩn bị</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Phát đề</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Công bố đáp án</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-row">
+                          <div class="studio-form-col" style="flex:2;">
+                            <label class="studio-field-label"><i class="fas fa-question"></i> Câu hỏi trắc nghiệm code:</label>
+                            <input type="text" class="studio-input" id="studio-sec2-quiz-q" value="Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?" placeholder="Câu hỏi trắc nghiệm...">
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                            <select class="studio-select" id="studio-sec2-quiz-correct">
+                              <option value="A" selected>A ('VIET')</option>
+                              <option value="B">B ('VIETN')</option>
+                              <option value="C">C ('VIE')</option>
+                              <option value="D">D ('ETNA')</option>
+                            </select>
+                          </div>
+                          <div class="studio-form-col">
+                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                            <select class="studio-select" id="studio-sec2-quiz-time">
+                              <option value="30">30 giây</option>
+                              <option value="60" selected>1 phút</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- HĐ 2.3: Thực hành nhóm -->
+                      <div class="sub-activity-card" id="sub-act-2-3">
+                        <div class="sub-activity-header">
+                          <div class="sub-act-title">
+                            <i class="fas fa-laptop-code" style="color:#a855f7;"></i> HĐ 2.3: Thực hành nhóm cắt và ghép xâu
+                          </div>
+                          <div class="seq-badge-flow">
+                            <span class="seq-chip">1. Giao đề bài</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">2. Mở code</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">3. Thu bài & Mẫu</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                            <span class="seq-chip">4. Sảnh chờ</span>
+                          </div>
+                        </div>
+                        <div class="studio-form-group">
+                          <label class="studio-field-label"><i class="fas fa-file-code"></i> Yêu cầu bài tập nhóm:</label>
+                          <textarea class="studio-textarea" id="studio-sec2-prac-task" rows="2" placeholder="Yêu cầu bài tập...">Cho xâu s = 'chuc mung nam moi 2026'. Viết lệnh cắt ra cụm từ 'nam moi' và in ra màn hình.</textarea>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <!-- Bước 4: ĐẤU TRƯỜNG KAHOOT & VINH DANH PODIUM -->
-                <div class="studio-step-card" data-step="4">
-                  <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 4: ĐẤU TRƯỜNG KAHOOT & VINH DANH PODIUM</div>
+                <!-- Nút thêm mục mới -->
+                <button type="button" class="btn-add-section" onclick="window.studioAddNewSection()">
+                  <i class="fas fa-plus-circle"></i> + THÊM MỤC BÀI HỌC MỚI (MỤC 3, MỤC 4...)
+                </button>
+
+                <!-- 🏆 PHẦN 3: TỔNG KẾT — ĐẤU TRƯỜNG KAHOOT & BỤC VINH DANH PODIUM 3D -->
+                <div class="studio-step-card" data-step="4" id="studio-step-card-quiz" style="border-left:5px solid #f59e0b;">
+                  <div class="ssc-header" style="background:rgba(245,158,11,0.08);">
+                    <div class="ssc-title">
+                      <span style="color:#f59e0b;margin-right:6px;">🏆</span> <strong>TỔNG KẾT: ĐẤU TRƯỜNG KAHOOT & BỤC VINH DANH PODIUM 3D</strong>
+                    </div>
+                    <div class="seq-badge-flow">
+                      <span class="seq-chip">1. Khởi động đấu trường</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">2. Phát đề thi đua</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">3. Bục vinh danh</span> <i class="fas fa-arrow-right seq-arrow"></i>
+                      <span class="seq-chip">4. Tổng kết</span>
+                    </div>
                     <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-4">
                       <span class="slider round"></span>
@@ -1023,10 +1205,10 @@ print("2. Cắt xâu:", s[10:17])
                       </div>
                     </div>
 
-                    <!-- Dạng 2: Đúng / Sai 4 ý chuẩn 2025 -->
+                    <!-- Dạng 2: Đúng/Sai 4 mệnh đề -->
                     <div class="studio-form-group" id="studio-quiz-tf-wrap" style="display:none;">
-                      <label class="studio-field-label"><i class="fas fa-tasks"></i> 4 Mệnh đề Đúng / Sai (Định dạng thi THPT mới):</label>
-                      <div class="studio-tf-list" style="display:flex;flex-direction:column;gap:8px;">
+                      <label class="studio-field-label"><i class="fas fa-tasks"></i> Thiết lập 4 mệnh đề Đúng / Sai:</label>
+                      <div class="tf-editor-grid" style="display:flex;flex-direction:column;gap:8px;">
                         <div class="tf-item-row" style="display:flex;gap:8px;align-items:center;">
                           <span style="color:#38bdf8;font-weight:700;width:24px;">a)</span>
                           <input type="text" class="studio-input" id="studio-tf-stmt-a" value="s[0] trả về ký tự đầu tiên của xâu" style="flex:1;">
@@ -1705,6 +1887,49 @@ print("2. Cắt xâu:", s[10:17])
         <button type="button" class="btn-confirm" id="btn-wra-proceed" onclick="window.closeWaitingRoomAlert(true)" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:700;">
           <i class="fas fa-play"></i> Vẫn bắt đầu hoạt động
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: XEM TRƯỚC KỊCH BẢN BÀI DẠY SƯ PHẠM DẠNG BẢNG CHI TIẾT (THAY THẾ BROWSER ALERT) -->
+  <div class="modal-overlay modal-xl" id="modal-studio-preview" style="display:none;z-index:999999;">
+    <div class="modal-card blueprint-preview-card" style="max-width:1150px;width:95vw;max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden;border:1px solid rgba(56,189,248,0.4);box-shadow:0 0 50px rgba(14,165,233,0.25);">
+      <div class="blueprint-modal-header" style="padding:16px 24px;background:linear-gradient(135deg,#0f172a,#1e293b);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#0284c7,#38bdf8);display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;box-shadow:0 0 15px rgba(56,189,248,0.4);">
+            <i class="fas fa-sitemap"></i>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:1px;">BẢN ĐỒ TIẾN TRÌNH SƯ PHẠM CHI TIẾT (LESSON BLUEPRINT)</div>
+            <h3 id="bp-modal-title" style="margin:2px 0 0 0;font-size:18px;font-weight:800;color:#f8fafc;">Bài 12: Kiểu dữ liệu xâu trong Python</h3>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div class="bp-summary-tags" id="bp-summary-tags" style="display:flex;gap:8px;">
+            <!-- Render badges -->
+          </div>
+          <button type="button" class="btn-tool" onclick="window.closeStudioPreviewModal()" style="width:34px;height:34px;border-radius:8px;border:none;background:rgba(255,255,255,0.1);color:#cbd5e1;cursor:pointer;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="blueprint-modal-body" style="padding:20px;overflow-y:auto;flex:1;background:#090d16;">
+        <div class="blueprint-table-wrap" id="blueprint-table-container">
+          <!-- Render dynamic Blueprint Table -->
+        </div>
+      </div>
+      <div class="blueprint-modal-footer" style="padding:14px 24px;background:#0f172a;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:13px;color:#94a3b8;">
+          <i class="fas fa-info-circle" style="color:#38bdf8;"></i> Mọi hoạt động đều tuân thủ <strong>Chu trình 4 nút tuần tự</strong> trên bàn điều khiển Sân khấu.
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button type="button" class="btn-cancel" onclick="window.closeStudioPreviewModal()" style="padding:9px 18px;font-size:13.5px;font-weight:700;">
+            <i class="fas fa-times"></i> Đóng lại
+          </button>
+          <button type="button" class="btn-primary" id="btn-bp-apply-save" onclick="window.studioSaveFromPreview()" style="background:linear-gradient(135deg,#059669,#10b981);padding:9px 20px;font-size:13.5px;font-weight:700;border:none;border-radius:8px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 0 15px rgba(16,185,129,0.35);">
+            <i class="fas fa-save"></i> ÁP DỤNG & LƯU KỊCH BẢN
+          </button>
+        </div>
       </div>
     </div>
   </div>

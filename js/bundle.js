@@ -278,6 +278,47 @@
         "shortAnswer": "TinHoc",
         "timeLimit": 20
       },
+      "sections": [
+        {
+          "id": 1,
+          "title": "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự",
+          "theory": {
+            "task": "Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.",
+            "doc": "SGK Tin học 10 Cánh Diều - Mục 1 Trang 92",
+            "timeLimit": 300
+          },
+          "quiz": {
+            "question": "Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?",
+            "correct": "A",
+            "timeLimit": 60
+          },
+          "practice": {
+            "title": "Nhiệm vụ Thảo luận & Thực hành Nhóm đôi",
+            "task": "Cho xâu ký tự: s = 'chuc mung nam moi 2026'\nHai em hãy thảo luận và viết các câu lệnh Python để thực hiện:\n1. In ra độ dài của xâu s.\n2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.",
+            "placeholder": "# Gợi ý bài thực hành xâu ký tự:\ns = 'chuc mung nam moi 2026'\nprint(\"1. Độ dài xâu:\", len(s))\nprint(\"2. Cắt xâu:\", s[10:17])",
+            "timeLimit": 600
+          }
+        },
+        {
+          "id": 2,
+          "title": "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)",
+          "theory": {
+            "task": "Đọc SGK mục 2 (trang 94), thảo luận cú pháp cắt xâu s[start:stop] và tính chất bất biến (immutable) của xâu.",
+            "doc": "SGK Tin học 10 Cánh Diều - Mục 2 Trang 94",
+            "timeLimit": 300
+          },
+          "quiz": {
+            "question": "Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?",
+            "correct": "A",
+            "timeLimit": 60
+          },
+          "practice": {
+            "title": "Thực hành nhóm cắt và ghép xâu",
+            "task": "Cho xâu s = 'chuc mung nam moi 2026'. Viết lệnh cắt ra cụm từ 'nam moi' và in ra màn hình.",
+            "timeLimit": 600
+          }
+        }
+      ],
       "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
     },
     "tin10_bai1": {
@@ -2578,6 +2619,32 @@
       const tog4 = document.getElementById('step-toggle-4');
       if (tog4) tog4.checked = (lesson.stepsEnabled ? (lesson.stepsEnabled[4] !== false) : true);
 
+      // Điền các mục bài học (Sections) nếu có
+      if (lesson.sections && lesson.sections[0]) {
+        const s1 = lesson.sections[0];
+        const s1TitleEl = document.getElementById('studio-sec1-title');
+        if (s1TitleEl && s1.title) s1TitleEl.value = s1.title;
+        const s1QuizQEl = document.getElementById('studio-sec1-quiz-q');
+        if (s1QuizQEl && s1.quiz && s1.quiz.question) s1QuizQEl.value = s1.quiz.question;
+        const s1QuizAnsEl = document.getElementById('studio-sec1-quiz-correct');
+        if (s1QuizAnsEl && s1.quiz && s1.quiz.correct) s1QuizAnsEl.value = s1.quiz.correct;
+      }
+      if (lesson.sections && lesson.sections[1]) {
+        const s2 = lesson.sections[1];
+        const s2TitleEl = document.getElementById('studio-sec2-title');
+        if (s2TitleEl && s2.title) s2TitleEl.value = s2.title;
+        const s2TTaskEl = document.getElementById('studio-sec2-theory-task');
+        if (s2TTaskEl && s2.theory && s2.theory.task) s2TTaskEl.value = s2.theory.task;
+        const s2TDocEl = document.getElementById('studio-sec2-theory-doc');
+        if (s2TDocEl && s2.theory && s2.theory.doc) s2TDocEl.value = s2.theory.doc;
+        const s2QuizQEl = document.getElementById('studio-sec2-quiz-q');
+        if (s2QuizQEl && s2.quiz && s2.quiz.question) s2QuizQEl.value = s2.quiz.question;
+        const s2QuizAnsEl = document.getElementById('studio-sec2-quiz-correct');
+        if (s2QuizAnsEl && s2.quiz && s2.quiz.correct) s2QuizAnsEl.value = s2.quiz.correct;
+        const s2PracTaskEl = document.getElementById('studio-sec2-prac-task');
+        if (s2PracTaskEl && s2.practice && s2.practice.task) s2PracTaskEl.value = s2.practice.task;
+      }
+
       // Bước 5: Vinh danh
       const tog5 = document.getElementById('step-toggle-5');
       if (tog5) tog5.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[5] !== false : true);
@@ -2630,6 +2697,20 @@
         5: document.getElementById('step-toggle-5')?.checked !== false
       };
 
+      const sec1Title = document.getElementById('studio-sec1-title')?.value.trim() || 'Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự';
+      const sec1QuizQ = document.getElementById('studio-sec1-quiz-q')?.value.trim() || '';
+      const sec1QuizAns = document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
+      const sec1QuizTime = parseInt(document.getElementById('studio-sec1-quiz-time')?.value || '60', 10);
+
+      const sec2Title = document.getElementById('studio-sec2-title')?.value.trim() || 'Mục 2: Phép Cắt Xâu Ký Tự (Slicing)';
+      const sec2TheoryTask = document.getElementById('studio-sec2-theory-task')?.value.trim() || '';
+      const sec2TheoryDoc = document.getElementById('studio-sec2-theory-doc')?.value.trim() || '';
+      const sec2TheoryTime = parseInt(document.getElementById('studio-sec2-theory-time')?.value || '300', 10);
+      const sec2QuizQ = document.getElementById('studio-sec2-quiz-q')?.value.trim() || '';
+      const sec2QuizAns = document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
+      const sec2QuizTime = parseInt(document.getElementById('studio-sec2-quiz-time')?.value || '60', 10);
+      const sec2PracTask = document.getElementById('studio-sec2-prac-task')?.value.trim() || '';
+
       const updatedLesson = {
         id: lessonId,
         title: title,
@@ -2667,6 +2748,22 @@
           subItems: subItems,
           shortAnswer: shortAns
         },
+        sections: [
+          {
+            id: 1,
+            title: sec1Title,
+            theory: { task: task2, doc: doc2, timeLimit: time2 },
+            quiz: { question: sec1QuizQ, correct: sec1QuizAns, timeLimit: sec1QuizTime },
+            practice: { title: dTitle, task: dTask, placeholder: dStart, timeLimit: time3 }
+          },
+          {
+            id: 2,
+            title: sec2Title,
+            theory: { task: sec2TheoryTask, doc: sec2TheoryDoc, timeLimit: sec2TheoryTime },
+            quiz: { question: sec2QuizQ, correct: sec2QuizAns, timeLimit: sec2QuizTime },
+            practice: { title: 'Thực hành Cắt và Ghép xâu', task: sec2PracTask, timeLimit: 600 }
+          }
+        ],
         stepsEnabled: stepsEnabled
       };
 
@@ -2754,8 +2851,236 @@
     },
 
     studioPreviewLesson() {
-      const l = this.getLesson(this.currentStudioLessonId);
-      alert(`👁️ XEM TRƯỚC KỊCH BẢN: ${l.title}\n\n• Bước 1: ${l.oldLesson?.question || 'Chưa đặt'}\n• Bước 2: ${l.theoryTask || 'Chưa đặt'}\n• Bước 3 Quiz: ${l.quiz?.question || 'Chưa đặt'} (Đ/A: ${l.quiz?.correct})\n• Bước 4 Thực hành: ${l.discussion?.title || 'Chưa đặt'}\n• Bước 5: Bục vinh danh Podium.`);
+      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const l = this.getLesson(lessonId) || {};
+      const titleInp = document.getElementById('studio-lesson-title-input');
+      const title = (titleInp && titleInp.value.trim()) || l.title || 'Bài dạy thực hành';
+
+      const modal = document.getElementById('modal-studio-preview');
+      const titleEl = document.getElementById('bp-modal-title');
+      const container = document.getElementById('blueprint-table-container');
+      const summaryTags = document.getElementById('bp-summary-tags');
+      if (!modal || !container) return;
+
+      if (titleEl) titleEl.textContent = title;
+
+      // Đọc các giá trị từ form Studio hiện thời
+      const oldLessonQ = document.getElementById('studio-old-lesson-q')?.value.trim() || l.oldLesson?.question || 'Chưa đặt';
+      const oldLessonTime = document.getElementById('step-time-1')?.value || '120';
+
+      const sec1Title = document.getElementById('studio-sec1-title')?.value.trim() || 'Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự';
+      const sec1TheoryTask = document.getElementById('studio-theory-task')?.value.trim() || l.theoryTask || 'Đọc SGK mục 1';
+      const sec1TheoryDoc = document.getElementById('studio-theory-doc')?.value.trim() || l.theoryDoc || 'SGK Tin học 10';
+      const sec1TheoryTime = document.getElementById('step-time-2')?.value || '300';
+      const sec1QuizQ = document.getElementById('studio-sec1-quiz-q')?.value.trim() || 'Trong Python, chỉ số (index) đầu tiên bắt đầu từ mấy?';
+      const sec1QuizAns = document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
+      const sec1QuizTime = document.getElementById('studio-sec1-quiz-time')?.value || '60';
+      const sec1PracTitle = document.getElementById('studio-disc-title')?.value.trim() || l.discussion?.title || 'Thực hành code Python';
+      const sec1PracTask = document.getElementById('studio-disc-task')?.value.trim() || l.discussion?.task || 'Viết chương trình Python';
+      const sec1PracTime = document.getElementById('step-time-3')?.value || '600';
+
+      const sec2Title = document.getElementById('studio-sec2-title')?.value.trim() || 'Mục 2: Phép Cắt Xâu Ký Tự (Slicing)';
+      const sec2TheoryTask = document.getElementById('studio-sec2-theory-task')?.value.trim() || 'Đọc SGK mục 2 về cú pháp slicing';
+      const sec2TheoryDoc = document.getElementById('studio-sec2-theory-doc')?.value.trim() || 'SGK Tin học 10';
+      const sec2TheoryTime = document.getElementById('studio-sec2-theory-time')?.value || '300';
+      const sec2QuizQ = document.getElementById('studio-sec2-quiz-q')?.value.trim() || 'Cho xâu s = "VIETNAM". Kết quả của s[0:4] là gì?';
+      const sec2QuizAns = document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
+      const sec2QuizTime = document.getElementById('studio-sec2-quiz-time')?.value || '60';
+      const sec2PracTask = document.getElementById('studio-sec2-prac-task')?.value.trim() || 'Cắt xâu và in ra cụm từ "nam moi"';
+      const sec2PracTime = '600';
+
+      const quizQ = document.getElementById('studio-quiz-q')?.value.trim() || l.quiz?.question || 'Câu hỏi trắc nghiệm Đấu trường';
+      const quizType = document.getElementById('studio-quiz-type')?.value || l.quiz?.type || 'single_choice';
+      const quizTime = document.getElementById('step-time-4')?.value || '20';
+
+      const formatTime = (sec) => {
+        const s = parseInt(sec, 10);
+        if (s < 60) return `${s} giây`;
+        return `${Math.round(s / 60)} phút`;
+      };
+
+      if (summaryTags) {
+        summaryTags.innerHTML = `
+          <span class="bp-stage-badge bp-stage-blue"><i class="fas fa-layer-group"></i> 2 Mục bài học</span>
+          <span class="bp-stage-badge bp-stage-gold"><i class="fas fa-tasks"></i> 8 Hoạt động</span>
+          <span class="bp-stage-badge bp-stage-red"><i class="fas fa-stopwatch"></i> Tổng ~35 phút</span>
+        `;
+      }
+
+      const tableHtml = `
+        <table class="blueprint-table">
+          <thead>
+            <tr>
+              <th style="width:220px;"><i class="fas fa-stream"></i> Tiến trình / Mục bài học</th>
+              <th style="width:160px;"><i class="fas fa-flag"></i> Hoạt động</th>
+              <th><i class="fas fa-file-alt"></i> Nội dung tác nghiệp trọng tâm</th>
+              <th style="width:110px;"><i class="fas fa-clock"></i> Thời lượng</th>
+              <th style="width:330px;"><i class="fas fa-sliders-h"></i> Chu trình 4 Nút Tuần Tự Chuẩn</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- KHỞI ĐỘNG & BÀI CŨ -->
+            <tr>
+              <td>
+                <span class="bp-stage-badge bp-stage-red">🔴 KHỞI ĐỘNG & BÀI CŨ</span>
+              </td>
+              <td><strong>Kiểm tra bài cũ</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;font-weight:600;">${oldLessonQ}</div>
+                <div style="font-size:11.5px;color:#94a3b8;margin-top:4px;"><i class="fas fa-dice"></i> Bốc thăm gọi ngẫu nhiên học sinh trả lời miệng/trên máy</div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(oldLessonTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Bốc thăm</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Câu hỏi</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Đáp án</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 1: HĐ 1.1 -->
+            <tr>
+              <td rowspan="3" style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
+                <span class="bp-stage-badge bp-stage-blue">🔷 ${sec1Title}</span>
+              </td>
+              <td><i class="fas fa-book-reader" style="color:#38bdf8;"></i> <strong>HĐ 1.1: Khám phá SGK</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;">${sec1TheoryTask}</div>
+                <div style="font-size:11.5px;color:#38bdf8;margin-top:3px;"><i class="fas fa-bookmark"></i> ${sec1TheoryDoc} (kèm thẻ NotebookLM)</div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1TheoryTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Giao nhiệm vụ</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Bắt đầu đọc</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Chốt kiến thức</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 1: HĐ 1.2 -->
+            <tr>
+              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 1.2: Trắc nghiệm nhanh</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;">${sec1QuizQ}</div>
+                <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec1QuizAns}</strong></div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1QuizTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Chuẩn bị</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Phát đề</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Công bố Đ/A</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 1: HĐ 1.3 -->
+            <tr>
+              <td><i class="fas fa-laptop-code" style="color:#a855f7;"></i> <strong>HĐ 1.3: Thực hành code</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;font-weight:600;">${sec1PracTitle}</div>
+                <div style="font-size:12px;color:#94a3b8;white-space:pre-line;margin-top:2px;">${sec1PracTask}</div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1PracTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Giao đề bài</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Mở code</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Thu bài & Mẫu</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 2: HĐ 2.1 -->
+            <tr>
+              <td rowspan="3" style="background:rgba(2,132,199,0.06);border-right:1px solid rgba(56,189,248,0.2);">
+                <span class="bp-stage-badge bp-stage-blue">🔷 ${sec2Title}</span>
+              </td>
+              <td><i class="fas fa-book-reader" style="color:#38bdf8;"></i> <strong>HĐ 2.1: Khám phá cú pháp</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;">${sec2TheoryTask}</div>
+                <div style="font-size:11.5px;color:#38bdf8;margin-top:3px;"><i class="fas fa-bookmark"></i> ${sec2TheoryDoc}</div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2TheoryTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Giao nhiệm vụ</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Bắt đầu đọc</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Chốt kiến thức</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 2: HĐ 2.2 -->
+            <tr>
+              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 2.2: Trắc nghiệm code</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;">${sec2QuizQ}</div>
+                <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec2QuizAns}</strong></div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2QuizTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Chuẩn bị</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Phát đề</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Công bố Đ/A</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- MỤC 2: HĐ 2.3 -->
+            <tr>
+              <td><i class="fas fa-laptop-code" style="color:#a855f7;"></i> <strong>HĐ 2.3: Thực hành nhóm</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;">${sec2PracTask}</div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2PracTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Giao đề bài</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Mở code</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Thu bài & Mẫu</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Sảnh chờ</span>
+                </div>
+              </td>
+            </tr>
+
+            <!-- TỔNG KẾT: KAHOOT & PODIUM -->
+            <tr>
+              <td>
+                <span class="bp-stage-badge bp-stage-gold">🏆 TỔNG KẾT</span>
+              </td>
+              <td><strong>Đấu trường Kahoot & Podium</strong></td>
+              <td>
+                <div style="font-size:13px;color:#cbd5e1;font-weight:600;">${quizQ}</div>
+                <div style="font-size:11.5px;color:#fbbf24;margin-top:4px;">
+                  <i class="fas fa-shield-alt"></i> Tự động đảo đáp án 18 máy chống nhìn bài • Dạng: ${quizType === 'single_choice' ? '4 màu Kahoot' : (quizType === 'true_false' ? 'Đúng/Sai 4 ý' : 'Điền kết quả')}
+                </div>
+              </td>
+              <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(quizTime)}</span></td>
+              <td>
+                <div class="bp-seq-table-flow">
+                  <span class="bp-seq-chip c1">1. Khởi động</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c2">2. Phát đề</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c3">3. Bục vinh danh</span> <i class="fas fa-chevron-right" style="font-size:9px;color:#64748b;"></i>
+                  <span class="bp-seq-chip c4">4. Tổng kết</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+
+      container.innerHTML = tableHtml;
+      modal.style.display = 'flex';
     },
 
     // Xử lý nộp form đăng nhập Admin
@@ -6141,6 +6466,53 @@
 
   window.studioPreviewLesson = function() {
     APP.studioPreviewLesson();
+  };
+
+  window.closeStudioPreviewModal = function() {
+    const modal = document.getElementById('modal-studio-preview');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.studioSaveFromPreview = function() {
+    APP.saveStudioLesson();
+    const modal = document.getElementById('modal-studio-preview');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.studioAddNewSection = function() {
+    const container = document.getElementById('studio-sections-container');
+    if (!container) return;
+    const nextIdx = container.querySelectorAll('.studio-section-card').length + 1;
+    const card = document.createElement('div');
+    card.className = 'studio-section-card';
+    card.id = `studio-sec-card-${nextIdx}`;
+    card.setAttribute('data-sec', String(nextIdx));
+    card.innerHTML = `
+      <div class="section-card-header">
+        <div class="section-header-title">
+          <div class="section-diamond-tag">🔷 ${nextIdx}</div>
+          <input type="text" class="section-title-input" id="studio-sec${nextIdx}-title" value="Mục ${nextIdx}: Nội dung bài học mới" placeholder="Tên mục ${nextIdx}...">
+        </div>
+        <button type="button" class="btn-tool-sm btn-tool-danger" onclick="this.closest('.studio-section-card').remove()" style="padding:4px 10px;font-size:12px;border-radius:6px;"><i class="fas fa-trash"></i> Xóa mục</button>
+      </div>
+      <div class="section-sub-activities">
+        <div class="sub-activity-card">
+          <div class="sub-activity-header">
+            <div class="sub-act-title"><i class="fas fa-book-open" style="color:#38bdf8;"></i> HĐ ${nextIdx}.1: Khám phá SGK & Thẻ Tri Thức</div>
+            <div class="seq-badge-flow"><span class="seq-chip">1. Giao nhiệm vụ</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">2. Bắt đầu đọc</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">3. Chốt kiến thức</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">4. Sảnh chờ</span></div>
+          </div>
+          <textarea class="studio-textarea" rows="2" placeholder="Nhiệm vụ đọc SGK mục ${nextIdx}..."></textarea>
+        </div>
+        <div class="sub-activity-card">
+          <div class="sub-activity-header">
+            <div class="sub-act-title"><i class="fas fa-check-double" style="color:#10b981;"></i> HĐ ${nextIdx}.2: Trắc nghiệm nhanh củng cố</div>
+            <div class="seq-badge-flow"><span class="seq-chip">1. Chuẩn bị</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">2. Phát đề</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">3. Công bố Đ/A</span> <i class="fas fa-arrow-right seq-arrow"></i> <span class="seq-chip">4. Sảnh chờ</span></div>
+          </div>
+          <input type="text" class="studio-input" placeholder="Câu hỏi trắc nghiệm nhanh mục ${nextIdx}...">
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
   };
 
   window.studioSaveLesson = function() {
