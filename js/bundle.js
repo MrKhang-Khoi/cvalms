@@ -664,6 +664,27 @@
               // 3. Đồng bộ tiến trình sư phạm & Phòng chờ
               if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
                 updates.currentPhase = val.currentPhase;
+                if (val.currentPhase !== 'waiting') {
+                  let mId = state.machineId || state.fixedMachineId;
+                  if (!mId) {
+                    try {
+                      const saved = localStorage.getItem('lms_fixed_machine_id');
+                      if (saved) mId = parseInt(saved, 10);
+                    } catch {}
+                  }
+                  if (mId) {
+                    const classData = APP.classes[state.classId] || APP.classes['10A1'];
+                    const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+                    updates.screen = 'student';
+                    updates.machineId = mId;
+                    updates.fixedMachineId = mId;
+                    updates.students = pair;
+                  }
+                }
+              }
+              if (val.returnToLobby && state.role === 'student') {
+                updates.screen = 'lobby';
+                updates.currentPhase = 'waiting';
               }
               if (val.lastFinishedActivity !== undefined) {
                 updates.lastFinishedActivity = val.lastFinishedActivity;
@@ -702,9 +723,19 @@
               }
               if (val.luckyDraw) {
                 updates.luckyDraw = val.luckyDraw;
-                if (val.luckyDraw.payload && val.luckyDraw.spinning) {
-                  if (window.APP && window.APP.handleRemoteLuckyDrawSpin) {
-                    window.APP.handleRemoteLuckyDrawSpin(val.luckyDraw.payload);
+                if (state.role === 'student') {
+                  if (val.luckyDraw.modalOpen) {
+                    APP.openLuckyDrawModal(false);
+                    if (val.luckyDraw.strategy) {
+                      APP.setLuckyDrawStrategy(val.luckyDraw.strategy, false);
+                    }
+                  } else if (val.luckyDraw.modalOpen === false) {
+                    APP.closeLuckyDrawModal(false);
+                  }
+                  if (val.luckyDraw.payload && val.luckyDraw.spinning) {
+                    if (window.APP && window.APP.handleRemoteLuckyDrawSpin) {
+                      window.APP.handleRemoteLuckyDrawSpin(val.luckyDraw.payload);
+                    }
                   }
                 }
               }
@@ -767,10 +798,61 @@
       const state = STORE.getState();
       if (data.type === 'PHASE_CHANGE') {
         if (state.role === 'student' && data.payload && data.payload.phase) {
-          STORE.setState({
-            currentPhase: data.payload.phase,
+          const nextPhase = data.payload.phase;
+          const updates = {
+            currentPhase: nextPhase,
             lastFinishedActivity: data.payload.lastFinished || null
+          };
+          if (nextPhase !== 'waiting') {
+            let mId = state.machineId || state.fixedMachineId;
+            if (!mId) {
+              try {
+                const saved = localStorage.getItem('lms_fixed_machine_id');
+                if (saved) mId = parseInt(saved, 10);
+              } catch {}
+            }
+            if (mId) {
+              const classData = APP.classes[state.classId] || APP.classes['10A1'];
+              const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+              updates.screen = 'student';
+              updates.machineId = mId;
+              updates.fixedMachineId = mId;
+              updates.students = pair;
+            }
+          } else if (data.payload.resetByTeacher || data.payload.returnToLobby) {
+            updates.screen = 'lobby';
+          }
+          STORE.setState(updates);
+        }
+      } else if (data.type === 'START_COUNTDOWN') {
+        APP.handleRemoteCountdown(data.payload);
+      } else if (data.type === 'LUCKY_DRAW_OPEN') {
+        if (state.role === 'student') {
+          APP.openLuckyDrawModal(false);
+          if (data.payload && data.payload.strategy) {
+            APP.setLuckyDrawStrategy(data.payload.strategy, false);
+          }
+        }
+      } else if (data.type === 'LUCKY_DRAW_STRATEGY') {
+        if (state.role === 'student' && data.payload && data.payload.strategy) {
+          APP.setLuckyDrawStrategy(data.payload.strategy, false);
+        }
+      } else if (data.type === 'OLD_LESSON_DONE_RETURN_LOBBY') {
+        if (state.role === 'student') {
+          STORE.setState({
+            screen: 'lobby',
+            currentPhase: 'waiting',
+            lastFinishedActivity: data.payload && data.payload.lastFinished ? data.payload.lastFinished : 'Kiểm tra bài cũ'
           });
+        }
+      } else if (data.type === 'OLD_LESSON_SPOTLIGHT') {
+        if (data.payload) {
+          const oldL = Object.assign({}, STORE.getState().oldLesson, {
+            selectedMachine: data.payload.selectedMachine,
+            selectedStudent: data.payload.selectedStudent,
+            questionText: data.payload.questionText || data.payload.question
+          });
+          STORE.setState({ oldLesson: oldL });
         }
       } else if (data.type === 'MACHINE_JOINED') {
         const mId = data.payload.machineId;
@@ -2677,6 +2759,12 @@
           if (title) title.innerHTML = '<i class="fas fa-desktop"></i> PHÒNG MÁY ĐANG CHỜ GIÁO VIÊN KÍCH HOẠT TIẾT HỌC';
           if (desc) desc.textContent = 'Học sinh vui lòng ngồi ổn định tại chỗ. Sơ đồ đang được khóa để Thầy/Cô chọn lớp và kích hoạt bài học.';
           if (grid) grid.classList.add('locked-state');
+        } else if (state.lastFinishedActivity) {
+          banner.className = 'lobby-banner unlocked';
+          if (icon) icon.className = 'fas fa-flag-checkered';
+          if (title) title.innerHTML = `<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH: ${state.lastFinishedActivity.toUpperCase()} — SẴN SÀNG HOẠT ĐỘNG TIẾP`;
+          if (desc) desc.textContent = 'Các em hãy hướng mắt lên bảng nghe Thầy/Cô nhận xét. Khi Thầy kích hoạt hoạt động mới, máy tính sẽ tự động vào bài!';
+          if (grid) grid.classList.remove('locked-state');
         } else {
           banner.className = 'lobby-banner unlocked';
           if (icon) icon.className = 'fas fa-unlock-alt';
@@ -3302,29 +3390,47 @@
     },
 
     // BỐC THĂM KỊCH TÍNH (LUCKY DRAW 2 TẦNG)
-    openLuckyDrawModal() {
+    openLuckyDrawModal(broadcast = true) {
       const modal = document.getElementById('modal-lucky-draw');
       if (modal) modal.style.display = 'flex';
       const state = STORE.getState();
       const isStudent = (state.role === 'student');
       const closeBtn = document.getElementById('btn-close-lucky-draw');
+      const cancelBtn = document.getElementById('btn-cancel-lucky-draw');
       const spinBtn = document.getElementById('btn-trigger-spin');
       const stratSelector = document.querySelector('.ld-strategy-selector');
+      const studentBadge = document.getElementById('ld-student-badge-view');
+
       if (closeBtn) closeBtn.style.display = isStudent ? 'none' : 'inline-flex';
+      if (cancelBtn) cancelBtn.style.display = isStudent ? 'none' : 'inline-flex';
       if (spinBtn) spinBtn.style.display = isStudent ? 'none' : 'inline-flex';
       if (stratSelector) stratSelector.style.display = isStudent ? 'none' : 'flex';
+      if (studentBadge) studentBadge.style.display = isStudent ? 'inline-block' : 'none';
 
       const banner = document.getElementById('ld-result-banner');
       if (banner) banner.style.display = 'none';
       if (spinBtn) spinBtn.disabled = false;
 
       this.initLuckyDrawViews();
+
+      if (broadcast && state.role === 'teacher') {
+        const curStrat = state.luckyDraw ? state.luckyDraw.strategy : 'slot_machine';
+        SYNC_BUS.broadcast('LUCKY_DRAW_OPEN', { strategy: curStrat });
+        if (db) {
+          db.ref('activeSession/luckyDraw').update({
+            modalOpen: true,
+            strategy: curStrat,
+            spinning: false,
+            timestamp: Date.now()
+          }).catch(()=>{});
+        }
+      }
     },
 
     closeLuckyDrawModal(broadcast = true) {
       const modal = document.getElementById('modal-lucky-draw');
       if (modal) modal.style.display = 'none';
-      if (broadcast) {
+      if (broadcast && STORE.getState().role === 'teacher') {
         SYNC_BUS.broadcast('LUCKY_DRAW_CLOSE', {});
         if (db) {
           db.ref('activeSession/luckyDraw').update({
@@ -3335,7 +3441,7 @@
       }
     },
 
-    setLuckyDrawStrategy(strat) {
+    setLuckyDrawStrategy(strat, broadcast = true) {
       const state = STORE.getState();
       const ld = Object.assign({}, state.luckyDraw, { strategy: strat });
       STORE.setState({ luckyDraw: ld });
@@ -3351,6 +3457,16 @@
       if (viewWheel) viewWheel.style.display = (strat === 'wheel_fortune') ? 'block' : 'none';
 
       this.initLuckyDrawViews();
+
+      if (broadcast && state.role === 'teacher') {
+        SYNC_BUS.broadcast('LUCKY_DRAW_STRATEGY', { strategy: strat });
+        if (db) {
+          db.ref('activeSession/luckyDraw').update({
+            strategy: strat,
+            timestamp: Date.now()
+          }).catch(()=>{});
+        }
+      }
     },
 
     initLuckyDrawViews() {
@@ -3588,32 +3704,48 @@
 
         // Cập nhật vào Store
         const state = STORE.getState();
+        const curQ = (state.oldLesson && (state.oldLesson.questionText || state.oldLesson.question)) ||
+                     (document.getElementById('otc-question-input') ? document.getElementById('otc-question-input').value.trim() : '') ||
+                     "Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là 'bộ não' điều khiển mọi hoạt động của máy tính?";
+
         const oldL = Object.assign({}, state.oldLesson, {
           selectedMachine: targetMachine,
-          selectedStudent: targetStudent
+          selectedStudent: targetStudent,
+          questionText: curQ,
+          isActive: true
         });
         STORE.setState({ oldLesson: oldL });
+
+        if (isInitiator) {
+          SYNC_BUS.broadcast('OLD_LESSON_SPOTLIGHT', {
+            selectedMachine: targetMachine,
+            selectedStudent: targetStudent,
+            questionText: curQ
+          });
+        }
 
         if (db && isInitiator) {
           db.ref('activeSession/oldLesson').update({
             selectedMachine: targetMachine,
-            selectedStudent: targetStudent
+            selectedStudent: targetStudent,
+            questionText: curQ,
+            isActive: true
           }).catch(()=>{});
           db.ref('activeSession/luckyDraw').update({
             spinning: false,
-            completed: true
+            completed: true,
+            modalOpen: false
           }).catch(()=>{});
         }
 
         const spinBtn = document.getElementById('btn-trigger-spin');
         if (spinBtn) spinBtn.disabled = false;
 
-        if (!isInitiator) {
-          setTimeout(() => {
-            const modal = document.getElementById('modal-lucky-draw');
-            if (modal) modal.style.display = 'none';
-          }, 3000);
-        }
+        // Tự động đóng modal sau 2.5s trên mọi máy (cả GV và HS) để hiển thị câu hỏi và spotlight!
+        setTimeout(() => {
+          const modal = document.getElementById('modal-lucky-draw');
+          if (modal) modal.style.display = 'none';
+        }, 2500);
       }, duration + 200);
     }
   };
@@ -3641,9 +3773,31 @@
   window.setOldLessonQType = function(t) { APP.setOldLessonQType(t); };
   window.broadcastOldLessonStart = function() { APP.broadcastOldLessonStart(); };
   window.toggleOldLessonMenu = function() { APP.toggleOldLessonMenu(); };
-  window.closeAllTpbMenus = function() { APP.closeAllTpbMenus(); };
   window.teacherLockOldLesson = function() { APP.teacherLockOldLesson(); };
   window.teacherRevealOldLesson = function() { APP.teacherRevealOldLesson(); };
+  window.teacherFinishOldLessonToLobby = function() {
+    APP.stopMasterTimer();
+    APP.updateMasterTimerDisplay(0);
+    const lastFinished = 'Kiểm tra bài cũ';
+    STORE.setState({
+      currentPhase: 'waiting',
+      teacherPhase: 'waiting',
+      lastFinishedActivity: lastFinished
+    });
+
+    SYNC_BUS.broadcast('OLD_LESSON_DONE_RETURN_LOBBY', {
+      lastFinished: lastFinished
+    });
+
+    if (db) {
+      db.ref('activeSession').update({
+        currentPhase: 'waiting',
+        returnToLobby: true,
+        lastFinishedActivity: lastFinished,
+        lastUpdated: Date.now()
+      }).catch(()=>{});
+    }
+  };
 
   window.teacherSetPhase = function(phase) {
     const s = STORE.getState();
@@ -3729,6 +3883,30 @@
         numEl.textContent = '🚀';
         AUDIO.playFanfare();
         clearInterval(window._countdownTimerInterval);
+
+        // Học sinh từ sảnh chờ tự động vào giao diện của mình (mỗi máy 1 giao diện)
+        const curState = STORE.getState();
+        if (curState.role === 'student' && curState.screen === 'lobby') {
+          let mId = curState.machineId || curState.fixedMachineId;
+          if (!mId) {
+            try {
+              const saved = localStorage.getItem('lms_fixed_machine_id');
+              if (saved) mId = parseInt(saved, 10);
+            } catch {}
+          }
+          if (mId) {
+            const classData = APP.classes[curState.classId] || APP.classes['10A1'];
+            const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+            STORE.setState({
+              screen: 'student',
+              machineId: mId,
+              fixedMachineId: mId,
+              students: pair,
+              currentPhase: 'old_lesson'
+            });
+          }
+        }
+
         setTimeout(() => {
           overlay.style.display = 'none';
         }, 800);
@@ -3784,6 +3962,7 @@
       }
     }
 
+    SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ' });
     if (db) {
       db.ref('activeSession/countdown').set({
         active: true,

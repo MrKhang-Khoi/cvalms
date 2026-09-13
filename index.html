@@ -1224,6 +1224,9 @@ print("2. Cắt xâu:", s[10:17])
                   <button type="button" class="btn-confirm" id="btn-teacher-reveal-old-lesson" onclick="window.teacherRevealOldLesson()">
                     <i class="fas fa-bullhorn"></i> CÔNG BỐ ĐÁP ÁN CHUẨN
                   </button>
+                  <button type="button" class="btn-tool" id="btn-finish-old-lesson-to-lobby" onclick="window.teacherFinishOldLessonToLobby()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:#f59e0b;" title="Chốt bài cũ và đưa tất cả học sinh về sảnh chờ">
+                    <i class="fas fa-undo"></i> HOÀN THÀNH BÀI CŨ — VỀ SẢNH CHỜ
+                  </button>
                 </div>
               </div>
 
@@ -1497,7 +1500,10 @@ print("2. Cắt xâu:", s[10:17])
           <span class="ld-sound-status"><i class="fas fa-volume-up"></i> Âm thanh Web Audio chân thực</span>
         </div>
         <div class="ld-footer-right">
-          <button type="button" class="btn-cancel" onclick="window.closeLuckyDrawModal()">Đóng</button>
+          <div class="ld-student-badge-view" id="ld-student-badge-view" style="display:none;color:#38bdf8;font-weight:700;font-size:14px;padding:8px 16px;background:rgba(56,189,248,0.15);border-radius:8px;border:1px solid #38bdf8;">
+            <i class="fas fa-satellite-dish"></i> ĐANG XEM BỐC THĂM TỪ BÀN ĐIỀU KHIỂN CỦA THẦY...
+          </div>
+          <button type="button" class="btn-cancel" id="btn-cancel-lucky-draw" onclick="window.closeLuckyDrawModal()">Đóng</button>
           <button type="button" class="btn-confirm btn-lg" id="btn-trigger-spin" onclick="window.startLuckyDrawSpin()">
             <i class="fas fa-play"></i> BẮT ĐẦU QUAY SỐ (ĐỒNG BỘ 18 MÁY)
           </button>
