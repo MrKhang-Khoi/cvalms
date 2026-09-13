@@ -101,8 +101,109 @@
         "17": ["Thái Văn Tài", "Cao Minh Uy"],
         "18": ["Lê Văn Việt", "Trần Như Ý"]
       }
+    },
+    "11A1": {
+      "className": "Lớp 11A1",
+      "grade": 11,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Trần Tuấn Kiệt", "Nguyễn Thảo Vy"],
+        "2": ["Phạm Hoàng Long", "Lê Quỳnh Như"],
+        "3": ["Hoàng Gia Bảo", "Vũ Mai Phương"],
+        "4": ["Đỗ Minh Trí", "Bùi Khánh Huyền"],
+        "5": ["Nguyễn Đức Thắng", "Phan Thùy Trang"],
+        "6": ["Vũ Hải Nam", "Trịnh Bảo Ngọc"],
+        "7": ["Đặng Văn Khoa", "Trần Thanh Hằng"],
+        "8": ["Lê Công Vinh", "Nguyễn Thu Hà"],
+        "9": ["Hồ Tấn Tài", "Đoàn Thị Mơ"],
+        "10": ["Ngô Văn Toản", "Dương Ánh Nguyệt"],
+        "11": ["Lý Quang Diệu", "Phạm Kim Cương"],
+        "12": ["Trương Tấn Sang", "Lâm Hải Yến"],
+        "13": ["Chu Bá Thông", "Đinh Bích Thủy"],
+        "14": ["Vương Đình Huệ", "Mai Hồng Gấm"],
+        "15": ["Tạ Quang Bửu", "Phạm Tuyết Nhung"],
+        "16": ["Hà Huy Tập", "Nguyễn Bích Liên"],
+        "17": ["Thái Bình Dương", "Cao Thùy Chi"],
+        "18": ["Lê Quý Đôn", "Trần Mộng Điệp"]
+      }
+    },
+    "11A2": {
+      "className": "Lớp 11A2",
+      "grade": 11,
+      "totalStudents": 35,
+      "seatingPlan": {
+        "1": ["Nguyễn Quốc Cường", "Trần Thúy Nga"],
+        "2": ["Lê Hồng Phong", "Phạm Diệu Linh"],
+        "3": ["Vũ Trọng Phụng", "Đặng Mỹ Linh"],
+        "4": ["Bùi Bích Phương", "Hoàng Thùy Linh"],
+        "5": ["Đinh Bộ Lĩnh", "Ngô Thanh Vân"],
+        "6": ["Lý Thường Kiệt", "Võ Hoàng Yến"],
+        "7": ["Trịnh Kiểm", "Dương Cẩm Thúy"],
+        "8": ["Phan Bội Châu", "Cao Thái Hà"],
+        "9": ["Hà Huy Giáp", "Đoàn Thiên Ân"],
+        "10": ["Chu Văn An", "Lâm Khánh Chi"],
+        "11": ["Tạ Hiện", "Nguyễn Thúc Thùy Tiên"],
+        "12": ["Thái Phiên", "Trần Tiểu Vy"],
+        "13": ["Lâm Đồng", "Bùi Quỳnh Hoa"],
+        "14": ["Vương Thừa Vũ", "Đặng Thu Thảo"],
+        "15": ["Hồ Xuân Hương", "Phạm Hương"],
+        "16": ["Mai Thúc Loan", "Nguyễn Thị Huyền"],
+        "17": ["Đặng Dung", "Lê Âu Ngân Anh"],
+        "18": ["Trần Hưng Đạo", "Dự bị máy 18"]
+      }
+    },
+    "12A1": {
+      "className": "Lớp 12A1",
+      "grade": 12,
+      "totalStudents": 38,
+      "seatingPlan": {
+        "1": ["Nguyễn Tất Thành", "Trần Lệ Xuân"],
+        "2": ["Lê Duẩn", "Phạm Thị Yến"],
+        "3": ["Võ Nguyên Giáp", "Hoàng Diệu Nhi"],
+        "4": ["Đỗ Mười", "Bùi Lan Hương"],
+        "5": ["Nguyễn Văn Linh", "Phan Thị Mơ"],
+        "6": ["Vũ Đình Hòe", "Trịnh Kim Chi"],
+        "7": ["Đặng Thai Mai", "Trần Kiều Trinh"],
+        "8": ["Lê Văn Hưu", "Nguyễn Thị Sen"],
+        "9": ["Hồ Đắc Di", "Đoàn Thị Điểm"],
+        "10": ["Ngô Sĩ Liên", "Dương Thị Hải"],
+        "11": ["Lý Tự Trọng", "Phạm Thị Loan"],
+        "12": ["Trương Vĩnh Ký", "Lâm Thị Mỹ"],
+        "13": ["Chu Mạnh Trinh", "Đinh Thị Vân"],
+        "14": ["Vương Hồng Sển", "Mai Thị Nương"],
+        "15": ["Tạ Uyên", "Phạm Thị Đào"],
+        "16": ["Hà Văn Lâu", "Nguyễn Thị Lựu"],
+        "17": ["Thái Văn Lung", "Cao Thị Bầu"],
+        "18": ["Lê Hồng Sơn", "Trần Văn Ơn"]
+      }
+    },
+    "12A2": {
+      "className": "Lớp 12A2",
+      "grade": 12,
+      "totalStudents": 37,
+      "seatingPlan": {
+        "1": ["Nguyễn Thái Học", "Trần Thị Dung"],
+        "2": ["Lê Lợi", "Phạm Thị Hậu"],
+        "3": ["Vũ Khâm Lân", "Đặng Thị Nhu"],
+        "4": ["Bùi Viện", "Hoàng Thị Loan"],
+        "5": ["Đinh Tiên Hoàng", "Ngô Gia Tự"],
+        "6": ["Lý Thái Tổ", "Võ Thị Sáu"],
+        "7": ["Trịnh Hoài Đức", "Dương Vân Nga"],
+        "8": ["Phan Chu Trinh", "Cao Bá Quát"],
+        "9": ["Hà Tôn Quyền", "Đoàn Nhữ Hài"],
+        "10": ["Chu Đạt", "Lâm Hoài Thu"],
+        "11": ["Tạ Mỹ Duật", "Nguyễn Thị Định"],
+        "12": ["Thái Thuận", "Trần Quốc Toản"],
+        "13": ["Lâm Văn Bền", "Bùi Thị Xuân"],
+        "14": ["Vương Chí Sình", "Đặng Thùy Trâm"],
+        "15": ["Hồ Tùng Mậu", "Phạm Ngọc Thạch"],
+        "16": ["Mai Chí Thọ", "Nguyễn Văn Cừ"],
+        "17": ["Đặng Tất", "Lê Văn Tám"],
+        "18": ["Trần Nhật Duật", "Dự bị máy 18"]
+      }
     }
   };
+
 
   const DEFAULT_LESSONS = {
     "tin10_bai12": {
@@ -1574,7 +1675,25 @@
             unlocked: true,
             pollLocked: false
           });
+
+          const qInput = document.getElementById('otc-question-input');
+          const lessonQ = lessonObj.oldLesson?.question || lessonObj.warmup?.question;
+          if (qInput && lessonQ) {
+            qInput.value = lessonQ;
+          }
+
           alert(`🎉 Đã kích hoạt ${chosenClass}! Sơ đồ máy đã mở khóa để các em vào sảnh chờ.`);
+        });
+      }
+
+      const selLessonEl = document.getElementById('teacher-select-lesson');
+      if (selLessonEl) {
+        selLessonEl.addEventListener('change', () => {
+          const lObj = this.getLesson(selLessonEl.value);
+          const qInput = document.getElementById('otc-question-input');
+          if (qInput && lObj && lObj.oldLesson?.question) {
+            qInput.value = lObj.oldLesson.question;
+          }
         });
       }
 
@@ -2193,6 +2312,11 @@
       `).join('');
       if (!lessons.some(l => l.id === currentVal)) {
         sel.value = lessons[0].id;
+      }
+      const activeLesson = this.getLesson(sel.value);
+      const qInput = document.getElementById('otc-question-input');
+      if (qInput && activeLesson && activeLesson.oldLesson?.question) {
+        qInput.value = activeLesson.oldLesson.question;
       }
     },
 
@@ -2876,19 +3000,38 @@
 
       // Nếu ở Bước 1: Kiểm tra bài cũ phía Giáo viên
       if (state.currentPhase === 'old_lesson') {
+        const btnQuestion = document.getElementById('btn-ol-step-2-question') || document.getElementById('btn-teacher-start-old-lesson');
+        const btnAnswer = document.getElementById('btn-ol-step-3-answer') || document.getElementById('btn-teacher-reveal-old-lesson');
+
+        const hasDrawn = !!(state.oldLesson && state.oldLesson.selectedStudent);
+        const hasQuestion = !!(state.oldLesson && state.oldLesson.questionRevealed);
+
+        if (btnQuestion) {
+          btnQuestion.disabled = !hasDrawn;
+          btnQuestion.classList.toggle('disabled', !hasDrawn);
+        }
+        if (btnAnswer) {
+          btnAnswer.disabled = !hasQuestion;
+          btnAnswer.classList.toggle('disabled', !hasQuestion);
+        }
+
         const studentSpotlight = document.getElementById('ots-student-name');
         if (studentSpotlight) {
           if (state.oldLesson && state.oldLesson.selectedStudent) {
             studentSpotlight.innerHTML = `<span style="color:#38bdf8;font-weight:800;">MÁY ${String(state.oldLesson.selectedMachine).padStart(2,'0')}:</span> <span style="color:#f59e0b;font-weight:800;">${state.oldLesson.selectedStudent}</span>`;
           } else {
-            studentSpotlight.textContent = 'Chưa bốc thăm (Bấm nút [Bốc thăm] để chọn ngẫu nhiên)';
+            studentSpotlight.textContent = 'Chưa bốc thăm (Bấm nút [1. 🎲 BỐC THĂM] để chọn ngẫu nhiên)';
           }
         }
         const timerDisplay = document.getElementById('ots-timer-display');
-        if (timerDisplay && state.oldLesson) {
-          const mins = Math.floor(state.oldLesson.timeLeft / 60);
-          const secs = state.oldLesson.timeLeft % 60;
-          timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+        if (timerDisplay) {
+          if (!hasQuestion) {
+            timerDisplay.textContent = '02:00';
+          } else if (state.oldLesson) {
+            const mins = Math.floor((state.oldLesson.timeLeft || 0) / 60);
+            const secs = (state.oldLesson.timeLeft || 0) % 60;
+            timerDisplay.textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+          }
         }
         const subList = document.getElementById('ol-submissions-list');
         const subCount = document.getElementById('ol-submitted-count');
@@ -3310,39 +3453,21 @@
         const ol = state.oldLesson || {};
         const timerEl = document.getElementById('ol-timer');
         if (timerEl) {
-          const mins = Math.floor((ol.timeLeft || 0) / 60);
-          const secs = (ol.timeLeft || 0) % 60;
-          timerEl.innerHTML = `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+          if (!ol.questionRevealed) {
+            timerEl.innerHTML = '<i class="fas fa-stopwatch"></i> 02:00';
+          } else {
+            const mins = Math.floor((ol.timeLeft || 0) / 60);
+            const secs = (ol.timeLeft || 0) % 60;
+            timerEl.innerHTML = `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+          }
         }
 
         // Cập nhật hộp thoại Neon vinh danh duy nhất 1 em học sinh (Chuẩn ảnh mẫu Thầy giao)
         this.renderNeonLuckyCard(ol.selectedMachine, ol.selectedStudent, ol.questionRevealed);
 
-        const spotlight = document.getElementById('ol-caller-spotlight');
-        const callerInfo = document.getElementById('ol-caller-info');
         const stageContainer = document.querySelector('.old-lesson-container');
-        if (spotlight && callerInfo) {
-          const isThisMachine = (ol.selectedMachine === machineId);
-          spotlight.classList.toggle('highlighted', !!ol.selectedMachine);
-          spotlight.classList.toggle('winner-gold-spotlight', isThisMachine);
-          if (stageContainer) {
-            stageContainer.classList.toggle('stage-winner-active', isThisMachine);
-          }
-          if (ol.selectedStudent) {
-            if (isThisMachine) {
-              callerInfo.innerHTML = `
-                <div class="winner-headline"><i class="fas fa-crown"></i> BẠN ĐÃ ĐƯỢC GỌI LÊN SÓNG!</div>
-                <div class="winner-subline">Mời em <strong class="winner-name">${ol.selectedStudent}</strong> tự tin đứng dậy hoặc lên bảng trả lời!</div>
-              `;
-            } else {
-              callerInfo.innerHTML = `
-                <span class="audience-badge"><i class="fas fa-bullhorn"></i> MÁY ${String(ol.selectedMachine).padStart(2,'0')}</span>
-                <span class="audience-text">Bạn <strong>${ol.selectedStudent}</strong> đang trả lời bài cũ... Cả lớp chú ý lắng nghe và nhận xét!</span>
-              `;
-            }
-          } else {
-            callerInfo.innerHTML = '<span class="waiting-spin-badge"><i class="fas fa-hourglass-half"></i> Đang chờ Thầy bốc thăm gọi học sinh...</span>';
-          }
+        if (stageContainer) {
+          stageContainer.classList.toggle('stage-winner-active', !!(ol.selectedMachine && ol.selectedMachine === machineId));
         }
 
         const qText = document.getElementById('ol-question-text');
@@ -3580,9 +3705,14 @@
     },
 
     broadcastOldLessonStart() {
+      const state = STORE.getState();
+      if (!state.oldLesson || !state.oldLesson.selectedStudent) {
+        alert('⚠️ Thầy chưa bốc thăm gọi học sinh! Vui lòng bấm nút [1. 🎲 BỐC THĂM] trước khi phát đề.');
+        return;
+      }
+
       const qInput = document.getElementById('otc-question-input');
       const qText = qInput ? qInput.value.trim() : '';
-      const state = STORE.getState();
       const sec = (state.oldLesson && state.oldLesson.timerSeconds) || 120;
 
       const oldL = Object.assign({}, state.oldLesson, {
@@ -3630,6 +3760,11 @@
 
     teacherRevealOldLesson() {
       const state = STORE.getState();
+      if (!state.oldLesson || !state.oldLesson.questionRevealed) {
+        alert('⚠️ Thầy chưa phát câu hỏi kiểm tra bài cũ! Vui lòng bấm nút [2. 🚀 CÂU HỎI] trước khi công bố đáp án.');
+        return;
+      }
+
       const oldL = Object.assign({}, state.oldLesson, { isRevealed: true });
       STORE.setState({ oldLesson: oldL });
       SYNC_BUS.broadcast('OLD_LESSON_REVEAL', {});
@@ -3652,12 +3787,15 @@
       const olTimer = document.getElementById('ol-timer');
       const pollTimer = document.getElementById('poll-timer');
 
+      const s = STORE.getState();
+      const isOldLessonStandingBy = (s.currentPhase === 'old_lesson' && (!s.oldLesson || !s.oldLesson.questionRevealed));
+
       if (masterDisplay) {
         masterDisplay.textContent = formatted;
         masterDisplay.classList.toggle('tmc-timer-warning', safeSec <= 30 && safeSec > 0);
       }
-      if (otsDisplay) otsDisplay.textContent = formatted;
-      if (olTimer) olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
+      if (otsDisplay && !isOldLessonStandingBy) otsDisplay.textContent = formatted;
+      if (olTimer && !isOldLessonStandingBy) olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
       if (pollTimer) pollTimer.innerHTML = `<i class="fas fa-clock"></i> ${safeSec > 60 ? formatted : safeSec + 's'}`;
     },
 
@@ -4670,6 +4808,11 @@
   };
 
   window.teacherOnGradeChange = function(grade) {
+    if (!grade) {
+      const gSel = document.getElementById('teacher-select-grade');
+      grade = gSel ? gSel.value : (STORE.getState().grade || '10');
+    }
+    grade = String(grade);
     STORE.setState({ grade });
     const classSel = document.getElementById('teacher-select-class');
     if (classSel) {
@@ -4692,9 +4835,9 @@
     const s = STORE.getState();
     const checkedInCount = Object.keys(s.occupiedMachines || {}).length;
     if (checkedInCount === 0) {
-      if (!confirm('Chưa có máy học sinh nào vào phòng chờ! Thầy vẫn muốn bắt đầu tiết học?')) {
-        return;
-      }
+      const modal = document.getElementById('modal-zero-student-alert');
+      if (modal) modal.style.display = 'flex';
+      return;
     }
 
     const now = Date.now();
@@ -4876,7 +5019,16 @@
 
   // ĐIỀU KHIỂN HOẠT ĐỘNG SÂN KHẤU ĐỘNG (DYNAMIC STAGE ACTIVITY CONTROLS)
   window.handleStartActivity = function(actKey) {
-    // 1. Kiểm tra sĩ số phòng chờ
+    const s = STORE.getState();
+    const checkedInCount = Object.keys(s.occupiedMachines || {}).length;
+    // Chặn cứng tuyệt đối khi phòng chờ chưa có học sinh nào (0/18 máy)
+    if (checkedInCount === 0) {
+      const zeroModal = document.getElementById('modal-zero-student-alert');
+      if (zeroModal) zeroModal.style.display = 'flex';
+      return;
+    }
+
+    // 1. Kiểm tra sĩ số phòng chờ nếu còn thiếu một số máy (nhưng > 0)
     const readiness = APP.checkWaitingRoomReadiness();
     if (!readiness.isReady) {
       window._pendingStartActivityKey = actKey;
@@ -4894,6 +5046,11 @@
     }
 
     APP.executeStartActivity(actKey);
+  };
+
+  window.closeZeroStudentAlert = function() {
+    const zeroModal = document.getElementById('modal-zero-student-alert');
+    if (zeroModal) zeroModal.style.display = 'none';
   };
 
   window.closeWaitingRoomAlert = function(proceed) {

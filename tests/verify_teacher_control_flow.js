@@ -204,11 +204,12 @@ async function runTest() {
 
     const studentQuestionAndSpotlight = await studentPage.evaluate(() => {
       const modal = document.getElementById('modal-lucky-draw');
+      const nlcName = document.getElementById('nlc-student-name');
       const callerInfo = document.getElementById('ol-caller-info');
       const qText = document.getElementById('ol-question-text');
       return {
         modalClosed: !modal || modal.style.display === 'none',
-        callerInfoText: callerInfo ? callerInfo.textContent.trim() : '',
+        callerInfoText: (nlcName ? nlcName.textContent.trim() : '') || (callerInfo ? callerInfo.textContent.trim() : ''),
         questionText: qText ? qText.textContent.trim() : ''
       };
     });
@@ -227,10 +228,11 @@ async function runTest() {
 
     // BƯỚC 4: Thầy bấm "HOÀN THÀNH BÀI CŨ — VỀ SẢNH CHỜ" -> Học sinh về Sảnh chờ
     console.log('\n[BƯỚC 4] Giáo viên bấm nút "HOÀN THÀNH BÀI CŨ — VỀ SẢNH CHỜ" -> Tất cả học sinh về Sảnh chờ:');
-    const finishBtnVisible = await teacherPage.isVisible('#btn-finish-old-lesson-to-lobby');
-    console.log(`  - Nút "#btn-finish-old-lesson-to-lobby" hiển thị trên bảng Thầy: ${finishBtnVisible}`);
+    const finishBtnSel = (await teacherPage.$('#btn-ol-step-4-waiting')) ? '#btn-ol-step-4-waiting' : '#btn-finish-old-lesson-to-lobby';
+    const finishBtnVisible = await teacherPage.isVisible(finishBtnSel);
+    console.log(`  - Nút "${finishBtnSel}" hiển thị trên bảng Thầy: ${finishBtnVisible}`);
 
-    await teacherPage.click('#btn-finish-old-lesson-to-lobby');
+    await teacherPage.click(finishBtnSel);
     await teacherPage.waitForTimeout(300);
 
     await studentPage.evaluate(() => {

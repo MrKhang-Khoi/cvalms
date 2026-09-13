@@ -18,7 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.9.0">
+  <link rel="stylesheet" href="style.css?v=2.9.2">
 
   <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
@@ -467,10 +467,6 @@
             </div>
           </div>
 
-          <div class="ol-caller-spotlight" id="ol-caller-spotlight">
-            <div class="ol-cs-badge"><i class="fas fa-bullhorn"></i> LƯỢT TRẢ LỜI:</div>
-            <div class="ol-cs-title" id="ol-caller-info">Đang chờ Thầy bốc thăm gọi học sinh...</div>
-          </div>
 
           <!-- Nội dung câu hỏi kiểm tra bài cũ (Chỉ chiếu câu hỏi, học sinh đứng dậy trả lời miệng) -->
           <div class="ol-question-card">
@@ -485,14 +481,6 @@
               <i class="fas fa-hourglass-half fa-spin" style="color:#38bdf8;margin-right:8px;"></i> Các em hãy quan sát Thầy bốc thăm trên màn hình lớn. Câu hỏi sẽ được chiếu tới tất cả các máy ngay khi có người được chọn!
             </div>
 
-            <!-- Hướng dẫn sư phạm: Học sinh đứng dậy hoặc lên bảng trả lời miệng -->
-            <div class="ol-oral-instruction-banner" style="margin-top:18px;padding:16px;background:rgba(56,189,248,0.1);border:1.5px dashed #38bdf8;border-radius:12px;display:flex;align-items:center;gap:14px;">
-              <div style="font-size:28px;color:#38bdf8;"><i class="fas fa-microphone-alt"></i></div>
-              <div>
-                <div style="font-weight:700;color:#f8fafc;font-size:15px;">HÌNH THỨC TRẢ LỜI: ĐỨNG DẬY HOẶC LÊN BẢNG</div>
-                <div style="color:#94a3b8;font-size:13px;margin-top:2px;">Học sinh được Thầy gọi tên sẽ đứng dậy tại chỗ hoặc lên bảng trả lời trực tiếp. Cả lớp chú ý theo dõi và nhận xét!</div>
-              </div>
-            </div>
 
             <!-- Banner Đáp Án Chuẩn Khi Thầy Công Bố -->
             <div class="ol-reveal-box" id="ol-reveal-box" style="display:none;margin-top:18px;">
@@ -1164,44 +1152,40 @@ print("2. Cắt xâu:", s[10:17])
           <!-- BƯỚC 1: BẢNG TÁC NGHIỆP KIỂM TRA BÀI CŨ (100% WIDTH FULL VIEW) -->
           <div id="tw-panel-old-lesson" class="tw-panel">
             <div class="ol-tw-full-container">
-              <!-- Hàng 1: Spotlight Học sinh được gọi & Đồng hồ & Nút Bốc thăm -->
+              <!-- Hàng 1: Spotlight Học sinh được gọi & Đồng hồ tĩnh 02:00 -->
               <div class="ol-top-banner">
                 <div class="ol-spotlight-card" id="ol-teacher-spotlight">
                   <div class="ots-icon"><i class="fas fa-bullhorn"></i></div>
                   <div class="ots-info">
                     <div class="ots-label">HỌC SINH ĐƯỢC CHỈ ĐỊNH ĐỨNG DẬY TRẢ LỜI:</div>
-                    <div class="ots-name" id="ots-student-name">Chưa bốc thăm (Bấm nút [Bốc thăm ngẫu nhiên] để chọn)</div>
+                    <div class="ots-name" id="ots-student-name">Chưa bốc thăm (Bấm nút [1. 🎲 BỐC THĂM] để chọn ngẫu nhiên)</div>
                   </div>
                   <div class="ots-timer-wrap">
                     <span class="ots-timer" id="ots-timer-display">02:00</span>
                   </div>
                 </div>
-                <div class="ol-quick-tools">
-                  <button type="button" class="btn-hero-lucky" id="btn-open-lucky-draw" onclick="window.openLuckyDrawModal()">
-                    <i class="fas fa-dice"></i> BỐC THĂM GỌI HỌC SINH (A / B)
-                  </button>
-                </div>
               </div>
 
-              <!-- Hàng 2: Soạn câu hỏi & Nút điều phối -->
+              <!-- Hàng 2: Soạn câu hỏi & Bàn điều khiển 4 nút tuần tự -->
               <div class="ol-controls-card">
                 <div class="otc-row">
                   <label><i class="fas fa-question-circle"></i> Câu hỏi kiểm tra bài cũ:</label>
                   <input type="text" class="otc-input" id="otc-question-input" value="Trong máy tính, thiết bị nào đóng vai trò là 'bộ não' điều khiển mọi hoạt động?">
                 </div>
 
-                <div class="otc-actions-bar">
-                  <button type="button" class="btn-primary" id="btn-teacher-start-old-lesson" onclick="window.broadcastOldLessonStart()">
-                    <i class="fas fa-paper-plane"></i> PHÁT ĐỀ XUỐNG 18 MÁY
+                <!-- BÀN ĐIỀU KHIỂN 4 BƯỚC TUẦN TỰ SƯ PHẠM -->
+                <div class="ol-sequential-actions">
+                  <button type="button" class="btn-ol-step btn-ol-draw" id="btn-ol-step-1-draw" onclick="window.openLuckyDrawModal()">
+                    <i class="fas fa-dice"></i> 1. BỐC THĂM
                   </button>
-                  <button type="button" class="btn-tool" id="btn-teacher-lock-old-lesson" onclick="window.teacherLockOldLesson()">
-                    <i class="fas fa-lock"></i> KHÓA BÀI NGAY
+                  <button type="button" class="btn-ol-step btn-ol-question disabled" id="btn-ol-step-2-question" disabled onclick="window.broadcastOldLessonStart()">
+                    <i class="fas fa-paper-plane"></i> 2. CÂU HỎI
                   </button>
-                  <button type="button" class="btn-confirm" id="btn-teacher-reveal-old-lesson" onclick="window.teacherRevealOldLesson()">
-                    <i class="fas fa-bullhorn"></i> CÔNG BỐ ĐÁP ÁN CHUẨN
+                  <button type="button" class="btn-ol-step btn-ol-answer disabled" id="btn-ol-step-3-answer" disabled onclick="window.teacherRevealOldLesson()">
+                    <i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN
                   </button>
-                  <button type="button" class="btn-tool" id="btn-finish-old-lesson-to-lobby" onclick="window.teacherFinishOldLessonToLobby()" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border-color:#f59e0b;" title="Chốt bài cũ và đưa tất cả học sinh về sảnh chờ">
-                    <i class="fas fa-undo"></i> HOÀN THÀNH BÀI CŨ — VỀ SẢNH CHỜ
+                  <button type="button" class="btn-ol-step btn-ol-waiting" id="btn-ol-step-4-waiting" onclick="window.teacherFinishOldLessonToLobby()">
+                    <i class="fas fa-undo"></i> 4. PHÒNG CHỜ
                   </button>
                 </div>
               </div>
@@ -1503,6 +1487,27 @@ print("2. Cắt xâu:", s[10:17])
     </div>
   </div>
 
+  <!-- MODAL: CHẶN CỨNG TUYỆT ĐỐI KHI CHƯA CÓ HỌC SINH NÀO TRONG PHÒNG CHỜ (0/18 MÁY) -->
+  <div class="modal-overlay" id="modal-zero-student-alert" style="display:none;z-index:999999;">
+    <div class="modal-card" style="max-width:540px;text-align:center;border:2px solid #ef4444;box-shadow:0 0 50px rgba(239,68,68,0.45);background:linear-gradient(145deg,#1e1b2e 0%,#0f172a 100%);">
+      <div style="font-size:48px;color:#ef4444;margin-bottom:12px;filter:drop-shadow(0 0 15px rgba(239,68,68,0.6));">
+        <i class="fas fa-shield-alt"></i>
+      </div>
+      <h3 style="font-size:20px;color:#f8fafc;margin-bottom:8px;font-weight:800;letter-spacing:0.5px;">
+        CHƯA CÓ HỌC SINH TRONG PHÒNG CHỜ!
+      </h3>
+      <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:20px;">
+        Hiện tại chưa có máy học sinh nào kết nối vào phòng chờ (<strong>0/18 máy</strong>).<br>
+        Thầy vui lòng nhắc nhở học sinh mở máy và đăng nhập vào phòng chờ trước khi phát lệnh bắt đầu hoạt động!
+      </p>
+      <div style="display:flex;justify-content:center;">
+        <button type="button" class="btn-confirm" id="btn-close-zero-student-alert" onclick="window.closeZeroStudentAlert()" style="background:linear-gradient(135deg,#ef4444,#b91c1c);color:#fff;border:none;padding:12px 28px;font-size:14px;font-weight:800;border-radius:10px;box-shadow:0 0 20px rgba(239,68,68,0.4);cursor:pointer;">
+          <i class="fas fa-bullhorn"></i> ĐÃ HIỂU — ĐỂ THẦY NHẮC NHỞ HỌC SINH
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: CẢNH BÁO SĨ SỐ PHÒNG CHỜ (KHI CÒN MÁY CHƯA VÀO) -->
   <div class="modal-overlay" id="modal-waiting-room-alert" style="display:none;z-index:99999;">
     <div class="modal-card" style="max-width:560px;text-align:center;border:2px solid #f59e0b;box-shadow:0 0 40px rgba(245,158,11,0.35);">
@@ -1551,9 +1556,10 @@ print("2. Cắt xâu:", s[10:17])
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.1 Cache-Busted) -->
-  <script src="js/bundle.js?v=2.9.1"></script>
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.2 Cache-Busted) -->
+  <script src="js/bundle.js?v=2.9.2"></script>
 </body>
 </html>
+
 
 

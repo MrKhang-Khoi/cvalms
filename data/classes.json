@@ -1,4 +1,4 @@
-﻿{
+{
   "classes": {
     "9A1": {
       "className": "Lớp 9A1",
@@ -47,7 +47,132 @@
         "15": ["Thái Hữu Phước", "Trần Như Thảo"],
         "16": ["Lâm Nhật Huy", "Nguyễn Mỹ Lan"],
         "17": ["Tạ Văn Hưng", "Phạm Diệu Huyền"],
-        "18": ["Đặng Quốc Tuấn", ""]
+        "18": ["Đặng Quốc Tuấn", "Dự bị máy 18"]
+      }
+    },
+    "10A2": {
+      "className": "Lớp 10A2",
+      "grade": 10,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Nguyễn Gia Huy", "Trần Mai Anh"],
+        "2": ["Lê Minh Khang", "Phạm Thu Thảo"],
+        "3": ["Vũ Hải Đăng", "Đặng Thùy Dung"],
+        "4": ["Bùi Quốc Bảo", "Hoàng Ngọc Hân"],
+        "5": ["Đinh Tuấn Anh", "Ngô Phương Linh"],
+        "6": ["Lý Gia Bảo", "Võ Thị Quỳnh"],
+        "7": ["Trịnh Đức Trọng", "Dương Mỹ Tâm"],
+        "8": ["Phan Bảo Nam", "Cao Thị Yến"],
+        "9": ["Hà Minh Triết", "Đoàn Thúy Vi"],
+        "10": ["Chu Đình Trọng", "Lâm Mỹ Hạnh"],
+        "11": ["Tạ Quốc Cường", "Nguyễn Hồng Hạnh"],
+        "12": ["Thái Duy Anh", "Trần Như Quỳnh"],
+        "13": ["Lâm Chí Khang", "Bùi Thanh Trúc"],
+        "14": ["Vương Quốc Việt", "Đặng Bích Ngọc"],
+        "15": ["Hồ Quang Hiếu", "Phạm Mỹ Duyên"],
+        "16": ["Mai Hữu Phước", "Nguyễn Cẩm Ly"],
+        "17": ["Đặng Văn Hậu", "Lê Thị Bích"],
+        "18": ["Trần Tiến Đạt", "Vũ Hoàng My"]
+      }
+    },
+    "11A1": {
+      "className": "Lớp 11A1",
+      "grade": 11,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Trần Tuấn Kiệt", "Nguyễn Thảo Vy"],
+        "2": ["Phạm Hoàng Long", "Lê Quỳnh Như"],
+        "3": ["Hoàng Gia Bảo", "Vũ Mai Phương"],
+        "4": ["Đỗ Minh Trí", "Bùi Khánh Huyền"],
+        "5": ["Nguyễn Đức Thắng", "Phan Thùy Trang"],
+        "6": ["Vũ Hải Nam", "Trịnh Bảo Ngọc"],
+        "7": ["Đặng Văn Khoa", "Trần Thanh Hằng"],
+        "8": ["Lê Công Vinh", "Nguyễn Thu Hà"],
+        "9": ["Hồ Tấn Tài", "Đoàn Thị Mơ"],
+        "10": ["Ngô Văn Toản", "Dương Ánh Nguyệt"],
+        "11": ["Lý Quang Diệu", "Phạm Kim Cương"],
+        "12": ["Trương Tấn Sang", "Lâm Hải Yến"],
+        "13": ["Chu Bá Thông", "Đinh Bích Thủy"],
+        "14": ["Vương Đình Huệ", "Mai Hồng Gấm"],
+        "15": ["Tạ Quang Bửu", "Phạm Tuyết Nhung"],
+        "16": ["Hà Huy Tập", "Nguyễn Bích Liên"],
+        "17": ["Thái Bình Dương", "Cao Thùy Chi"],
+        "18": ["Lê Quý Đôn", "Trần Mộng Điệp"]
+      }
+    },
+    "11A2": {
+      "className": "Lớp 11A2",
+      "grade": 11,
+      "totalStudents": 35,
+      "seatingPlan": {
+        "1": ["Nguyễn Quốc Cường", "Trần Thúy Nga"],
+        "2": ["Lê Hồng Phong", "Phạm Diệu Linh"],
+        "3": ["Vũ Trọng Phụng", "Đặng Mỹ Linh"],
+        "4": ["Bùi Bích Phương", "Hoàng Thùy Linh"],
+        "5": ["Đinh Bộ Lĩnh", "Ngô Thanh Vân"],
+        "6": ["Lý Thường Kiệt", "Võ Hoàng Yến"],
+        "7": ["Trịnh Kiểm", "Dương Cẩm Thúy"],
+        "8": ["Phan Bội Châu", "Cao Thái Hà"],
+        "9": ["Hà Huy Giáp", "Đoàn Thiên Ân"],
+        "10": ["Chu Văn An", "Lâm Khánh Chi"],
+        "11": ["Tạ Hiện", "Nguyễn Thúc Thùy Tiên"],
+        "12": ["Thái Phiên", "Trần Tiểu Vy"],
+        "13": ["Lâm Đồng", "Bùi Quỳnh Hoa"],
+        "14": ["Vương Thừa Vũ", "Đặng Thu Thảo"],
+        "15": ["Hồ Xuân Hương", "Phạm Hương"],
+        "16": ["Mai Thúc Loan", "Nguyễn Thị Huyền"],
+        "17": ["Đặng Dung", "Lê Âu Ngân Anh"],
+        "18": ["Trần Hưng Đạo", "Dự bị máy 18"]
+      }
+    },
+    "12A1": {
+      "className": "Lớp 12A1",
+      "grade": 12,
+      "totalStudents": 38,
+      "seatingPlan": {
+        "1": ["Nguyễn Tất Thành", "Trần Lệ Xuân"],
+        "2": ["Lê Duẩn", "Phạm Thị Yến"],
+        "3": ["Võ Nguyên Giáp", "Hoàng Diệu Nhi"],
+        "4": ["Đỗ Mười", "Bùi Lan Hương"],
+        "5": ["Nguyễn Văn Linh", "Phan Thị Mơ"],
+        "6": ["Vũ Đình Hòe", "Trịnh Kim Chi"],
+        "7": ["Đặng Thai Mai", "Trần Kiều Trinh"],
+        "8": ["Lê Văn Hưu", "Nguyễn Thị Sen"],
+        "9": ["Hồ Đắc Di", "Đoàn Thị Điểm"],
+        "10": ["Ngô Sĩ Liên", "Dương Thị Hải"],
+        "11": ["Lý Tự Trọng", "Phạm Thị Loan"],
+        "12": ["Trương Vĩnh Ký", "Lâm Thị Mỹ"],
+        "13": ["Chu Mạnh Trinh", "Đinh Thị Vân"],
+        "14": ["Vương Hồng Sển", "Mai Thị Nương"],
+        "15": ["Tạ Uyên", "Phạm Thị Đào"],
+        "16": ["Hà Văn Lâu", "Nguyễn Thị Lựu"],
+        "17": ["Thái Văn Lung", "Cao Thị Bầu"],
+        "18": ["Lê Hồng Sơn", "Trần Văn Ơn"]
+      }
+    },
+    "12A2": {
+      "className": "Lớp 12A2",
+      "grade": 12,
+      "totalStudents": 37,
+      "seatingPlan": {
+        "1": ["Nguyễn Thái Học", "Trần Thị Dung"],
+        "2": ["Lê Lợi", "Phạm Thị Hậu"],
+        "3": ["Vũ Khâm Lân", "Đặng Thị Nhu"],
+        "4": ["Bùi Viện", "Hoàng Thị Loan"],
+        "5": ["Đinh Tiên Hoàng", "Ngô Gia Tự"],
+        "6": ["Lý Thái Tổ", "Võ Thị Sáu"],
+        "7": ["Trịnh Hoài Đức", "Dương Vân Nga"],
+        "8": ["Phan Chu Trinh", "Cao Bá Quát"],
+        "9": ["Hà Tôn Quyền", "Đoàn Nhữ Hài"],
+        "10": ["Chu Đạt", "Lâm Hoài Thu"],
+        "11": ["Tạ Mỹ Duật", "Nguyễn Thị Định"],
+        "12": ["Thái Thuận", "Trần Quốc Toản"],
+        "13": ["Lâm Văn Bền", "Bùi Thị Xuân"],
+        "14": ["Vương Chí Sình", "Đặng Thùy Trâm"],
+        "15": ["Hồ Tùng Mậu", "Phạm Ngọc Thạch"],
+        "16": ["Mai Chí Thọ", "Nguyễn Văn Cừ"],
+        "17": ["Đặng Tất", "Lê Văn Tám"],
+        "18": ["Trần Nhật Duật", "Dự bị máy 18"]
       }
     }
   }

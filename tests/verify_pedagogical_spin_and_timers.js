@@ -32,7 +32,7 @@ function startStaticServer() {
       fs.readFile(filePath, (err, content) => {
         if (err) {
           res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-          res.end(`404 Not Found: ${req.url}`);
+          res.end('404 Not Found: ' + req.url);
         } else {
           res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
           res.end(content);
@@ -41,14 +41,14 @@ function startStaticServer() {
     });
 
     server.listen(PORT, '127.0.0.1', () => {
-      console.log(`[HTTP Server] Running at http://127.0.0.1:${PORT}`);
+      console.log('[HTTP Server] Running at http://127.0.0.1:' + PORT);
       resolve(server);
     });
   });
 }
 
 async function runVerification() {
-  console.log('🚀 [TEST] KHỞI ĐỘNG KIỂM THỬ SƯ PHẠM ĐA ĐẠI LÝ: BỐC THĂM ĐÍCH DANH 1 EM, ĐỒNG HỒ ĐỘC LẬP & CHUYỂN CẢNH MƯỢT');
+  console.log('🚀 [TEST] KHỞI ĐỘNG KIỂM THỬ SƯ PHẠM ĐA ĐẠI LÝ v2.9.2: 4 NÚT TUẦN TỰ, CHẶN CỨNG 0 HỌC SINH, ĐỒNG BỘ 12A2, GIAO DIỆN TINH GỌN & ĐỒNG HỒ TĨNH');
   const server = await startStaticServer();
   const browser = await chromium.launch({ headless: true });
 
@@ -58,12 +58,14 @@ async function runVerification() {
   const teacherPage = await teacherCtx.newPage();
   const studentPage = await studentCtx.newPage();
 
+  let nativeConfirmTriggered = false;
   teacherPage.on('dialog', async d => {
-    console.log('  [Teacher Dialog]:', d.message());
+    console.log('  [Teacher Dialog]:', d.type(), d.message());
+    nativeConfirmTriggered = true;
     await d.accept();
   });
   studentPage.on('dialog', async d => {
-    console.log('  [Student Dialog]:', d.message());
+    console.log('  [Student Dialog]:', d.type(), d.message());
     await d.accept();
   });
 
@@ -74,64 +76,111 @@ async function runVerification() {
 
   try {
     // -------------------------------------------------------------
-    // GIAI ĐOẠN 1: KIỂM TRA CÀI ĐẶT THỜI GIAN TRONG XƯỞNG SOẠN (STUDIO)
+    // GIAI ĐOẠN 0: CHẶN CỨNG 100% KHI CHƯA CÓ HỌC SINH NÀO VÀO PHÒNG CHỜ (0/18 MÁY)
     // -------------------------------------------------------------
-    console.log('\n--- 1. KIỂM TRA CÀI ĐẶT THỜI LƯỢNG BƯỚC 2 & 4 TRONG XƯỞNG SOẠN ---');
-    await teacherPage.goto(`http://127.0.0.1:${PORT}/?role=teacher`, { waitUntil: 'domcontentloaded' });
+    console.log('\n--- 0. KIỂM TRA CHẶN CỨNG KHI PHÒNG CHỜ TRỐNG (0/18 MÁY) ---');
+    await teacherPage.goto('http://127.0.0.1:' + PORT + '/?role=teacher', { waitUntil: 'domcontentloaded' });
     await teacherPage.waitForTimeout(1000);
 
-    // Chuyển sang quyền GV và click tab Studio
+    // Chuyển sang quyền GV
     await teacherPage.evaluate(() => {
-      window.STORE.setState({ role: 'teacher', screen: 'teacher' });
+      window.STORE.setState({ role: 'teacher', screen: 'teacher', occupiedMachines: {} });
     });
     await teacherPage.waitForTimeout(300);
-    await teacherPage.click('#btn-tnav-studio');
-    await teacherPage.waitForTimeout(600);
 
-    const stepTime2Exists = await teacherPage.$('#step-time-2');
-    const stepTime4Exists = await teacherPage.$('#step-time-4');
-    console.log('  [PASS] Dropdown thời gian Bước 2 (#step-time-2) tồn tại:', !!stepTime2Exists);
-    console.log('  [PASS] Dropdown thời gian Bước 4 (#step-time-4) tồn tại:', !!stepTime4Exists);
+    // Thầy bấm bắt đầu tiết học khi 0 học sinh
+    await teacherPage.evaluate(() => {
+      window.teacherStartLesson();
+    });
+    await teacherPage.waitForTimeout(400);
 
-    // Chọn thời lượng mới và lưu bài
-    await teacherPage.selectOption('#step-time-2', '180'); // 3 phút
-    await teacherPage.selectOption('#step-time-4', '720'); // 12 phút
-    await teacherPage.click('#btn-studio-save-lesson');
-    await teacherPage.waitForTimeout(600);
-
-    const savedLesson = await teacherPage.evaluate(() => {
-      const s = window.STORE.getState();
-      const l = window.APP.getLesson(s.lessonId);
+    const zeroModalState = await teacherPage.evaluate(() => {
+      const modal = document.getElementById('modal-zero-student-alert');
+      const bypassBtn = modal ? modal.querySelector('#btn-wra-proceed') : null;
+      const closeBtn = document.getElementById('btn-close-zero-student-alert');
       return {
-        theoryTimeLimit: l.theoryTimeLimit,
-        discTimeLimit: l.discussion && l.discussion.timeLimit
+        visible: modal ? window.getComputedStyle(modal).display !== 'none' : false,
+        hasBypassBtn: !!bypassBtn,
+        hasCloseBtn: !!closeBtn
       };
     });
-    console.log('  [PASS] Dữ liệu thời gian đã lưu vào Lesson:', savedLesson);
+    console.log('  [PASS] Modal chặn cứng (#modal-zero-student-alert) hiển thị:', zeroModalState.visible);
+    console.log('  [PASS] Không có nút vượt rào (Vẫn bắt đầu):', !zeroModalState.hasBypassBtn);
+    console.log('  [PASS] Không sử dụng alert/confirm mặc định của trình duyệt:', !nativeConfirmTriggered);
+
+    if (!zeroModalState.visible) {
+      throw new Error('LỖI: Chưa hiện hộp thoại chặn cứng #modal-zero-student-alert khi phòng chờ trống!');
+    }
+    if (zeroModalState.hasBypassBtn) {
+      throw new Error('LỖI: Tồn tại nút vượt rào cho phép bắt đầu khi 0 học sinh!');
+    }
+    if (nativeConfirmTriggered) {
+      throw new Error('LỖI: Vẫn còn gọi confirm() mặc định của trình duyệt!');
+    }
+
+    await teacherPage.screenshot({ path: path.join(outputDir, '00_zero_student_strict_modal.png') });
+
+    // Đóng modal cảnh báo
+    await teacherPage.click('#btn-close-zero-student-alert');
+    await teacherPage.waitForTimeout(400);
+    const zeroModalClosed = await teacherPage.evaluate(() => {
+      const modal = document.getElementById('modal-zero-student-alert');
+      return modal ? window.getComputedStyle(modal).display === 'none' : true;
+    });
+    console.log('  [PASS] Đóng modal thành công và giữ nguyên sảnh chờ:', zeroModalClosed);
 
     // -------------------------------------------------------------
-    // GIAI ĐOẠN 2: KÍCH HOẠT LỚP HỌC & CÀI ĐẶT CẦU NỐI ĐỒNG BỘ DUAL CONTEXT
+    // GIAI ĐOẠN 1: ĐỒNG BỘ KHỐI 12, LỚP 12A2 VÀ TỰ ĐỘNG NẠP CÂU HỎI TIN 12
     // -------------------------------------------------------------
-    console.log('\n--- 2. KÍCH HOẠT LỚP HỌC & ĐƯA HỌC SINH VÀO SẢNH CHỜ ---');
-    await teacherPage.click('#btn-tnav-stage');
-    await teacherPage.waitForTimeout(500);
-
+    console.log('\n--- 1. KIỂM TRA ĐỒNG BỘ KHỐI 12, LỚP 12A2 VÀ CÂU HỎI AI ---');
     await teacherPage.evaluate(() => {
-      window.STORE.setState({
-        teacherTab: 'stage',
-        teacherStage: 'active',
-        unlocked: true,
-        currentPhase: 'waiting'
-      });
-      window.APP.renderDynamicStagePipeline();
+      window.teacherSwitchTab('stage');
+      const hwStage = document.getElementById('teacher-stage-hardware');
+      const actStage = document.getElementById('teacher-stage-active');
+      if (hwStage) hwStage.classList.add('active');
+      if (actStage) actStage.classList.remove('active');
     });
     await teacherPage.waitForTimeout(500);
 
-    // Học sinh vào sảnh
-    await studentPage.goto(`http://127.0.0.1:${PORT}/?role=student`, { waitUntil: 'domcontentloaded' });
+    // Chọn Khối 12
+    await teacherPage.selectOption('#teacher-select-grade', '12');
+    await teacherPage.evaluate(() => {
+      window.teacherOnGradeChange();
+    });
+    await teacherPage.waitForTimeout(400);
+
+    // Kiểm tra danh sách lớp có 12A2
+    const class12A2Option = await teacherPage.evaluate(() => {
+      const sel = document.getElementById('teacher-select-class');
+      return sel ? !!sel.querySelector('option[value="12A2"]') : false;
+    });
+    console.log('  [PASS] Danh sách lớp có Lớp 12A2:', class12A2Option);
+    if (!class12A2Option) throw new Error('LỖI: Thiếu lớp 12A2 trong dropdown chọn lớp!');
+
+    await teacherPage.selectOption('#teacher-select-class', '12A2');
+
+    // Kiểm tra câu hỏi tự động nạp theo bài AI
+    const qInputValue = await teacherPage.evaluate(() => {
+      const qIn = document.getElementById('otc-question-input');
+      return qIn ? qIn.value.trim() : '';
+    });
+    console.log('  [PASS] Ô câu hỏi bài cũ (#otc-question-input) tự động nạp:', qInputValue);
+    if (!qInputValue.includes('Trí tuệ nhân tạo') && !qInputValue.includes('Narrow AI')) {
+      throw new Error('LỖI: Ô câu hỏi chưa nạp đúng câu hỏi Tin học 12 (giá trị hiện tại: ' + qInputValue + ')');
+    }
+
+    // Bấm kích hoạt lớp học
+    await teacherPage.click('#btn-start-class-session');
+    await teacherPage.waitForTimeout(500);
+
+    // -------------------------------------------------------------
+    // GIAI ĐOẠN 2: HỌC SINH VÀO SẢNH & KIỂM TRA ĐỒNG BỘ 12A2 + SƠ ĐỒ MÁY
+    // -------------------------------------------------------------
+    console.log('\n--- 2. HỌC SINH MÁY 01 VÀO PHÒNG CHỜ (SƠ ĐỒ 12A2) ---');
+    await studentPage.goto('http://127.0.0.1:' + PORT + '/?role=student', { waitUntil: 'domcontentloaded' });
     await studentPage.waitForTimeout(1000);
 
-    // Cài đặt cầu nối đồng bộ thông điệp giữa 2 Browser Contexts độc lập (Playwright Dual-Context Bridge)
+    // Cài đặt cầu nối đồng bộ Playwright Dual-Context
     await teacherPage.exposeFunction('relayToStudent', (data) => {
       return studentPage.evaluate((d) => {
         if (window.SYNC_BUS && window.SYNC_BUS.handleMessage) {
@@ -162,280 +211,256 @@ async function runVerification() {
       };
     });
 
+    // Học sinh nhận diện lớp 12A2
     await studentPage.evaluate(() => {
-      window.STORE.setState({ unlocked: true });
+      window.STORE.setState({
+        unlocked: true,
+        classId: '12A2',
+        grade: '12'
+      });
     });
     await studentPage.waitForTimeout(400);
 
-    // Chọn Máy 04
+    // Chọn Máy 01 (ở 12A2 là Nguyễn Thái Học • Trần Thị Dung)
     await studentPage.evaluate(() => {
-      window.onSelectDesk(4);
+      window.onSelectDesk(1);
     });
     await studentPage.waitForTimeout(400);
     const confirmBtn = await studentPage.$('#btn-modal-confirm');
     if (confirmBtn) await confirmBtn.click();
     await studentPage.waitForTimeout(600);
 
-    // Kiểm tra học sinh ở Sảnh chờ st-view-waiting
-    const studentWaitingActive = await studentPage.evaluate(() => {
-      const el = document.getElementById('st-view-waiting');
-      return el && el.classList.contains('active');
+    // Kiểm tra Topbar học sinh hiện đúng Lớp 12A2
+    const studentHeaderData = await studentPage.evaluate(() => {
+      const classLabel = document.getElementById('sh-class-label');
+      const studentsLabel = document.getElementById('sh-students-label');
+      return {
+        classText: classLabel ? classLabel.textContent.trim() : '',
+        studentsText: studentsLabel ? studentsLabel.textContent.trim() : ''
+      };
     });
-    console.log('  [PASS] Học sinh Máy 04 đã vào Sảnh chờ Đấu trường (#st-view-waiting):', studentWaitingActive);
-    await studentPage.screenshot({ path: path.join(outputDir, '01_student_waiting_ready.png') });
+    console.log('  [PASS] Topbar học sinh hiển thị:', studentHeaderData);
+    if (!studentHeaderData.classText.includes('12A2')) {
+      throw new Error('LỖI: Topbar học sinh không hiện đúng Lớp 12A2 (' + studentHeaderData.classText + ')');
+    }
+    if (!studentHeaderData.studentsText.includes('Nguyễn Thái Học')) {
+      throw new Error('LỖI: Danh sách học sinh máy 01 rơi về lớp khác (' + studentHeaderData.studentsText + ')');
+    }
+
+    // Đánh dấu máy 01 đã điểm danh vào state Giáo viên
+    await teacherPage.evaluate(() => {
+      window.STORE.setState({
+        occupiedMachines: { "1": { machineId: 1, students: ["Nguyễn Thái Học", "Trần Thị Dung"] } }
+      });
+    });
 
     // -------------------------------------------------------------
-    // GIAI ĐOẠN 3: GIÁO VIÊN BẮT ĐẦU HOẠT ĐỘNG KIỂM TRA BÀI CŨ
+    // GIAI ĐOẠN 3: KIỂM TRA GIAO DIỆN HỌC SINH TINH GỌN (CLEAN STAGE)
     // -------------------------------------------------------------
-    console.log('\n--- 3. BẮT ĐẦU BƯỚC 1 (BÀI CŨ): ĐỒNG HỒ ĐỨNG YÊN, CÂU HỎI KHÓA ---');
+    console.log('\n--- 3. KIỂM TRA GIAO DIỆN HỌC SINH ĐÃ XÓA SẠCH CÁC PHẦN TỬ THỪA ---');
     await teacherPage.evaluate(() => {
       window.APP.executeStartActivity('old_lesson');
     });
-    // Bỏ qua đếm ngược 3-2-1 bằng timeout
     await teacherPage.waitForTimeout(4200);
     await studentPage.waitForTimeout(500);
 
-    // Kiểm tra đồng hồ đứng yên (chưa chạy) và câu hỏi chưa phát
-    const studentOldLessonState = await studentPage.evaluate(() => {
-      const state = window.STORE.getState();
-      const standby = document.getElementById('ol-question-standby-banner');
-      const qText = document.getElementById('ol-question-text');
+    const cleanStageCheck = await studentPage.evaluate(() => {
+      const callerSpotlight = document.getElementById('ol-caller-spotlight');
+      const oralBanner = document.querySelector('.ol-oral-instruction-banner');
+      const neonCard = document.getElementById('neon-lucky-card');
       const timerEl = document.getElementById('ol-timer');
       return {
-        currentPhase: state.currentPhase,
-        questionRevealed: !!(state.oldLesson && state.oldLesson.questionRevealed),
-        standbyVisible: standby ? standby.style.display !== 'none' : false,
-        qTextVisible: qText ? qText.style.display !== 'none' : false,
+        callerSpotlightRemoved: !callerSpotlight,
+        oralBannerRemoved: !oralBanner,
+        neonCardExists: !!neonCard,
         timerText: timerEl ? timerEl.textContent.trim() : ''
       };
     });
-    console.log('  [PASS] Trạng thái Bài cũ học sinh:', studentOldLessonState);
-    if (studentOldLessonState.questionRevealed || studentOldLessonState.qTextVisible) {
-      throw new Error('LỖI SƯ PHẠM: Câu hỏi bài cũ bị lộ trước khi bốc thăm!');
+    console.log('  [PASS] Đã xóa bỏ #ol-caller-spotlight:', cleanStageCheck.callerSpotlightRemoved);
+    console.log('  [PASS] Đã xóa bỏ .ol-oral-instruction-banner:', cleanStageCheck.oralBannerRemoved);
+    console.log('  [PASS] Thẻ Neon Lucky Card (#neon-lucky-card) sẵn sàng:', cleanStageCheck.neonCardExists);
+    console.log('  [PASS] Đồng hồ học sinh đứng yên tĩnh tuyệt đối tại 02:00:', cleanStageCheck.timerText === '02:00');
+
+    if (!cleanStageCheck.callerSpotlightRemoved) {
+      throw new Error('LỖI: Phần tử #ol-caller-spotlight vẫn còn tồn tại trong DOM học sinh!');
     }
-    await studentPage.screenshot({ path: path.join(outputDir, '02_student_old_lesson_standby.png') });
+    if (!cleanStageCheck.oralBannerRemoved) {
+      throw new Error('LỖI: Hướng dẫn trả lời miệng vẫn còn tồn tại trong DOM học sinh!');
+    }
+    if (cleanStageCheck.timerText !== '02:00') {
+      throw new Error('LỖI: Đồng hồ bài cũ không đứng yên tại 02:00 (giá trị hiện tại: ' + cleanStageCheck.timerText + ')');
+    }
+
+    await studentPage.screenshot({ path: path.join(outputDir, '01_clean_student_stage_02_00.png') });
 
     // -------------------------------------------------------------
-    // GIAI ĐOẠN 4: BỐC THĂM VÒNG XOAY ĐÍCH DANH 1 HỌC SINH
+    // GIAI ĐOẠN 4: KIỂM TRA RÀNG BUỘC 4 NÚT TUẦN TỰ TRÊN BÀN ĐIỀU KHIỂN
     // -------------------------------------------------------------
-    console.log('\n--- 4. BỐC THĂM VÒNG XOAY: CHỈ ĐÍCH DANH DUY NHẤT 1 HỌC SINH (KHÔNG GHÉP &) ---');
-    await teacherPage.evaluate(() => {
-      window.APP.openLuckyDrawModal(true);
-      window.APP.setLuckyDrawStrategy('wheel_fortune', true);
+    console.log('\n--- 4. KIỂM TRA LOGIC TUẦN TỰ 4 BƯỚC: [1.BỐC THĂM] -> [2.CÂU HỎI] -> [3.ĐÁP ÁN] -> [4.PHÒNG CHỜ] ---');
+    const initialButtonsState = await teacherPage.evaluate(() => {
+      const btnDraw = document.getElementById('btn-ol-step-1-draw');
+      const btnQ = document.getElementById('btn-ol-step-2-question');
+      const btnA = document.getElementById('btn-ol-step-3-answer');
+      const btnW = document.getElementById('btn-ol-step-4-waiting');
+      return {
+        btnDrawEnabled: btnDraw ? !btnDraw.disabled : false,
+        btnQDisabled: btnQ ? btnQ.disabled : false,
+        btnADisabled: btnA ? btnA.disabled : false,
+        btnWEnabled: btnW ? !btnW.disabled : false
+      };
     });
-    await teacherPage.waitForTimeout(600);
+    console.log('  [PASS] Trạng thái 4 nút trước khi bốc thăm:', initialButtonsState);
+    if (!initialButtonsState.btnQDisabled) {
+      throw new Error('LỖI SƯ PHẠM: Nút 2 (Câu hỏi) chưa bị khóa khi chưa bốc thăm!');
+    }
+    if (!initialButtonsState.btnADisabled) {
+      throw new Error('LỖI SƯ PHẠM: Nút 3 (Đáp án) chưa bị khóa khi chưa phát câu hỏi!');
+    }
 
-    // Phát lệnh quay với đích danh Máy 04, Em "Trần Đình Khôi" (1 học sinh duy nhất)
+    // Thầy bấm Nút 1: Bốc thăm ngẫu nhiên học sinh lớp 12A2 (Máy 01: Nguyễn Thái Học)
+    console.log('\n--- BƯỚC 1: BỐC THĂM ĐÍCH DANH HỌC SINH LỚP 12A2 ---');
     await teacherPage.evaluate(() => {
       const payload = {
-        strategy: 'wheel_fortune',
-        targetMachine: 4,
-        targetStudent: 'Trần Đình Khôi',
-        studentsList: ['Trần Đình Khôi', 'Võ Hoài Nam'],
+        strategy: 'slot_machine',
+        targetMachine: 1,
+        targetStudent: 'Nguyễn Thái Học',
+        studentsList: ['Nguyễn Thái Học', 'Trần Thị Dung'],
         duration: 1000
       };
       window.SYNC_BUS.broadcast('LUCKY_DRAW_SPIN', payload);
       window.APP.executeLuckyDrawAnimation(payload, true);
     });
 
-    // Chờ quay xong (1000ms + 200ms) + đóng modal (2500ms)
-    await teacherPage.waitForTimeout(4200);
+    await teacherPage.waitForTimeout(4000);
     await studentPage.waitForTimeout(1000);
 
-    // Kiểm tra Hộp Thoại Neon Chuẩn Ảnh Thầy Gửi
-    const neonCardData = await studentPage.evaluate(() => {
-      const card = document.getElementById('neon-lucky-card');
-      const desk = document.getElementById('nlc-desk-text');
-      const name = document.getElementById('nlc-student-name');
-      const status = document.getElementById('nlc-status-text');
-      const qRevealed = window.STORE.getState().oldLesson?.questionRevealed;
+    const postDrawState = await teacherPage.evaluate(() => {
+      const btnQ = document.getElementById('btn-ol-step-2-question');
+      const btnA = document.getElementById('btn-ol-step-3-answer');
+      const otsName = document.getElementById('ots-student-name');
+      const otsTimer = document.getElementById('ots-timer-display');
       return {
-        cardVisible: card ? card.style.display !== 'none' : false,
-        deskText: desk ? desk.textContent.trim() : '',
-        studentName: name ? name.textContent.trim() : '',
-        statusText: status ? status.textContent.trim() : '',
-        questionRevealed: !!qRevealed
+        btnQEnabled: btnQ ? !btnQ.disabled : false,
+        btnADisabled: btnA ? btnA.disabled : false,
+        otsName: otsName ? otsName.textContent.trim() : '',
+        otsTimer: otsTimer ? otsTimer.textContent.trim() : ''
       };
     });
-    console.log('  [PASS] Dữ liệu Hộp thoại Neon vinh danh:', neonCardData);
-
-    if (neonCardData.studentName.includes('&')) {
-      throw new Error(`LỖI SƯ PHẠM: Hộp thoại vinh danh hiển thị ghép cặp (${neonCardData.studentName}) thay vì 1 em duy nhất!`);
+    console.log('  [PASS] Bàn điều khiển GV sau khi bốc thăm xong:', postDrawState);
+    if (!postDrawState.btnQEnabled) {
+      throw new Error('LỖI: Nút 2 (Câu hỏi) chưa mở khóa sau khi bốc thăm!');
     }
-    if (neonCardData.questionRevealed) {
-      throw new Error('LỖI SƯ PHẠM: Câu hỏi bị phát tự động sau khi quay xong mà không chờ Thầy bấm nút!');
+    if (!postDrawState.btnADisabled) {
+      throw new Error('LỖI: Nút 3 (Đáp án) bị mở khóa sớm khi chưa phát đề!');
     }
-    await studentPage.screenshot({ path: path.join(outputDir, '03_neon_lucky_card_single_student.png') });
+    if (postDrawState.otsTimer !== '02:00') {
+      throw new Error('LỖI: Đồng hồ GV bị chạy sớm trước khi phát đề (' + postDrawState.otsTimer + ')');
+    }
 
-    // -------------------------------------------------------------
-    // GIAI ĐOẠN 5: THẦY BẤM [PHÁT ĐỀ & BẮT ĐẦU TÍNH GIỜ]
-    // -------------------------------------------------------------
-    console.log('\n--- 5. GIÁO VIÊN BẤM PHÁT ĐỀ: CÂU HỎI HIỆN RA & ĐỒNG HỒ ĐẾM GIỜ ---');
-    await teacherPage.evaluate(() => {
-      window.APP.broadcastOldLessonStart();
+    const studentPostDraw = await studentPage.evaluate(() => {
+      const name = document.getElementById('nlc-student-name');
+      const timerEl = document.getElementById('ol-timer');
+      return {
+        name: name ? name.textContent.trim() : '',
+        timerText: timerEl ? timerEl.textContent.trim() : ''
+      };
     });
-    await studentPage.waitForTimeout(1000);
+    console.log('  [PASS] Màn hình học sinh sau khi bốc thăm:', studentPostDraw);
+    if (studentPostDraw.name !== 'Nguyễn Thái Học') {
+      throw new Error('LỖI: Thẻ Neon học sinh hiện sai tên (' + studentPostDraw.name + ')');
+    }
+    if (studentPostDraw.timerText !== '02:00') {
+      throw new Error('LỖI: Đồng hồ học sinh bị chạy sớm trước khi phát đề (' + studentPostDraw.timerText + ')');
+    }
 
-    const questionActiveState = await studentPage.evaluate(() => {
+    await studentPage.screenshot({ path: path.join(outputDir, '02_student_neon_card_12A2_02_00.png') });
+
+    // Bấm Nút 2: Phát đề câu hỏi xuống 18 máy
+    console.log('\n--- BƯỚC 2: PHÁT ĐỀ CÂU HỎI & BẮT ĐẦU TÍNH GIỜ ---');
+    await teacherPage.click('#btn-ol-step-2-question');
+    await teacherPage.waitForTimeout(1000);
+    await studentPage.waitForTimeout(500);
+
+    const postQuestionState = await teacherPage.evaluate(() => {
+      const btnA = document.getElementById('btn-ol-step-3-answer');
+      return {
+        btnAEnabled: btnA ? !btnA.disabled : false
+      };
+    });
+    console.log('  [PASS] Sau khi phát đề, Nút 3 (Đáp án) đã mở khóa:', postQuestionState.btnAEnabled);
+    if (!postQuestionState.btnAEnabled) {
+      throw new Error('LỖI: Nút 3 (Đáp án) chưa mở khóa sau khi phát đề!');
+    }
+
+    const studentPostQuestion = await studentPage.evaluate(() => {
       const qText = document.getElementById('ol-question-text');
-      const standby = document.getElementById('ol-question-standby-banner');
-      const status = document.getElementById('nlc-status-text');
       const timerRunning = window.STORE.getState().timer?.isRunning;
       return {
         qTextVisible: qText ? qText.style.display !== 'none' : false,
-        standbyHidden: standby ? standby.style.display === 'none' : false,
-        statusText: status ? status.textContent.trim() : '',
+        qContent: qText ? qText.textContent.trim() : '',
         timerRunning: !!timerRunning
       };
     });
-    console.log('  [PASS] Trạng thái sau khi Thầy phát đề:', questionActiveState);
-    if (!questionActiveState.qTextVisible) {
-      throw new Error('LỖI: Câu hỏi chưa hiện lên màn hình học sinh sau khi Thầy bấm phát đề!');
+    console.log('  [PASS] Câu hỏi đã hiển thị trên màn hình học sinh:', studentPostQuestion);
+    if (!studentPostQuestion.qTextVisible) {
+      throw new Error('LỖI: Câu hỏi chưa bung ra sau khi bấm Nút 2!');
     }
-    await studentPage.screenshot({ path: path.join(outputDir, '04_question_revealed_and_timer_running.png') });
 
-    // -------------------------------------------------------------
-    // GIAI ĐOẠN 6: HẾT GIỜ (00:00) -> KHÔNG TỰ THOÁT RA PHÒNG CHỜ
-    // -------------------------------------------------------------
-    console.log('\n--- 6. HẾT GIỜ (00:00): GIỮ NGUYÊN MÀN HÌNH, THẦY CÔNG BỐ ĐÁP ÁN ---');
-    // Cưỡng bức đồng hồ về 0
-    await teacherPage.evaluate(() => {
-      window.APP.updateMasterTimerDisplay(0);
-      window.STORE.setState({
-        oldLesson: Object.assign({}, window.STORE.getState().oldLesson, { isLocked: true, timeLeft: 0 }),
-        timer: Object.assign({}, window.STORE.getState().timer, { secondsLeft: 0, isRunning: false })
-      });
-    });
-    await studentPage.evaluate(() => {
-      window.APP.updateMasterTimerDisplay(0);
-    });
+    await studentPage.screenshot({ path: path.join(outputDir, '03_question_revealed_and_timer_active.png') });
+
+    // Bấm Nút 3: Công bố đáp án chuẩn
+    console.log('\n--- BƯỚC 3: CÔNG BỐ ĐÁP ÁN CHUẨN ---');
+    await teacherPage.click('#btn-ol-step-3-answer');
+    await teacherPage.waitForTimeout(800);
     await studentPage.waitForTimeout(500);
 
-    // Học sinh vẫn ở Bước 1
-    const stillInOldLesson = await studentPage.evaluate(() => {
-      return window.STORE.getState().currentPhase === 'old_lesson';
-    });
-    console.log('  [PASS] Hết giờ, học sinh vẫn ở trên sàn diễn bài cũ (không bị văng ra phòng chờ):', stillInOldLesson);
-    if (!stillInOldLesson) {
-      throw new Error('LỖI SƯ PHẠM: Hết giờ hệ thống tự động đá học sinh về phòng chờ!');
-    }
-
-    // Thầy công bố đáp án
-    await teacherPage.evaluate(() => {
-      window.APP.teacherRevealOldLesson();
-    });
-    await studentPage.waitForTimeout(600);
-
-    const revealBoxVisible = await studentPage.evaluate(() => {
+    const answerRevealed = await studentPage.evaluate(() => {
       const box = document.getElementById('ol-reveal-box');
       return box ? box.style.display !== 'none' : false;
     });
-    console.log('  [PASS] Thầy công bố đáp án -> Hộp đáp án hiển thị:', revealBoxVisible);
-    if (!revealBoxVisible) {
-      throw new Error('LỖI SƯ PHẠM: Hộp đáp án chưa hiển thị sau khi Thầy công bố!');
+    console.log('  [PASS] Đáp án chuẩn hiển thị trên máy học sinh:', answerRevealed);
+    if (!answerRevealed) {
+      throw new Error('LỖI: Hộp đáp án chuẩn chưa hiển thị sau khi bấm Nút 3!');
     }
-    await studentPage.screenshot({ path: path.join(outputDir, '05_answer_revealed_by_teacher.png') });
 
-    // -------------------------------------------------------------
-    // GIAI ĐOẠN 7: KẾT THÚC HOẠT ĐỘNG: CHUYỂN CẢNH MƯỢT 1.5S
-    // -------------------------------------------------------------
-    console.log('\n--- 7. THẦY BẤM KẾT THÚC HOẠT ĐỘNG: TOAST CHUYỂN CẢNH SƯ PHẠM 1.5S ---');
-    await teacherPage.evaluate(() => {
-      window.handleFinishActivity('old_lesson');
-    });
+    await studentPage.screenshot({ path: path.join(outputDir, '04_answer_revealed.png') });
 
-    // Sau 500ms: Toast chuyển cảnh phải hiển thị
+    // Bấm Nút 4: Phòng chờ (Reset học sinh về sảnh chờ an toàn)
+    console.log('\n--- BƯỚC 4: BẤM PHÒNG CHỜ (RESET AN TOÀN VỀ SẢNH CHỜ) ---');
+    await teacherPage.click('#btn-ol-step-4-waiting');
+    await teacherPage.waitForTimeout(1000);
     await studentPage.waitForTimeout(500);
-    const toastVisible = await studentPage.evaluate(() => {
-      const t = document.getElementById('activity-finishing-toast');
-      return t ? t.style.display !== 'none' : false;
-    });
-    console.log('  [PASS] Toast chuyển cảnh 1.5s hiển thị trên máy học sinh:', toastVisible);
-    await studentPage.screenshot({ path: path.join(outputDir, '06_activity_finishing_toast.png') });
 
-    // Chờ qua 1.5s (tổng cộng 1800ms)
-    await studentPage.waitForTimeout(1500);
-    await teacherPage.waitForTimeout(500);
-
-    // Học sinh đã nhẹ nhàng về Sảnh chờ st-view-waiting
-    const backToWaiting = await studentPage.evaluate(() => {
-      const state = window.STORE.getState();
-      const waitingEl = document.getElementById('st-view-waiting');
-      return state.currentPhase === 'waiting' && waitingEl && waitingEl.classList.contains('active');
-    });
-    console.log('  [PASS] Sau 1.5s, học sinh nhẹ nhàng về Sảnh chờ Đấu trường:', backToWaiting);
-    if (!backToWaiting) {
-      throw new Error('LỖI SƯ PHẠM: Học sinh chưa trở về sảnh chờ st-view-waiting sau 1.5s kết thúc hoạt động!');
-    }
-
-    // Kiểm tra thẻ hoạt động bài cũ phía GV đã bị finished/disabled
-    const oldLessonCardFinished = await teacherPage.evaluate(() => {
-      const card = document.querySelector('.pipeline-activity-card.finished, .pipeline-act-card.act-card-disabled');
-      return !!card;
-    });
-    console.log('  [PASS] Thẻ hoạt động Bước 1 trên Sân khấu GV đã disable chống chọn lại:', oldLessonCardFinished);
-    await teacherPage.screenshot({ path: path.join(outputDir, '07_teacher_stage_disabled_card.png') });
-
-    // -------------------------------------------------------------
-    // GIAI ĐOẠN 8: KẾT THÚC TIẾT HỌC -> DỌN SẠCH & VỀ PHÒNG MÁY ĐANG CHỜ
-    // -------------------------------------------------------------
-    console.log('\n--- 8. KẾT THÚC TIẾT HỌC: LÀM SẠCH FACTORY CLEAN, VỀ PHÒNG MÁY ĐANG CHỜ ---');
-    await teacherPage.evaluate(() => {
-      window.APP.stopMasterTimer();
-      window.APP.updateMasterTimerDisplay(0);
-      window.APP.resetAndCleanActivity('waiting', { cleanAll: true });
-      window.STORE.setState({
-        sessionStarted: false,
-        unlocked: false,
-        currentPhase: 'waiting',
-        teacherPhase: 'waiting',
-        machineId: null,
-        fixedMachineId: null,
-        students: [],
-        occupiedMachines: {},
-        finishedActivities: {},
-        lastFinishedActivity: null
-      });
-      window.SYNC_BUS.broadcast('SESSION_ENDED', {});
-    });
-    await studentPage.waitForTimeout(1000);
-
-    const studentLobbyState = await studentPage.evaluate(() => {
-      const state = window.STORE.getState();
-      const title = document.getElementById('lsb-title');
-      const lobbyScreen = document.getElementById('screen-lobby');
+    const backToLobbySafe = await studentPage.evaluate(() => {
+      const stWaiting = document.getElementById('st-view-waiting');
       return {
-        screen: state.screen,
-        sessionStarted: state.sessionStarted,
-        studentsLen: state.students ? state.students.length : 0,
-        lastFinished: state.lastFinishedActivity,
-        bannerText: title ? title.textContent.trim() : '',
-        lobbyActive: lobbyScreen ? lobbyScreen.classList.contains('active') : false
+        phase: window.STORE.getState().currentPhase,
+        stWaitingActive: stWaiting ? stWaiting.classList.contains('active') : false
       };
     });
-    console.log('  [PASS] Trạng thái Sảnh học sinh sau khi Kết thúc Tiết học:', studentLobbyState);
-
-    if (studentLobbyState.screen !== 'lobby' || !studentLobbyState.bannerText.includes('PHÒNG MÁY ĐANG CHỜ')) {
-      throw new Error('LỖI: Học sinh chưa về trạng thái PHÒNG MÁY ĐANG CHỜ sạch sẽ!');
+    console.log('  [PASS] Học sinh đã trở về sảnh chờ an toàn (#st-view-waiting):', backToLobbySafe);
+    if (backToLobbySafe.phase !== 'waiting' || !backToLobbySafe.stWaitingActive) {
+      throw new Error('LỖI: Bấm Nút 4 không đưa học sinh về sảnh chờ an toàn!');
     }
-    await studentPage.screenshot({ path: path.join(outputDir, '08_student_back_clean_lobby.png') });
+
+    await studentPage.screenshot({ path: path.join(outputDir, '05_student_back_to_lobby_rescued.png') });
 
     // -------------------------------------------------------------
-    // GIAI ĐOẠN 9: KIỂM TRA BỐ CỤC ĐA ĐỘ PHÂN GIẢI & KHÔNG TRÀN NGANG
+    // GIAI ĐOẠN 5: KIỂM TRA BỐ CỤC ĐA ĐỘ PHÂN GIẢI & KHÔNG TRÀN NGANG
     // -------------------------------------------------------------
-    console.log('\n--- 9. KIỂM TRA BỐ CỤC KHÔNG TRÀN NGANG Ở ĐỘ PHÂN GIẢI 1366x768 VÀ 1920x1080 ---');
+    console.log('\n--- 5. KIỂM TRA BỐ CỤC KHÔNG TRÀN NGANG Ở ĐỘ PHÂN GIẢI 1366x768 VÀ 1920x1080 ---');
     for (const vp of [{ w: 1366, h: 768 }, { w: 1920, h: 1080 }]) {
       await studentPage.setViewportSize({ width: vp.w, height: vp.h });
       await studentPage.waitForTimeout(300);
       const isOverflow = await studentPage.evaluate(() => {
         return document.documentElement.scrollWidth > document.documentElement.clientWidth;
       });
-      console.log(`  [PASS] Độ phân giải ${vp.w}x${vp.h}: Tràn ngang = ${isOverflow} (0 overflow)`);
-      if (isOverflow) throw new Error(`LỖI: Bị tràn ngang tại độ phân giải ${vp.w}x${vp.h}!`);
+      console.log('  [PASS] Độ phân giải ' + vp.w + 'x' + vp.h + ': Tràn ngang = ' + isOverflow + ' (0 overflow)');
+      if (isOverflow) throw new Error('LỖI: Bị tràn ngang tại độ phân giải ' + vp.w + 'x' + vp.h + '!');
     }
 
     console.log('\n================================================================');
-    console.log('🎉 TẤT CẢ 9 BƯỚC KIỂM THỬ SƯ PHẠM ĐỀU ĐẠT CHUẨN ZERO-BUG 100%!');
+    console.log('🎉 TẤT CẢ CÁC HẠNG MỤC SƯ PHẠM v2.9.2 ĐỀU ĐẠT CHUẨN ZERO-BUG 100%!');
     console.log('================================================================\n');
 
   } finally {
