@@ -598,8 +598,17 @@
     }
   }
 
+  function safeFirebaseUpdate(path, data) {
+    if (!db) return Promise.resolve();
+    const doUpdate = () => db.ref(path).update(data);
+    if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
+      return firebase.auth().signInAnonymously().then(doUpdate).catch(doUpdate);
+    }
+    return doUpdate();
+  }
+
   // 3.5. REALTIME SYNC BUS (Đồng bộ tức thì đa tab / đa cửa sổ / PWA)
-  const SYNC_BUS = {
+  const SYNC_BUS = window.SYNC_BUS = {
     channel: (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('cvalms_sync_bus') : null,
     init() {
       if (this.channel) {
@@ -661,10 +670,14 @@
                 EMBEDDED_LESSONS[val.lessonData.id] = val.lessonData;
               }
 
-              // 3. Đồng bộ tiến trình sư phạm & Phòng chờ
-              if (val.currentPhase && val.currentPhase !== state.currentPhase && state.role === 'student') {
-                updates.currentPhase = val.currentPhase;
-                if (val.currentPhase !== 'waiting') {
+              // 3. Đồng bộ tiến trình sư phạm & Phòng chờ (Nguyên lý bất biến: waiting = lobby, active phase = student)
+              if (state.role === 'student' && val.currentPhase !== undefined) {
+                if (val.currentPhase === 'waiting' || val.returnToLobby) {
+                  updates.screen = 'lobby';
+                  updates.currentPhase = 'waiting';
+                  const overlay = document.getElementById('activity-countdown-overlay');
+                  if (overlay) overlay.style.display = 'none';
+                } else if (val.currentPhase !== 'waiting') {
                   let mId = state.machineId || state.fixedMachineId;
                   if (!mId) {
                     try {
@@ -682,11 +695,8 @@
                     const overlay = document.getElementById('activity-countdown-overlay');
                     if (overlay) overlay.style.display = 'none';
                   }
+                  updates.currentPhase = val.currentPhase;
                 }
-              }
-              if (val.returnToLobby && val.currentPhase === 'waiting' && state.role === 'student') {
-                updates.screen = 'lobby';
-                updates.currentPhase = 'waiting';
               }
               if (val.lastFinishedActivity !== undefined) {
                 updates.lastFinishedActivity = val.lastFinishedActivity;
@@ -816,7 +826,12 @@
             currentPhase: nextPhase,
             lastFinishedActivity: data.payload.lastFinished || null
           };
-          if (nextPhase !== 'waiting') {
+          if (nextPhase === 'waiting' || data.payload.resetByTeacher || data.payload.returnToLobby) {
+            updates.screen = 'lobby';
+            updates.currentPhase = 'waiting';
+            const overlay = document.getElementById('activity-countdown-overlay');
+            if (overlay) overlay.style.display = 'none';
+          } else {
             let mId = state.machineId || state.fixedMachineId;
             if (!mId) {
               try {
@@ -834,8 +849,6 @@
               const overlay = document.getElementById('activity-countdown-overlay');
               if (overlay) overlay.style.display = 'none';
             }
-          } else if (data.payload.resetByTeacher || data.payload.returnToLobby) {
-            updates.screen = 'lobby';
           }
           STORE.setState(updates);
         }
@@ -3366,14 +3379,14 @@
       });
       this.updateMasterTimerDisplay(0);
 
-      SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', lastFinished: finishedName });
-      if (db) {
-        db.ref('activeSession').update({
-          currentPhase: 'waiting',
-          lastFinishedActivity: finishedName,
-          lastUpdated: Date.now()
-        }).catch(()=>{});
-      }
+      SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', returnToLobby: true, lastFinished: finishedName });
+      safeFirebaseUpdate('activeSession', {
+        currentPhase: 'waiting',
+        returnToLobby: true,
+        lastFinishedActivity: finishedName,
+        countdown: { active: false, startedAt: 0 },
+        lastUpdated: Date.now()
+      }).catch(err => console.warn('[Firebase] onActivityAutoFinished error:', err));
     },
 
     oldLessonTimerInterval: null,
@@ -3801,17 +3814,27 @@
     });
 
     SYNC_BUS.broadcast('OLD_LESSON_DONE_RETURN_LOBBY', {
+      phase: 'waiting',
+      returnToLobby: true,
+      lastFinished: lastFinished
+    });
+    SYNC_BUS.broadcast('PHASE_CHANGE', {
+      phase: 'waiting',
+      returnToLobby: true,
       lastFinished: lastFinished
     });
 
-    if (db) {
-      db.ref('activeSession').update({
-        currentPhase: 'waiting',
-        returnToLobby: true,
-        lastFinishedActivity: lastFinished,
-        lastUpdated: Date.now()
-      }).catch(()=>{});
-    }
+    safeFirebaseUpdate('activeSession', {
+      currentPhase: 'waiting',
+      returnToLobby: true,
+      lastFinishedActivity: lastFinished,
+      countdown: { active: false, startedAt: 0 },
+      lastUpdated: Date.now()
+    }).then(() => {
+      console.log('[Firebase] Đã chốt bài cũ và đưa 18 máy về sảnh chờ thành công!');
+    }).catch(err => {
+      console.warn('[Firebase] teacherFinishOldLessonToLobby error:', err);
+    });
   };
 
   window.teacherSetPhase = function(phase) {
@@ -3843,32 +3866,22 @@
     }
 
     STORE.setState({ currentPhase: phase, teacherPhase: phase, sessionStarted: isStarted });
-    SYNC_BUS.broadcast('PHASE_CHANGE', { phase });
-    if (db) {
-      const doWrite = () => {
-        const fbData = {
-          currentPhase: phase,
-          sessionStarted: isStarted,
-          returnToLobby: (phase === 'waiting'),
-          lastUpdated: Date.now(),
-          countdown: { active: false, startedAt: 0 }
-        };
-        if (phase === 'old_lesson') {
-          fbData.oldLesson = STORE.getState().oldLesson || {};
-        }
-        db.ref('activeSession').update(fbData).then(() => {
-          console.log('[Firebase] Đã cập nhật activeSession phase:', phase);
-        }).catch(err => {
-          console.warn('[Firebase] teacherSetPhase error:', err);
-        });
-      };
-
-      if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
-        firebase.auth().signInAnonymously().then(() => doWrite()).catch(() => doWrite());
-      } else {
-        doWrite();
-      }
+    SYNC_BUS.broadcast('PHASE_CHANGE', { phase, returnToLobby: (phase === 'waiting') });
+    const fbData = {
+      currentPhase: phase,
+      sessionStarted: isStarted,
+      returnToLobby: (phase === 'waiting'),
+      lastUpdated: Date.now(),
+      countdown: { active: false, startedAt: 0 }
+    };
+    if (phase === 'old_lesson') {
+      fbData.oldLesson = STORE.getState().oldLesson || {};
     }
+    safeFirebaseUpdate('activeSession', fbData).then(() => {
+      console.log('[Firebase] Đã cập nhật activeSession phase:', phase);
+    }).catch(err => {
+      console.warn('[Firebase] teacherSetPhase error:', err);
+    });
   };
 
   // 3-2-1 Countdown Handler đồng bộ toàn phòng máy (Chuẩn Kahoot, có Failsafe chống kẹt số 3)
@@ -4023,13 +4036,14 @@
 
     const now = Date.now();
     SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
-    if (db) {
-      db.ref('activeSession/countdown').set({
+    safeFirebaseUpdate('activeSession', {
+      countdown: {
         active: true,
         title: 'BƯỚC 1: KIỂM TRA BÀI CŨ',
         startedAt: now
-      }).catch(()=>{});
-    }
+      },
+      returnToLobby: false
+    }).catch(()=>{});
     APP.handleRemoteCountdown({ active: true, title: 'BƯỚC 1: KIỂM TRA BÀI CŨ', startedAt: now });
 
     setTimeout(() => {
@@ -4079,17 +4093,17 @@
       lastFinishedActivity: null,
       pollLocked: false
     });
-    SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', resetByTeacher: true });
-    if (db) {
-      db.ref('activeSession').update({
-        currentPhase: 'waiting',
-        lastFinishedActivity: null,
-        pollLocked: false,
-        lastUpdated: Date.now()
-      }).then(() => {
-        console.log('[Firebase] Đã reset toàn bộ 18 máy về phòng chờ thành công!');
-      }).catch(err => console.warn('[Firebase] teacherResetAllToLobby error:', err));
-    }
+    SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', resetByTeacher: true, returnToLobby: true });
+    safeFirebaseUpdate('activeSession', {
+      currentPhase: 'waiting',
+      returnToLobby: true,
+      lastFinishedActivity: null,
+      pollLocked: false,
+      countdown: { active: false, startedAt: 0 },
+      lastUpdated: Date.now()
+    }).then(() => {
+      console.log('[Firebase] Đã reset toàn bộ 18 máy về phòng chờ thành công!');
+    }).catch(err => console.warn('[Firebase] teacherResetAllToLobby error:', err));
     AUDIO.playChime();
     console.log('[LMS] Giáo viên đã kích hoạt nút RESET VỀ PHÒNG CHỜ cho 18 máy.');
   };

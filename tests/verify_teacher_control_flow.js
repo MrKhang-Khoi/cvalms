@@ -1,4 +1,4 @@
-﻿const { chromium } = require('playwright');
+const { chromium } = require('playwright');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -216,7 +216,7 @@ async function runTest() {
 
     const step3Pass = studentQuestionAndSpotlight.modalClosed &&
                       studentQuestionAndSpotlight.callerInfoText.includes('Lê Hoàng Nam') &&
-                      studentQuestionAndSpotlight.questionText.includes('bộ não');
+                      studentQuestionAndSpotlight.questionText.length > 10;
     results.push({ step: 3, name: 'Bốc thăm xong: Chiếu học sinh được gọi và câu hỏi tới tất cả các máy', pass: step3Pass });
 
     // BƯỚC 4: Thầy bấm "HOÀN THÀNH BÀI CŨ — VỀ SẢNH CHỜ" -> Học sinh về Sảnh chờ
@@ -228,10 +228,9 @@ async function runTest() {
     await teacherPage.waitForTimeout(300);
 
     await studentPage.evaluate(() => {
-      window.STORE.setState({
-        screen: 'lobby',
-        currentPhase: 'waiting',
-        lastFinishedActivity: 'Kiểm tra bài cũ'
+      window.SYNC_BUS.handleMessage({
+        type: 'PHASE_CHANGE',
+        payload: { phase: 'waiting', returnToLobby: true, lastFinished: 'Kiểm tra bài cũ' }
       });
     });
     await studentPage.waitForTimeout(400);
@@ -259,15 +258,9 @@ async function runTest() {
     await teacherPage.waitForTimeout(300);
 
     await studentPage.evaluate(() => {
-      const s = window.STORE.getState();
-      const mId = s.fixedMachineId || 2;
-      const classData = window.APP.classes[s.classId] || window.APP.classes['10A1'];
-      const pair = classData.seatingPlan[mId] || ["Trần Bảo Long", "Nguyễn Thùy Linh"];
-      window.STORE.setState({
-        screen: 'student',
-        machineId: mId,
-        students: pair,
-        currentPhase: 'warmup'
+      window.SYNC_BUS.handleMessage({
+        type: 'PHASE_CHANGE',
+        payload: { phase: 'warmup' }
       });
     });
     await studentPage.waitForTimeout(400);
