@@ -1257,52 +1257,158 @@ print("2. Cắt xâu:", s[10:17])
             </div>
           </div>
 
-          <!-- Chặng 2: Live Analytics Quick Poll -->
+          <!-- BƯỚC 2: BẢNG TÁC NGHIỆP KHÁM PHÁ KIẾN THỨC SGK (100% WIDTH FULL VIEW) -->
           <div id="tw-panel-warmup" class="tw-panel">
-            <div class="tw-card">
-              <div class="twc-header">
-                <h3><i class="fas fa-chart-bar"></i> BIỂU ĐỒ LIVE ANALYTICS (QUICK POLL)</h3>
-                <button type="button" class="btn-tool-sm" id="btn-lock-poll"><i class="fas fa-lock"></i> Khóa chọn</button>
+            <div class="ol-tw-full-container">
+              <!-- Hàng 1: Banner Nhiệm vụ đọc SGK & Đồng hồ tĩnh -->
+              <div class="ol-top-banner">
+                <div class="ol-spotlight-card h2-theory-spotlight" id="h2-teacher-spotlight">
+                  <div class="ots-icon"><i class="fas fa-book-reader"></i></div>
+                  <div class="ots-info">
+                    <div class="ots-label">NHIỆM VỤ ĐỌC SGK & KHÁM PHÁ KIẾN THỨC MỚI:</div>
+                    <div class="ots-name" id="h2-theory-task-display">Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.</div>
+                    <div class="h2-doc-link" id="h2-theory-doc-display" style="color:#38bdf8;font-size:13.5px;margin-top:5px;font-weight:600;">
+                      <i class="fas fa-bookmark" style="margin-right:6px;"></i> Tài liệu: SGK Tin học 10 Cánh Diều - Mục 1 Trang 92
+                    </div>
+                  </div>
+                  <div class="ots-timer-wrap">
+                    <span class="ots-timer" id="h2-timer-display">05:00</span>
+                  </div>
+                </div>
               </div>
-              <div class="poll-live-chart" id="poll-live-chart">
-                <!-- Biểu đồ phân tích A, B, C, D -->
+
+              <!-- Hàng 2: Bàn điều khiển 4 nút tuần tự sư phạm Hoạt động 2 -->
+              <div class="ol-controls-card">
+                <div class="ol-sequential-actions">
+                  <button type="button" class="btn-seq-step btn-seq-1" id="btn-h2-step-1-task" onclick="window.h2AssignTask()">
+                    <i class="fas fa-clipboard-list"></i> 1. GIAO NHIỆM VỤ
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-2 disabled" id="btn-h2-step-2-timer" disabled onclick="window.h2StartReading()">
+                    <i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-3 disabled" id="btn-h2-step-3-summary" disabled onclick="window.h2Summarize()">
+                    <i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-4" id="btn-h2-step-4-waiting" onclick="window.h2FinishToLobby()">
+                    <i class="fas fa-undo"></i> 4. PHÒNG CHỜ
+                  </button>
+                </div>
+              </div>
+
+              <!-- Hàng 3: Khung xem trước Trạm kiến thức số NotebookLM 18 máy đang xem -->
+              <div class="ol-submissions-box h2-preview-box">
+                <div class="osb-header">
+                  <h4><i class="fas fa-desktop"></i> TRẠM LÝ THUYẾT NOTEBOOKLM TRÊN 18 MÁY</h4>
+                  <span class="osb-count" id="h2-reading-status">Trạng thái: 18/18 máy sẵn sàng</span>
+                </div>
+                <div class="h2-theory-preview-grid" id="h2-theory-preview-grid">
+                  <!-- Render động các thẻ kiến thức NotebookLM -->
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Chặng 3: Trạm lý thuyết PWA -->
-          <div id="tw-panel-theory" class="tw-panel">
-            <div class="tw-card">
-              <h3><i class="fas fa-book-reader"></i> 18 MÁY ĐANG ĐỌC LÝ THUYẾT PWA</h3>
-              <p>Nội dung NotebookLM đã được tải cứng vào bộ nhớ đệm của 18 máy học sinh.</p>
-              <button type="button" class="btn-primary" onclick="window.teacherSetPhase('discussion')" style="margin-top:16px;">
-                <i class="fas fa-arrow-right"></i> CHUYỂN SANG CHẶNG 4: THỰC HÀNH
-              </button>
-            </div>
-          </div>
-
-          <!-- Chặng 4: Danh sách bài làm thảo luận & Spotlight -->
+          <!-- BƯỚC 3: BẢNG TÁC NGHIỆP THỰC HÀNH & THẢO LUẬN (100% WIDTH FULL VIEW) -->
           <div id="tw-panel-discussion" class="tw-panel">
-              <div class="tw-card">
-                <div class="twc-header">
-                  <h3><i class="fas fa-laptop-code"></i> BÀI LÀM THỰC HÀNH CỦA 18 MÁY</h3>
-                  <span id="disc-submitted-count" style="color:#34d399;font-weight:700;">Đã nộp: 1/18</span>
+            <div class="ol-tw-full-container">
+              <!-- Hàng 1: Banner Đề bài thực hành & Đồng hồ tĩnh -->
+              <div class="ol-top-banner">
+                <div class="ol-spotlight-card h3-disc-spotlight" id="h3-teacher-spotlight">
+                  <div class="ots-icon"><i class="fas fa-laptop-code"></i></div>
+                  <div class="ots-info">
+                    <div class="ots-label">NHIỆM VỤ THỰC HÀNH & THẢO LUẬN NHÓM ĐÔI:</div>
+                    <div class="ots-name" id="h3-disc-task-display">Thực hành lập trình Python: Kiểu dữ liệu xâu ký tự theo cặp đôi</div>
+                    <div id="h3-disc-meta-display" style="color:#a78bfa;font-size:13px;margin-top:4px;font-weight:600;">
+                      <i class="fas fa-code-branch"></i> Hỗ trợ nộp bài theo thời gian thực & Spotlight bài xuất sắc lên bảng
+                    </div>
+                  </div>
+                  <div class="ots-timer-wrap">
+                    <span class="ots-timer" id="h3-timer-display">10:00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hàng 2: Bàn điều khiển 4 nút tuần tự sư phạm Hoạt động 3 -->
+              <div class="ol-controls-card">
+                <div class="ol-sequential-actions">
+                  <button type="button" class="btn-seq-step btn-seq-1" id="btn-h3-step-1-task" onclick="window.h3DeliverTask()">
+                    <i class="fas fa-scroll"></i> 1. PHÁT ĐỀ BÀI
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-2 disabled" id="btn-h3-step-2-timer" disabled onclick="window.h3StartCoding()">
+                    <i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-3 disabled" id="btn-h3-step-3-solution" disabled onclick="window.h3RevealSolution()">
+                    <i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-4" id="btn-h3-step-4-waiting" onclick="window.h3FinishToLobby()">
+                    <i class="fas fa-undo"></i> 4. PHÒNG CHỜ
+                  </button>
+                </div>
+              </div>
+
+              <!-- Hàng 3: Danh sách bài nộp của 18 máy theo thời gian thực -->
+              <div class="ol-submissions-box">
+                <div class="osb-header">
+                  <h4><i class="fas fa-list-check"></i> BÀI LÀM THỰC HÀNH CỦA 18 MÁY THEO THỜI GIAN THỰC</h4>
+                  <span class="osb-count" id="disc-submitted-count">Đã nộp: 0/18 máy</span>
                 </div>
                 <div class="disc-submissions-list" id="disc-submissions-list">
-                  <!-- Danh sách bài nộp -->
+                  <!-- Render động bài nộp của 18 máy -->
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Chặng 4: Live Quiz -->
-            <div id="tw-panel-quiz" class="tw-panel">
-              <div class="tw-card">
-                <h3><i class="fas fa-trophy"></i> TRẮC NGHIỆM THI ĐUA (LIVE QUIZ)</h3>
+          <!-- BƯỚC 4: BẢNG TÁC NGHIỆP ĐẤU TRƯỜNG KAHOOT & PODIUM 3D (100% WIDTH FULL VIEW) -->
+          <div id="tw-panel-quiz" class="tw-panel">
+            <div class="ol-tw-full-container">
+              <!-- Hàng 1: Banner Đấu trường & Đồng hồ tĩnh -->
+              <div class="ol-top-banner">
+                <div class="ol-spotlight-card h4-quiz-spotlight" id="h4-teacher-spotlight">
+                  <div class="ots-icon"><i class="fas fa-trophy"></i></div>
+                  <div class="ots-info">
+                    <div class="ots-label">ĐẤU TRƯỜNG TRẮC NGHIỆM THI ĐUA (CHỐNG NHÌN BÀI NHAU):</div>
+                    <div class="ots-name" id="h4-quiz-q-display">Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?</div>
+                    <div id="h4-quiz-correct-display" style="color:#34d399;font-size:13px;font-weight:700;margin-top:4px;">
+                      <i class="fas fa-check-circle"></i> Đáp án chuẩn: B. Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo
+                    </div>
+                  </div>
+                  <div class="ots-timer-wrap">
+                    <span class="ots-timer" id="h4-timer-display">00:20</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Hàng 2: Bàn điều khiển 4 nút tuần tự sư phạm Hoạt động 4 -->
+              <div class="ol-controls-card">
+                <div class="ol-sequential-actions">
+                  <button type="button" class="btn-seq-step btn-seq-1" id="btn-h4-step-1-start" onclick="window.h4StartArena()">
+                    <i class="fas fa-shield-alt"></i> 1. KHỞI ĐỘNG ĐẤU TRƯỜNG
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-2 disabled" id="btn-h4-step-2-timer" disabled onclick="window.h4DeliverQuiz()">
+                    <i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-3 disabled" id="btn-h4-step-3-podium" disabled onclick="window.h4RevealPodium()">
+                    <i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH
+                  </button>
+                  <button type="button" class="btn-seq-step btn-seq-4" id="btn-h4-step-4-waiting" onclick="window.h4FinishSession()">
+                    <i class="fas fa-flag-checkered"></i> 4. TỔNG KẾT TIẾT HỌC
+                  </button>
+                </div>
+              </div>
+
+              <!-- Hàng 3: Bảng xếp hạng trực tiếp 18 máy & Podium -->
+              <div class="ol-submissions-box">
+                <div class="osb-header">
+                  <h4><i class="fas fa-crown"></i> BẢNG XẾP HẠNG THI ĐUA 18 MÁY (LIVE LEADERBOARD)</h4>
+                  <span class="osb-count" id="quiz-submitted-count">Đã trả lời: 0/18 máy</span>
+                </div>
                 <div class="quiz-leaderboard" id="quiz-leaderboard">
-                  <!-- Bảng xếp hạng -->
+                  <!-- Bảng xếp hạng + Bục Podium 3D -->
                 </div>
               </div>
             </div>
+          </div>
 
           </div>
         </div>

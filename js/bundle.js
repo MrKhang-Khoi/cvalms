@@ -1236,6 +1236,96 @@
           qa[data.payload.machineId] = data.payload;
           STORE.setState({ quizAnswers: qa });
         }
+      } else if (data.type === 'H2_TASK_ASSIGN') {
+        const p = data.payload || {};
+        const h2 = Object.assign({}, STORE.getState().h2State, {
+          assigned: true,
+          taskText: p.taskText,
+          docText: p.docText
+        });
+        STORE.setState({ h2State: h2 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H2_START_READING') {
+        const p = data.payload || {};
+        const h2 = Object.assign({}, STORE.getState().h2State, {
+          reading: true,
+          timeLeft: p.duration || 300
+        });
+        STORE.setState({ h2State: h2 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H2_SUMMARIZE') {
+        const h2 = Object.assign({}, STORE.getState().h2State, {
+          summarized: true
+        });
+        STORE.setState({ h2State: h2 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H3_TASK_DELIVER') {
+        const p = data.payload || {};
+        const h3 = Object.assign({}, STORE.getState().h3State, {
+          taskDelivered: true,
+          taskText: p.taskText,
+          title: p.title,
+          starterCode: p.starterCode
+        });
+        STORE.setState({ h3State: h3 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H3_START_CODING') {
+        const p = data.payload || {};
+        const h3 = Object.assign({}, STORE.getState().h3State, {
+          codingStarted: true,
+          timeLeft: p.duration || 600
+        });
+        STORE.setState({ h3State: h3 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H3_REVEAL_SOLUTION') {
+        const p = data.payload || {};
+        const h3 = Object.assign({}, STORE.getState().h3State, {
+          solutionRevealed: true,
+          solutionCode: p.solutionCode
+        });
+        STORE.setState({ h3State: h3 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H4_ARENA_START') {
+        const p = data.payload || {};
+        const h4 = Object.assign({}, STORE.getState().h4State, {
+          arenaStarted: true,
+          questionText: p.questionText,
+          questionType: p.questionType
+        });
+        STORE.setState({ h4State: h4 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H4_QUIZ_DELIVER') {
+        const p = data.payload || {};
+        const h4 = Object.assign({}, STORE.getState().h4State, {
+          quizDelivered: true,
+          timeLeft: p.duration || 20
+        });
+        STORE.setState({ h4State: h4 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
+      } else if (data.type === 'H4_REVEAL_PODIUM') {
+        const h4 = Object.assign({}, STORE.getState().h4State, {
+          podiumRevealed: true
+        });
+        STORE.setState({ h4State: h4 });
+        if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
+          window.APP.renderStudentWorkspace(STORE.getState());
+        }
       } else if (data.type === 'SESSION_ACTIVATED') {
         const p = data.payload || {};
         const updates = {
@@ -3024,10 +3114,11 @@
         const targetPanel = document.getElementById('tw-panel-' + actKey.replace('_', '-'));
         if (targetPanel) targetPanel.classList.add('active');
 
+        // TẤT CẢ HOẠT ĐỘNG: ĐỒNG HỒ ĐỨNG YÊN (CHƯA ĐẾM GIỜ), THẦY LÀM CHỦ NHỊP ĐIỆU BẰNG BỘ 4 NÚT TUẦN TỰ
+        this.stopMasterTimer();
+        this.updateMasterTimerDisplay(act.duration);
+
         if (actKey === 'old_lesson') {
-          // BÀI CŨ: ĐỒNG HỒ ĐỨNG YÊN (CHƯA ĐẾM GIỜ), CÂU HỎI KHÓA RỖNG, CHỜ BỐC THĂM!
-          this.stopMasterTimer();
-          this.updateMasterTimerDisplay(act.duration);
           STORE.setState({
             oldLesson: Object.assign({}, STORE.getState().oldLesson, {
               questionRevealed: false,
@@ -3037,9 +3128,38 @@
               timeLeft: act.duration
             })
           });
-        } else {
-          // CÁC HOẠT ĐỘNG KHÁC: BẮT ĐẦU TÍNH GIỜ THEO CÀI ĐẶT
-          this.startMasterCountdown(act.duration, actKey);
+          this.updateOldLessonStepButtons();
+        } else if (actKey === 'warmup' || actKey === 'theory') {
+          STORE.setState({
+            h2State: {
+              assigned: false,
+              reading: false,
+              summarized: false,
+              timeLeft: act.duration
+            }
+          });
+          this.updateH2StepButtons();
+          this.renderH2PreviewGrid();
+        } else if (actKey === 'discussion') {
+          STORE.setState({
+            h3State: {
+              taskDelivered: false,
+              codingStarted: false,
+              solutionRevealed: false,
+              timeLeft: act.duration
+            }
+          });
+          this.updateH3StepButtons();
+        } else if (actKey === 'quiz') {
+          STORE.setState({
+            h4State: {
+              arenaStarted: false,
+              quizDelivered: false,
+              podiumRevealed: false,
+              timeLeft: act.duration
+            }
+          });
+          this.updateH4StepButtons();
         }
 
         this.renderDynamicStagePipeline();
@@ -4132,9 +4252,16 @@
       const otsDisplay = document.getElementById('ots-timer-display');
       const olTimer = document.getElementById('ol-timer');
       const pollTimer = document.getElementById('poll-timer');
+      const h2Timer = document.getElementById('h2-timer-display');
+      const h3Timer = document.getElementById('h3-timer-display');
+      const h4Timer = document.getElementById('h4-timer-display');
+      const stH2Timer = document.getElementById('student-h2-timer');
 
       const s = STORE.getState();
       const isOldLessonStandingBy = (s.currentPhase === 'old_lesson' && (!s.oldLesson || !s.oldLesson.questionRevealed));
+      const isH2StandingBy = ((s.currentPhase === 'warmup' || s.currentPhase === 'theory') && (!s.h2State || !s.h2State.reading));
+      const isH3StandingBy = (s.currentPhase === 'discussion' && (!s.h3State || !s.h3State.codingStarted));
+      const isH4StandingBy = (s.currentPhase === 'quiz' && (!s.h4State || !s.h4State.quizDelivered));
 
       if (masterDisplay) {
         masterDisplay.textContent = formatted;
@@ -4143,6 +4270,11 @@
       if (otsDisplay && !isOldLessonStandingBy) otsDisplay.textContent = formatted;
       if (olTimer && !isOldLessonStandingBy) olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
       if (pollTimer) pollTimer.innerHTML = `<i class="fas fa-clock"></i> ${safeSec > 60 ? formatted : safeSec + 's'}`;
+
+      if (h2Timer && !isH2StandingBy) h2Timer.textContent = formatted;
+      if (stH2Timer && !isH2StandingBy) stH2Timer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
+      if (h3Timer && !isH3StandingBy) h3Timer.textContent = formatted;
+      if (h4Timer && !isH4StandingBy) h4Timer.textContent = formatted;
     },
 
     // Đồng bộ đồng hồ nhịp nhàng từng giây theo mốc NTP chung (Lockstep Sync)
@@ -4645,6 +4777,445 @@
       btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
     },
 
+    // ==========================================================
+    // HOẠT ĐỘNG 2: KHÁM PHÁ KIẾN THỨC SGK (4 NÚT TUẦN TỰ)
+    // ==========================================================
+    updateH2StepButtons() {
+      const state = STORE.getState();
+      const btn1 = document.getElementById('btn-h2-step-1-task');
+      const btn2 = document.getElementById('btn-h2-step-2-timer');
+      const btn3 = document.getElementById('btn-h2-step-3-summary');
+      const btn4 = document.getElementById('btn-h2-step-4-waiting');
+      if (!btn1 || !btn2 || !btn3 || !btn4) return;
+
+      const h2 = state.h2State || {};
+      const hasAssigned = !!h2.assigned;
+      const hasStarted = !!h2.reading;
+      const hasSummarized = !!h2.summarized;
+
+      [btn1, btn2, btn3, btn4].forEach(b => {
+        b.classList.remove('step-completed', 'step-active-pulse', 'disabled');
+      });
+
+      // BƯỚC 1: GIAO NHIỆM VỤ
+      if (hasAssigned) {
+        btn1.disabled = true;
+        btn1.classList.add('step-completed');
+        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ GIAO NHIỆM VỤ ]';
+      } else {
+        btn1.disabled = false;
+        btn1.classList.add('step-active-pulse');
+        btn1.innerHTML = '<i class="fas fa-clipboard-list"></i> 1. GIAO NHIỆM VỤ';
+      }
+
+      // BƯỚC 2: BẮT ĐẦU ĐỌC & TÍNH GIỜ
+      if (hasStarted) {
+        btn2.disabled = true;
+        btn2.classList.add('step-completed');
+        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG ĐỌC & TÍNH GIỜ ]';
+      } else if (hasAssigned) {
+        btn2.disabled = false;
+        btn2.classList.add('step-active-pulse');
+        btn2.innerHTML = '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
+      } else {
+        btn2.disabled = true;
+        btn2.classList.add('disabled');
+        btn2.innerHTML = '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
+      }
+
+      // BƯỚC 3: CHỐT KIẾN THỨC
+      if (hasSummarized) {
+        btn3.disabled = true;
+        btn3.classList.add('step-completed');
+        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CHỐT KIẾN THỨC ]';
+      } else if (hasStarted) {
+        btn3.disabled = false;
+        btn3.classList.add('step-active-pulse');
+        btn3.innerHTML = '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
+      } else {
+        btn3.disabled = true;
+        btn3.classList.add('disabled');
+        btn3.innerHTML = '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
+      }
+
+      // BƯỚC 4: PHÒNG CHỜ
+      btn4.disabled = false;
+      if (hasSummarized) {
+        btn4.classList.add('step-active-pulse');
+      }
+      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+    },
+
+    renderH2PreviewGrid() {
+      const container = document.getElementById('h2-theory-preview-grid');
+      if (!container) return;
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || EMBEDDED_LESSONS['tin10_bai12'] || {};
+      const theory = lesson.theory || [
+        { title: "1. Khái niệm kiểu xâu", summary: "Xâu ký tự (str) là tập hợp các ký tự trong bảng mã Unicode, đặt trong dấu ngoặc kép hoặc đơn.", code: "s = \"Hello 2026\"\nprint(type(s))", note: "Xâu là kiểu bất biến (immutable)" },
+        { title: "2. Đánh chỉ số xâu (Index)", summary: "Chỉ số dương từ 0 đến len(s)-1. Chỉ số âm từ -1 ngược về -len(s).", code: "s = \"Python\"\nprint(s[0])   # 'P'\nprint(s[-1])  # 'n'", note: "Cấm gán s[0] = 'J' (Báo lỗi TypeError)" },
+        { title: "3. Phép cắt xâu (Slicing)", summary: "Cú pháp: s[start : stop : step]. Cắt từ start đến stop-1.", code: "s = \"Tin hoc 10\"\nprint(s[4:7])  # 'hoc'", note: "Nếu bỏ trống start -> mặc định từ 0" }
+      ];
+
+      container.innerHTML = theory.map(item => `
+        <div class="h2-theory-preview-card">
+          <div class="h2-tpc-title"><i class="fas fa-bookmark"></i> ${item.title}</div>
+          <div class="h2-tpc-summary">${item.summary}</div>
+          ${item.code ? `<pre class="h2-tpc-code"><code>${item.code}</code></pre>` : ''}
+          ${item.note ? `<div class="h2-tpc-note"><i class="fas fa-lightbulb"></i> ${item.note}</div>` : ''}
+        </div>
+      `).join('');
+    },
+
+    h2AssignTask() {
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || {};
+      const taskInput = document.getElementById('studio-theory-task');
+      const docInput = document.getElementById('studio-theory-doc');
+      const taskText = (taskInput && taskInput.value.trim()) || lesson.theoryTask || 'Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.';
+      const docText = (docInput && docInput.value.trim()) || lesson.theoryDoc || 'SGK Tin học 10 Cánh Diều - Mục 1 Trang 92';
+
+      const taskDisp = document.getElementById('h2-theory-task-display');
+      if (taskDisp) taskDisp.textContent = taskText;
+      const docDisp = document.getElementById('h2-theory-doc-display');
+      if (docDisp) docDisp.innerHTML = `<i class="fas fa-bookmark" style="margin-right:6px;"></i> Tài liệu: ${docText}`;
+
+      const h2State = Object.assign({}, STORE.getState().h2State, {
+        assigned: true,
+        reading: false,
+        summarized: false,
+        taskText: taskText,
+        docText: docText
+      });
+      STORE.setState({ h2State });
+      this.updateH2StepButtons();
+      this.renderH2PreviewGrid();
+
+      SYNC_BUS.broadcast('H2_TASK_ASSIGN', { taskText, docText });
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+    },
+
+    h2StartReading() {
+      const state = STORE.getState();
+      if (!state.h2State || !state.h2State.assigned) {
+        alert('⚠️ Thầy chưa giao nhiệm vụ đọc SGK! Vui lòng bấm [1. 📋 GIAO NHIỆM VỤ] trước.');
+        return;
+      }
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const sec = lesson.theoryTimeLimit || 300;
+      const h2State = Object.assign({}, state.h2State, {
+        reading: true,
+        timeLeft: sec
+      });
+      STORE.setState({ h2State });
+      this.updateH2StepButtons();
+
+      this.startMasterCountdown(sec, 'warmup');
+      SYNC_BUS.broadcast('H2_START_READING', { duration: sec });
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+    },
+
+    h2Summarize() {
+      const state = STORE.getState();
+      if (!state.h2State || !state.h2State.reading) {
+        alert('⚠️ Chưa bắt đầu đếm giờ đọc! Vui lòng bấm [2. ⏱️ BẮT ĐẦU ĐỌC & TÍNH GIỜ] trước.');
+        return;
+      }
+      const h2State = Object.assign({}, state.h2State, {
+        summarized: true
+      });
+      STORE.setState({ h2State });
+      this.updateH2StepButtons();
+
+      SYNC_BUS.broadcast('H2_SUMMARIZE', {});
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+    },
+
+    h2FinishToLobby() {
+      if (window.handleFinishActivity) {
+        window.handleFinishActivity('warmup');
+      }
+    },
+
+    // ==========================================================
+    // HOẠT ĐỘNG 3: THỰC HÀNH & THẢO LUẬN (4 NÚT TUẦN TỰ)
+    // ==========================================================
+    updateH3StepButtons() {
+      const state = STORE.getState();
+      const btn1 = document.getElementById('btn-h3-step-1-task');
+      const btn2 = document.getElementById('btn-h3-step-2-timer');
+      const btn3 = document.getElementById('btn-h3-step-3-solution');
+      const btn4 = document.getElementById('btn-h3-step-4-waiting');
+      if (!btn1 || !btn2 || !btn3 || !btn4) return;
+
+      const h3 = state.h3State || {};
+      const hasDelivered = !!h3.taskDelivered;
+      const hasStarted = !!h3.codingStarted;
+      const hasSolution = !!h3.solutionRevealed;
+
+      [btn1, btn2, btn3, btn4].forEach(b => {
+        b.classList.remove('step-completed', 'step-active-pulse', 'disabled');
+      });
+
+      // BƯỚC 1: PHÁT ĐỀ BÀI
+      if (hasDelivered) {
+        btn1.disabled = true;
+        btn1.classList.add('step-completed');
+        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ BÀI ]';
+      } else {
+        btn1.disabled = false;
+        btn1.classList.add('step-active-pulse');
+        btn1.innerHTML = '<i class="fas fa-scroll"></i> 1. PHÁT ĐỀ BÀI';
+      }
+
+      // BƯỚC 2: MỞ KHUNG LÀM BÀI & TÍNH GIỜ
+      if (hasStarted) {
+        btn2.disabled = true;
+        btn2.classList.add('step-completed');
+        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG LÀM BÀI ]';
+      } else if (hasDelivered) {
+        btn2.disabled = false;
+        btn2.classList.add('step-active-pulse');
+        btn2.innerHTML = '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
+      } else {
+        btn2.disabled = true;
+        btn2.classList.add('disabled');
+        btn2.innerHTML = '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
+      }
+
+      // BƯỚC 3: THU BÀI & CÔNG BỐ CODE MẪU
+      if (hasSolution) {
+        btn3.disabled = true;
+        btn3.classList.add('step-completed');
+        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ THU BÀI & CÔNG BỐ ]';
+      } else if (hasStarted) {
+        btn3.disabled = false;
+        btn3.classList.add('step-active-pulse');
+        btn3.innerHTML = '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
+      } else {
+        btn3.disabled = true;
+        btn3.classList.add('disabled');
+        btn3.innerHTML = '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
+      }
+
+      // BƯỚC 4: PHÒNG CHỜ
+      btn4.disabled = false;
+      if (hasSolution) {
+        btn4.classList.add('step-active-pulse');
+      }
+      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+    },
+
+    h3DeliverTask() {
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || {};
+      const disc = lesson.discussion || {};
+      const taskInput = document.getElementById('studio-disc-task');
+      const titleInput = document.getElementById('studio-disc-title');
+      const starterInput = document.getElementById('studio-disc-starter');
+
+      const taskText = (taskInput && taskInput.value.trim()) || disc.task || 'Thực hành lập trình Python';
+      const title = (titleInput && titleInput.value.trim()) || disc.title || 'Nhiệm vụ Thảo luận & Thực hành Nhóm đôi';
+      const starterCode = (starterInput && starterInput.value.trim()) || disc.starterCode || '';
+
+      const taskDisp = document.getElementById('h3-disc-task-display');
+      if (taskDisp) taskDisp.textContent = title;
+
+      const h3State = Object.assign({}, STORE.getState().h3State, {
+        taskDelivered: true,
+        codingStarted: false,
+        solutionRevealed: false,
+        taskText,
+        title,
+        starterCode
+      });
+      STORE.setState({ h3State });
+      this.updateH3StepButtons();
+
+      SYNC_BUS.broadcast('H3_TASK_DELIVER', { taskText, title, starterCode });
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+    },
+
+    h3StartCoding() {
+      const state = STORE.getState();
+      if (!state.h3State || !state.h3State.taskDelivered) {
+        alert('⚠️ Thầy chưa phát đề bài thực hành! Vui lòng bấm [1. 📜 PHÁT ĐỀ BÀI] trước.');
+        return;
+      }
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const sec = (lesson.discussion && lesson.discussion.timeLimit) ? lesson.discussion.timeLimit : 600;
+
+      const h3State = Object.assign({}, state.h3State, {
+        codingStarted: true,
+        timeLeft: sec
+      });
+      STORE.setState({ h3State });
+      this.updateH3StepButtons();
+
+      this.startMasterCountdown(sec, 'discussion');
+      SYNC_BUS.broadcast('H3_START_CODING', { duration: sec });
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+    },
+
+    h3RevealSolution() {
+      const state = STORE.getState();
+      if (!state.h3State || !state.h3State.codingStarted) {
+        alert('⚠️ Chưa bắt đầu làm bài! Vui lòng bấm [2. 💻 MỞ KHUNG LÀM BÀI & TÍNH GIỜ] trước.');
+        return;
+      }
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const starter = (document.getElementById('studio-disc-starter') && document.getElementById('studio-disc-starter').value) || (lesson.discussion && lesson.discussion.starterCode) || '# Lời giải mẫu của Thầy:\ns = "chuc mung nam moi 2026"\nprint("1. Do dai:", len(s))\nprint("2. Cat xau:", s[10:17])\nprint("3. Khoang trang:", s.count(" "))';
+
+      const h3State = Object.assign({}, state.h3State, {
+        solutionRevealed: true,
+        solutionCode: starter
+      });
+      STORE.setState({ h3State });
+      this.updateH3StepButtons();
+
+      SYNC_BUS.broadcast('H3_REVEAL_SOLUTION', { solutionCode: starter });
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+    },
+
+    h3FinishToLobby() {
+      if (window.handleFinishActivity) {
+        window.handleFinishActivity('discussion');
+      }
+    },
+
+    // ==========================================================
+    // HOẠT ĐỘNG 4: ĐẤU TRƯỜNG KAHOOT (4 NÚT TUẦN TỰ)
+    // ==========================================================
+    updateH4StepButtons() {
+      const state = STORE.getState();
+      const btn1 = document.getElementById('btn-h4-step-1-start');
+      const btn2 = document.getElementById('btn-h4-step-2-timer');
+      const btn3 = document.getElementById('btn-h4-step-3-podium');
+      const btn4 = document.getElementById('btn-h4-step-4-waiting');
+      if (!btn1 || !btn2 || !btn3 || !btn4) return;
+
+      const h4 = state.h4State || {};
+      const hasStarted = !!h4.arenaStarted;
+      const hasDelivered = !!h4.quizDelivered;
+      const hasPodium = !!h4.podiumRevealed;
+
+      [btn1, btn2, btn3, btn4].forEach(b => {
+        b.classList.remove('step-completed', 'step-active-pulse', 'disabled');
+      });
+
+      // BƯỚC 1: KHỞI ĐỘNG ĐẤU TRƯỜNG
+      if (hasStarted) {
+        btn1.disabled = true;
+        btn1.classList.add('step-completed');
+        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ KHỞI ĐỘNG ]';
+      } else {
+        btn1.disabled = false;
+        btn1.classList.add('step-active-pulse');
+        btn1.innerHTML = '<i class="fas fa-shield-alt"></i> 1. KHỞI ĐỘNG ĐẤU TRƯỜNG';
+      }
+
+      // BƯỚC 2: PHÁT ĐỀ & TÍNH GIỜ
+      if (hasDelivered) {
+        btn2.disabled = true;
+        btn2.classList.add('step-completed');
+        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG THI ĐẤU ]';
+      } else if (hasStarted) {
+        btn2.disabled = false;
+        btn2.classList.add('step-active-pulse');
+        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
+      } else {
+        btn2.disabled = true;
+        btn2.classList.add('disabled');
+        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
+      }
+
+      // BƯỚC 3: CÔNG BỐ & BỤC VINH DANH
+      if (hasPodium) {
+        btn3.disabled = true;
+        btn3.classList.add('step-completed');
+        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ VINH DANH PODIUM ]';
+      } else if (hasDelivered) {
+        btn3.disabled = false;
+        btn3.classList.add('step-active-pulse');
+        btn3.innerHTML = '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
+      } else {
+        btn3.disabled = true;
+        btn3.classList.add('disabled');
+        btn3.innerHTML = '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
+      }
+
+      // BƯỚC 4: TỔNG KẾT TIẾT HỌC
+      btn4.disabled = false;
+      if (hasPodium) {
+        btn4.classList.add('step-active-pulse');
+      }
+      btn4.innerHTML = '<i class="fas fa-flag-checkered"></i> 4. TỔNG KẾT TIẾT HỌC';
+    },
+
+    h4StartArena() {
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || {};
+      const qInput = document.getElementById('studio-quiz-q');
+      const qTypeInput = document.getElementById('studio-quiz-type');
+      const qText = (qInput && qInput.value.trim()) || (lesson.quiz && lesson.quiz.question) || 'Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?';
+      const qType = (qTypeInput && qTypeInput.value) || (lesson.quiz && lesson.quiz.type) || 'single_choice';
+
+      const qDisp = document.getElementById('h4-quiz-q-display');
+      if (qDisp) qDisp.textContent = qText;
+
+      const h4State = Object.assign({}, STORE.getState().h4State, {
+        arenaStarted: true,
+        quizDelivered: false,
+        podiumRevealed: false,
+        questionText: qText,
+        questionType: qType
+      });
+      STORE.setState({ h4State });
+      this.updateH4StepButtons();
+
+      SYNC_BUS.broadcast('H4_ARENA_START', { questionText: qText, questionType: qType });
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+    },
+
+    h4DeliverQuiz() {
+      const state = STORE.getState();
+      if (!state.h4State || !state.h4State.arenaStarted) {
+        alert('⚠️ Thầy chưa khởi động đấu trường! Vui lòng bấm [1. ⚔️ KHỞI ĐỘNG ĐẤU TRƯỜNG] trước.');
+        return;
+      }
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const sec = (lesson.quiz && lesson.quiz.timeLimit) ? lesson.quiz.timeLimit : 20;
+
+      const h4State = Object.assign({}, state.h4State, {
+        quizDelivered: true,
+        timeLeft: sec
+      });
+      STORE.setState({ h4State });
+      this.updateH4StepButtons();
+
+      this.startMasterCountdown(sec, 'quiz');
+      SYNC_BUS.broadcast('H4_QUIZ_DELIVER', { duration: sec });
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+    },
+
+    h4RevealPodium() {
+      const state = STORE.getState();
+      if (!state.h4State || !state.h4State.quizDelivered) {
+        alert('⚠️ Chưa phát đề đấu trường! Vui lòng bấm [2. 🎯 PHÁT ĐỀ & TÍNH GIỜ] trước.');
+        return;
+      }
+      const h4State = Object.assign({}, state.h4State, {
+        podiumRevealed: true
+      });
+      STORE.setState({ h4State });
+      this.updateH4StepButtons();
+
+      SYNC_BUS.broadcast('H4_REVEAL_PODIUM', {});
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+    },
+
+    h4FinishSession() {
+      if (window.handleFinishActivity) {
+        window.handleFinishActivity('quiz');
+      }
+    },
+
     initLuckyDrawViews() {
       const state = STORE.getState();
       const strat = (state.luckyDraw && state.luckyDraw.strategy) ? state.luckyDraw.strategy : 'slot_machine';
@@ -5110,8 +5681,24 @@
   window.setOldLessonQType = function(t) { APP.setOldLessonQType(t); };
   window.broadcastOldLessonStart = function() { APP.broadcastOldLessonStart(); };
   window.toggleOldLessonMenu = function() { APP.toggleOldLessonMenu(); };
-  window.teacherLockOldLesson = function() { APP.teacherLockOldLesson(); };
   window.teacherRevealOldLesson = function() { APP.teacherRevealOldLesson(); };
+
+  // EXPORTS BÀN ĐIỀU KHIỂN 4 BƯỚC TUẦN TỰ HOẠT ĐỘNG 2, 3, 4
+  window.h2AssignTask = function() { APP.h2AssignTask(); };
+  window.h2StartReading = function() { APP.h2StartReading(); };
+  window.h2Summarize = function() { APP.h2Summarize(); };
+  window.h2FinishToLobby = function() { APP.h2FinishToLobby(); };
+
+  window.h3DeliverTask = function() { APP.h3DeliverTask(); };
+  window.h3StartCoding = function() { APP.h3StartCoding(); };
+  window.h3RevealSolution = function() { APP.h3RevealSolution(); };
+  window.h3FinishToLobby = function() { APP.h3FinishToLobby(); };
+
+  window.h4StartArena = function() { APP.h4StartArena(); };
+  window.h4DeliverQuiz = function() { APP.h4DeliverQuiz(); };
+  window.h4RevealPodium = function() { APP.h4RevealPodium(); };
+  window.h4FinishSession = function() { APP.h4FinishSession(); };
+
   window.teacherFinishOldLessonToLobby = function() {
     APP.stopMasterTimer();
     APP.updateMasterTimerDisplay(0);
@@ -5251,13 +5838,9 @@
         console.warn('[Firebase] teacherSetPhase error:', err);
       });
 
-      if (phase === 'old_lesson') {
-        // BÀI CŨ: ĐỒNG HỒ ĐỨNG YÊN TẠI MỨC CÀI ĐẶT, CÂU HỎI KHÓA, CHỜ BỐC THĂM VÀ THẦY PHÁT ĐỀ
-        APP.stopMasterTimer();
-        APP.updateMasterTimerDisplay(duration);
-      } else {
-        APP.startMasterCountdown(duration, phase);
-      }
+      // TẤT CẢ CÁC HOẠT ĐỘNG: ĐỒNG HỒ ĐỨNG YÊN TẠI MỨC CÀI ĐẶT, THẦY LÀM CHỦ BẰNG BỘ 4 NÚT TUẦN TỰ
+      APP.stopMasterTimer();
+      APP.updateMasterTimerDisplay(duration);
     }
   };
 

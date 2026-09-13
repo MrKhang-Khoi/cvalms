@@ -8,7 +8,8 @@
     "test:resilience": "node tests/test_network_resilience_cdp.js",
     "test:visual": "node tests/test_visual_and_layout_responsiveness.js",
     "test:quiz": "node tests/test_quiz_anti_cheat_and_consistency.js",
-    "test:all": "node tests/verify_pedagogical_spin_and_timers.js && node tests/test_quiz_anti_cheat_and_consistency.js && node tests/test_visual_and_layout_responsiveness.js",
+    "test:universal": "node tests/test_universal_sequential_rhythm.js",
+    "test:all": "node tests/verify_pedagogical_spin_and_timers.js && node tests/test_quiz_anti_cheat_and_consistency.js && node tests/test_universal_sequential_rhythm.js && node tests/test_visual_and_layout_responsiveness.js",
     "lint": "npx --yes oxlint js/ -D correctness -A no-unused-vars"
   },
   "devDependencies": {
