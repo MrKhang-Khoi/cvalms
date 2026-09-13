@@ -449,17 +449,17 @@
       machineId: null,          // Số máy hiện tại đang mở trong phiên
       pendingMachineId: null,   // Số máy đang chờ bấm xác nhận trong modal
       students: [],             // Danh sách 2 bạn tại máy
-      occupiedMachines: {       // Danh sách các máy đã có bạn khác chọn
-        1: true,
-        2: true
-      },
+      occupiedMachines: {},     // Danh sách các máy đã có bạn khác chọn (đồng bộ thời gian thực)
       currentPhase: 'waiting',  // 'waiting', 'old_lesson', 'warmup', 'theory', 'discussion', 'quiz'
       pollSelection: null,
       pollLocked: false,
+      pollAnswers: {},          // Bảng lưu lựa chọn Quick Poll thật của các máy
       discStatus: 'working',
       discSubmissionTime: null,
+      discussionAnswers: {},    // Bảng lưu bài làm thảo luận/code thật của các máy
       quizSelection: null,
       quizAnswered: false,
+      quizAnswers: {},          // Bảng lưu kết quả Live Quiz thật của các máy
       isSos: false,
 
       // Trạng thái Bước 1: Kiểm tra bài cũ
@@ -523,7 +523,7 @@
             localStorage.setItem('lms_fixed_machine_id', num.toString());
             this.state.fixedMachineId = num;
             this.state.machineId = num;
-            this.state.screen = 'student';
+            this.state.screen = 'lobby';
             const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
             if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
               this.state.students = cData.seatingPlan[num];
@@ -537,7 +537,7 @@
           if (num >= 1 && num <= 18) {
             this.state.fixedMachineId = num;
             this.state.machineId = num;
-            this.state.screen = 'student';
+            this.state.screen = 'lobby';
             const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
             if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
               this.state.students = cData.seatingPlan[num];
@@ -613,6 +613,16 @@
           } catch {}
         }
       });
+      // Khởi tạo trạng thái mới nhất từ storage nếu có
+      try {
+        const lastSync = localStorage.getItem('cvalms_sync_event');
+        if (lastSync) {
+          const data = JSON.parse(lastSync);
+          if (data && (Date.now() - data.timestamp < 300000)) {
+            this.handleMessage(data);
+          }
+        }
+      } catch {}
       // Nếu Firebase sẵn sàng, lắng nghe session từ Firebase
       if (db) {
         try {
@@ -702,6 +712,18 @@
                 const occ = Object.assign({}, state.occupiedMachines);
                 Object.keys(val.machines).forEach(m => { occ[m] = true; });
                 updates.occupiedMachines = occ;
+              }
+              if (val.pollAnswers !== undefined) {
+                updates.pollAnswers = val.pollAnswers || {};
+              }
+              if (val.pollLocked !== undefined) {
+                updates.pollLocked = !!val.pollLocked;
+              }
+              if (val.discussionAnswers !== undefined) {
+                updates.discussionAnswers = val.discussionAnswers || {};
+              }
+              if (val.quizAnswers !== undefined) {
+                updates.quizAnswers = val.quizAnswers || {};
               }
               if (Object.keys(updates).length > 0) {
                 STORE.setState(updates);
@@ -823,6 +845,43 @@
         STORE.setState({ oldLesson: oldL });
       } else if (data.type === 'LUCKY_DRAW_SPIN') {
         APP.handleRemoteLuckyDrawSpin(data.payload);
+      } else if (data.type === 'POLL_ANSWER') {
+        if (data.payload && data.payload.machineId) {
+          const pa = Object.assign({}, STORE.getState().pollAnswers);
+          pa[data.payload.machineId] = data.payload.choice;
+          STORE.setState({ pollAnswers: pa });
+        }
+      } else if (data.type === 'POLL_LOCK_TOGGLE') {
+        if (data.payload) {
+          STORE.setState({ pollLocked: !!data.payload.locked });
+        }
+      } else if (data.type === 'DISCUSSION_ANSWER') {
+        if (data.payload && data.payload.machineId) {
+          const da = Object.assign({}, STORE.getState().discussionAnswers);
+          da[data.payload.machineId] = data.payload;
+          STORE.setState({ discussionAnswers: da });
+        }
+      } else if (data.type === 'QUIZ_ANSWER') {
+        if (data.payload && data.payload.machineId) {
+          const qa = Object.assign({}, STORE.getState().quizAnswers);
+          qa[data.payload.machineId] = data.payload;
+          STORE.setState({ quizAnswers: qa });
+        }
+      } else if (data.type === 'SESSION_ACTIVATED') {
+        const p = data.payload || {};
+        const updates = {
+          unlocked: true,
+          sessionStarted: false,
+          currentPhase: 'waiting'
+        };
+        if (p.classId) updates.classId = p.classId;
+        if (p.grade) updates.grade = p.grade;
+        if (p.lessonId) updates.lessonId = p.lessonId;
+        if (p.lessonData) {
+          updates.lessonData = p.lessonData;
+          EMBEDDED_LESSONS[p.lessonData.id] = p.lessonData;
+        }
+        STORE.setState(updates);
       }
     }
   };
@@ -980,7 +1039,10 @@
         btn.addEventListener('click', e => {
           const choice = e.currentTarget.dataset.choice;
           const state = STORE.getState();
-          if (state.pollLocked) return;
+          if (state.pollLocked) {
+            alert('Thầy đã khóa lựa chọn Quick Poll!');
+            return;
+          }
           STORE.setState({ pollSelection: choice });
 
           if (db && state.machineId) {
@@ -988,6 +1050,9 @@
               choice: choice,
               timestamp: Date.now()
             }).catch(()=>{});
+          }
+          if (typeof SYNC_BUS !== 'undefined') {
+            SYNC_BUS.broadcast('POLL_ANSWER', { machineId: state.machineId || 1, choice });
           }
         });
       });
@@ -1007,14 +1072,26 @@
           STORE.setState({ discStatus: 'submitted', discSubmissionTime: timeStr });
 
           const state = STORE.getState();
-          if (db && state.machineId) {
-            db.ref(`activeSession/discussionAnswers/${state.machineId}`).set({
-              machineId: state.machineId,
-              students: state.students,
+          const mId = state.machineId || 1;
+          const stuList = (state.students && state.students.length > 0) ? state.students : [`Máy ${mId}`];
+
+          if (db && mId) {
+            db.ref(`activeSession/discussionAnswers/${mId}`).set({
+              machineId: mId,
+              students: stuList,
               content: content,
               submittedAt: Date.now()
             }).catch(()=>{});
           }
+          if (typeof SYNC_BUS !== 'undefined') {
+            SYNC_BUS.broadcast('DISCUSSION_ANSWER', {
+              machineId: mId,
+              students: stuList,
+              content: content,
+              submittedAt: timeStr
+            });
+          }
+          alert('🎉 Nhóm đã nộp bài thành công lên Bảng điều khiển của Thầy!');
         });
       }
 
@@ -1023,13 +1100,35 @@
         btn.addEventListener('click', e => {
           const opt = e.currentTarget.dataset.qopt;
           const state = STORE.getState();
-          const lesson = state.lessonData;
+          const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
           const isCorrect = (opt === lesson.quiz.correct);
+          const mId = state.machineId || 1;
+          const stuList = (state.students && state.students.length > 0) ? state.students : [`Máy ${mId}`];
+          const nowTs = Date.now();
 
           STORE.setState({
             quizSelection: opt,
             quizAnswered: true
           });
+
+          if (db && mId) {
+            db.ref(`activeSession/quizAnswers/${mId}`).set({
+              machineId: mId,
+              students: stuList,
+              choice: opt,
+              isCorrect: isCorrect,
+              timestamp: nowTs
+            }).catch(()=>{});
+          }
+          if (typeof SYNC_BUS !== 'undefined') {
+            SYNC_BUS.broadcast('QUIZ_ANSWER', {
+              machineId: mId,
+              students: stuList,
+              choice: opt,
+              isCorrect: isCorrect,
+              timestamp: nowTs
+            });
+          }
 
           // Hiệu ứng pháo hoa chúc mừng nếu đúng
           if (isCorrect && typeof confetti === 'function') {
@@ -1188,12 +1287,18 @@
             lessonId: chosenLesson,
             lessonData: lessonObj,
             oldLesson: Object.assign({}, STORE.getState().oldLesson, {
-              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || STORE.getState().oldLesson.questionText
+              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || STORE.getState().oldLesson.questionText,
+              submissions: {}
             }),
             unlocked: true,
             sessionStarted: false,
             teacherStage: 'active',
-            currentPhase: 'waiting'
+            currentPhase: 'waiting',
+            pollLocked: false,
+            pollAnswers: {},
+            discussionAnswers: {},
+            quizAnswers: {},
+            occupiedMachines: {}
           });
 
           if (db) {
@@ -1205,9 +1310,21 @@
               unlocked: true,
               sessionStarted: false,
               currentPhase: 'waiting',
+              pollLocked: false,
+              pollAnswers: {},
+              discussionAnswers: {},
+              quizAnswers: {},
               activatedAt: Date.now()
             }).catch(()=>{});
           }
+          SYNC_BUS.broadcast('SESSION_ACTIVATED', {
+            grade: chosenGrade,
+            classId: chosenClass,
+            lessonId: chosenLesson,
+            lessonData: lessonObj,
+            unlocked: true,
+            pollLocked: false
+          });
           alert(`🎉 Đã kích hoạt ${chosenClass}! Sơ đồ máy đã mở khóa để các em vào sảnh chờ.`);
         });
       }
@@ -1217,6 +1334,20 @@
       if (btnSaveStudio) {
         btnSaveStudio.addEventListener('click', () => {
           this.saveStudioLesson();
+        });
+      }
+
+      // 4.2. Khóa / Mở khóa bình chọn Quick Poll
+      const btnLockPoll = document.getElementById('btn-lock-poll');
+      if (btnLockPoll) {
+        btnLockPoll.addEventListener('click', () => {
+          const s = STORE.getState();
+          const newLocked = !s.pollLocked;
+          STORE.setState({ pollLocked: newLocked });
+          if (db) {
+            db.ref('activeSession/pollLocked').set(newLocked).catch(()=>{});
+          }
+          SYNC_BUS.broadcast('POLL_LOCK_TOGGLE', { locked: newLocked });
         });
       }
 
@@ -1435,11 +1566,52 @@
       }
     },
 
+    renderClassesSeatingPreview() {
+      const selectCls = document.getElementById('classes-select-class');
+      const clsId = selectCls ? selectCls.value : (STORE.getState().classId || '10A1');
+      const classData = this.classes[clsId] || this.classes['10A1'];
+      const preview = document.getElementById('classes-seating-preview');
+      if (!preview) return;
+
+      let html = '';
+      for (let i = 1; i <= 18; i++) {
+        const students = classData.seatingPlan[i] || [];
+        let chipsHtml = '';
+        if (students.length === 0) {
+          chipsHtml = '<span style="font-size:11px;color:#64748b;font-style:italic;padding:4px 0;">(Chưa có học sinh)</span>';
+        } else {
+          chipsHtml = students.map((name, idx) => `
+            <span class="student-chip">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</span>
+              <button type="button" class="chip-del" onclick="APP.removeStudentFromDesk(${i}, ${idx})" title="Xóa học sinh này">&times;</button>
+            </span>
+          `).join('');
+        }
+
+        html += `
+          <div class="settings-desk-card" data-desk="${i}">
+            <div class="sdc-header">
+              <span class="sdc-num">MÁY ${String(i).padStart(2, '0')}</span>
+              <span class="sdc-count">${students.length} bạn</span>
+            </div>
+            <div class="sdc-students-list">
+              ${chipsHtml}
+            </div>
+            <div class="sdc-add-row">
+              <input type="text" class="sdc-input" id="classes-add-student-input-${i}" placeholder="+ Tên học sinh..." onkeydown="if(event.key==='Enter')APP.addStudentToDesk(${i})">
+              <button type="button" class="sdc-btn-add" onclick="APP.addStudentToDesk(${i})" title="Thêm học sinh vào máy này">Thêm</button>
+            </div>
+          </div>
+        `;
+      }
+      preview.innerHTML = html;
+    },
+
     addStudentToDesk(deskNum) {
-      const selectCls = document.getElementById('settings-select-class');
+      const selectCls = document.getElementById('classes-select-class') || document.getElementById('settings-select-class');
       const clsId = selectCls ? selectCls.value : '10A1';
       const classData = this.classes[clsId] || this.classes['10A1'];
-      const input = document.getElementById(`add-student-input-${deskNum}`);
+      const input = document.getElementById(`add-student-input-${deskNum}`) || document.getElementById(`classes-add-student-input-${deskNum}`);
       if (!input) return;
 
       const name = input.value.trim();
@@ -1451,15 +1623,17 @@
       classData.seatingPlan[deskNum].push(name);
       input.value = '';
       this.renderSettingsSeatingGrid();
+      this.renderClassesSeatingPreview();
     },
 
     removeStudentFromDesk(deskNum, idx) {
-      const selectCls = document.getElementById('settings-select-class');
+      const selectCls = document.getElementById('classes-select-class') || document.getElementById('settings-select-class');
       const clsId = selectCls ? selectCls.value : '10A1';
       const classData = this.classes[clsId] || this.classes['10A1'];
       if (classData && classData.seatingPlan[deskNum]) {
         classData.seatingPlan[deskNum].splice(idx, 1);
         this.renderSettingsSeatingGrid();
+        this.renderClassesSeatingPreview();
       }
     },
 
@@ -2082,6 +2256,19 @@
     },
 
     render(state) {
+      // 0. Cập nhật huy hiệu PWA trên Topbar cho mọi màn hình
+      const pwaBadge = document.getElementById('device-pwa-badge');
+      if (pwaBadge) {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const modeText = isStandalone ? 'PWA Standalone' : 'Browser';
+        const fixedId = state.fixedMachineId;
+        if (fixedId) {
+          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+        } else {
+          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+        }
+      }
+
       // 1. Chuyển đổi màn hình: Sảnh (Lobby), Học sinh (Student), hoặc Giáo viên (Teacher)
       const screenLobby = document.getElementById('screen-lobby');
       const screenStudent = document.getElementById('screen-student');
@@ -2279,18 +2466,198 @@
         }
       }
 
-      // Nếu ở Chặng 1: Vẽ biểu đồ phân tích Quick Poll
+      // Nếu ở Chặng 1: Vẽ biểu đồ phân tích Quick Poll theo dữ liệu thật
       if (state.currentPhase === 'warmup') {
         const pollChart = document.getElementById('poll-live-chart');
+        const btnLock = document.getElementById('btn-lock-poll');
+        if (btnLock) {
+          btnLock.innerHTML = state.pollLocked
+            ? '<i class="fas fa-unlock"></i> Mở khóa chọn'
+            : '<i class="fas fa-lock"></i> Khóa chọn';
+        }
         if (pollChart) {
-          pollChart.innerHTML = '<div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">' +
-            '<div style="font-size:13px;display:flex;justify-content:space-between;"><span>Phương án A:</span> <strong>22% (4 máy)</strong></div>' +
-            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:22%;background:#3b82f6;height:100%;"></div></div>' +
-            '<div style="font-size:13px;display:flex;justify-content:space-between;color:#34d399;"><span>Phương án B (Đáp án đúng):</span> <strong>67% (12 máy)</strong></div>' +
-            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:67%;background:#10b981;height:100%;"></div></div>' +
-            '<div style="font-size:13px;display:flex;justify-content:space-between;"><span>Phương án C:</span> <strong>11% (2 máy)</strong></div>' +
-            '<div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;"><div style="width:11%;background:#f59e0b;height:100%;"></div></div>' +
-          '</div>';
+          const pollAns = state.pollAnswers || {};
+          const counts = { A: 0, B: 0, C: 0, D: 0 };
+          let total = 0;
+          Object.values(pollAns).forEach(ans => {
+            const c = (typeof ans === 'object' && ans.choice) ? ans.choice : ans;
+            if (counts[c] !== undefined) {
+              counts[c]++;
+              total++;
+            }
+          });
+
+          const colors = { A: '#ef4444', B: '#3b82f6', C: '#f59e0b', D: '#10b981' };
+          const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
+          const warmupOptions = (lesson && lesson.warmup && lesson.warmup.options) ? lesson.warmup.options : {
+            A: 'Phương án A', B: 'Phương án B', C: 'Phương án C', D: 'Phương án D'
+          };
+
+          let chartHtml = '<div style="display:flex;flex-direction:column;gap:12px;margin-top:10px;">';
+          chartHtml += `<div style="font-size:12px;color:#94a3b8;margin-bottom:4px;">Tổng số máy đã bình chọn: <strong style="color:#38bdf8;">${total}/18 máy</strong> ${state.pollLocked ? '<span style="color:#ef4444;font-weight:700;margin-left:6px;">(Đã khóa chọn)</span>' : ''}</div>`;
+
+          ['A', 'B', 'C', 'D'].forEach(opt => {
+            const cnt = counts[opt] || 0;
+            const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
+            const optLabel = warmupOptions[opt] || `Phương án ${opt}`;
+            chartHtml += `
+              <div>
+                <div style="font-size:13px;display:flex;justify-content:space-between;margin-bottom:4px;">
+                  <span><strong style="color:${colors[opt]};">${opt}:</strong> ${optLabel}</span>
+                  <strong>${pct}% (${cnt} máy)</strong>
+                </div>
+                <div style="background:#1e293b;height:12px;border-radius:6px;overflow:hidden;">
+                  <div style="width:${pct}%;background:${colors[opt]};height:100%;transition:width 0.4s ease;"></div>
+                </div>
+              </div>
+            `;
+          });
+          chartHtml += '</div>';
+          pollChart.innerHTML = chartHtml;
+        }
+      }
+
+      // Nếu ở Chặng 4: Render danh sách bài làm thảo luận & thực hành của 18 máy
+      if (state.currentPhase === 'discussion') {
+        const discList = document.getElementById('disc-submissions-list');
+        const discCount = document.getElementById('disc-submitted-count');
+        const answers = state.discussionAnswers || {};
+        const submittedKeys = Object.keys(answers);
+
+        if (discCount) {
+          discCount.textContent = `Đã nộp: ${submittedKeys.length}/18 máy`;
+        }
+
+        if (discList) {
+          let html = '';
+          for (let i = 1; i <= 18; i++) {
+            const item = answers[i];
+            const pair = classData.seatingPlan[i] || [`Máy ${i}`];
+            const stuNames = pair.join(' • ');
+
+            if (item) {
+              const content = typeof item === 'object' ? item.content : item;
+              const safeContent = String(content || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+              const timeStr = (typeof item === 'object' && item.submittedAt)
+                ? (typeof item.submittedAt === 'number' ? new Date(item.submittedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : item.submittedAt)
+                : '';
+              const stu = (typeof item === 'object' && item.students && item.students.length > 0) ? item.students.join(' • ') : stuNames;
+
+              html += `
+                <div class="osb-card submitted" style="margin-bottom:10px;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;">
+                  <div class="osb-card-top" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                    <span class="osb-badge-m" style="font-weight:700;color:#38bdf8;"><i class="fas fa-desktop"></i> MÁY ${String(i).padStart(2,'0')}</span>
+                    <span class="osb-badge-status success" style="color:#34d399;font-size:12px;"><i class="fas fa-check-circle"></i> Đã nộp ${timeStr ? `(${timeStr})` : ''}</span>
+                  </div>
+                  <div class="osb-card-names" style="font-size:13px;color:#cbd5e1;margin-bottom:6px;"><i class="fas fa-user-friends"></i> ${stu}</div>
+                  <div class="osb-card-ans" style="background:#1e293b;padding:8px 12px;border-radius:6px;font-family:Consolas,monospace;font-size:13px;color:#f8fafc;white-space:pre-wrap;max-height:120px;overflow-y:auto;">${safeContent}</div>
+                </div>
+              `;
+            } else {
+              html += `
+                <div class="osb-card" style="margin-bottom:10px;background:rgba(15,23,42,0.5);border:1px dashed #334155;border-radius:8px;padding:10px;opacity:0.7;">
+                  <div class="osb-card-top" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span class="osb-badge-m" style="color:#64748b;"><i class="fas fa-desktop"></i> MÁY ${String(i).padStart(2,'0')}</span>
+                    <span class="osb-badge-status pending" style="color:#94a3b8;font-size:12px;"><i class="fas fa-hourglass-half"></i> Đang thực hành...</span>
+                  </div>
+                  <div class="osb-card-names" style="font-size:12px;color:#64748b;margin-top:4px;"><i class="fas fa-user-friends"></i> ${stuNames}</div>
+                </div>
+              `;
+            }
+          }
+          discList.innerHTML = html;
+        }
+      }
+
+      // Nếu ở Chặng 5: Render bảng xếp hạng Live Quiz Leaderboard
+      if (state.currentPhase === 'quiz') {
+        const qBoard = document.getElementById('quiz-leaderboard');
+        if (qBoard) {
+          const qAnswers = state.quizAnswers || {};
+          const entries = [];
+          Object.keys(qAnswers).forEach(mId => {
+            const ans = qAnswers[mId];
+            if (ans) {
+              const pair = classData.seatingPlan[mId] || [`Máy ${mId}`];
+              const stuNames = (typeof ans === 'object' && ans.students && ans.students.length > 0)
+                ? ans.students.join(' • ')
+                : pair.join(' • ');
+              const isCorr = typeof ans === 'object' ? !!ans.isCorrect : false;
+              const choice = typeof ans === 'object' ? ans.choice : ans;
+              const ts = (typeof ans === 'object' && ans.timestamp) ? ans.timestamp : 0;
+              entries.push({
+                machineId: parseInt(mId, 10),
+                students: stuNames,
+                isCorrect: isCorr,
+                choice: choice,
+                timestamp: ts
+              });
+            }
+          });
+
+          // Sắp xếp: Đúng lên đầu, rồi tới timestamp sớm nhất
+          entries.sort((a, b) => {
+            if (a.isCorrect !== b.isCorrect) return a.isCorrect ? -1 : 1;
+            return a.timestamp - b.timestamp;
+          });
+
+          let boardHtml = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+              <span style="font-size:13px;color:#94a3b8;">Tổng số máy đã nộp trắc nghiệm: <strong style="color:#38bdf8;">${entries.length}/18 máy</strong></span>
+            </div>
+          `;
+
+          if (entries.length === 0) {
+            boardHtml += '<div style="text-align:center;padding:30px;color:#64748b;"><i class="fas fa-clock" style="font-size:24px;margin-bottom:8px;display:block;"></i>Đang chờ học sinh các máy gửi phương án trắc nghiệm...</div>';
+          } else {
+            // Hiển thị Podium Top 3 nếu có
+            if (entries.length >= 1) {
+              boardHtml += '<div style="display:flex;justify-content:center;align-items:flex-end;gap:12px;margin-bottom:20px;padding:10px 0;">';
+              const topRank = [entries[1], entries[0], entries[2]]; // 2nd, 1st, 3rd
+              const heights = ['90px', '120px', '70px'];
+              const podiumColors = ['#94a3b8', '#f59e0b', '#b45309'];
+              const medals = ['🥈 Hạng 2', '🥇 Hạng 1', '🥉 Hạng 3'];
+
+              topRank.forEach((e, idx) => {
+                if (e) {
+                  boardHtml += `
+                    <div style="display:flex;flex-direction:column;align-items:center;flex:1;max-width:140px;">
+                      <div style="font-size:11px;font-weight:700;color:${podiumColors[idx]};margin-bottom:4px;">${medals[idx]}</div>
+                      <div style="font-size:12px;font-weight:800;color:#f8fafc;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;" title="${e.students}">Máy ${String(e.machineId).padStart(2,'0')}</div>
+                      <div style="width:100%;height:${heights[idx]};background:linear-gradient(180deg, ${podiumColors[idx]}44, ${podiumColors[idx]}11);border:1px solid ${podiumColors[idx]};border-radius:8px 8px 0 0;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+                        <span style="font-size:18px;font-weight:900;color:${podiumColors[idx]};">${idx === 1 ? '1' : (idx === 0 ? '2' : '3')}</span>
+                        <span style="font-size:11px;color:${e.isCorrect ? '#34d399' : '#ef4444'};">${e.isCorrect ? 'Đúng' : 'Sai'} (${e.choice})</span>
+                      </div>
+                    </div>
+                  `;
+                }
+              });
+              boardHtml += '</div>';
+            }
+
+            // Bảng danh sách tất cả các máy
+            boardHtml += '<div style="display:flex;flex-direction:column;gap:8px;">';
+            entries.forEach((e, idx) => {
+              const rankColor = idx === 0 ? '#f59e0b' : (idx === 1 ? '#94a3b8' : (idx === 2 ? '#b45309' : '#64748b'));
+              boardHtml += `
+                <div style="display:flex;justify-content:space-between;align-items:center;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:8px 12px;">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-weight:800;font-size:13px;width:24px;color:${rankColor};">#${idx + 1}</span>
+                    <span style="font-weight:700;color:#38bdf8;">MÁY ${String(e.machineId).padStart(2,'0')}</span>
+                    <span style="font-size:13px;color:#cbd5e1;">${e.students}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:12px;color:#94a3b8;">Chọn: <strong>${e.choice}</strong></span>
+                    <span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;background:${e.isCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};color:${e.isCorrect ? '#34d399' : '#ef4444'};">
+                      ${e.isCorrect ? '<i class="fas fa-check"></i> Đúng' : '<i class="fas fa-times"></i> Sai'}
+                    </span>
+                  </div>
+                </div>
+              `;
+            });
+            boardHtml += '</div>';
+          }
+          qBoard.innerHTML = boardHtml;
         }
       }
     },
@@ -2534,14 +2901,41 @@
       }
 
       if (currentPhase === 'warmup') {
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        if (lesson && lesson.warmup) {
+          const qEl = document.getElementById('poll-question-text');
+          if (qEl && lesson.warmup.question) qEl.textContent = lesson.warmup.question;
+          const codeEl = document.getElementById('poll-code-snippet');
+          if (codeEl) {
+            if (lesson.warmup.code) {
+              codeEl.textContent = lesson.warmup.code;
+              if (codeEl.parentElement) codeEl.parentElement.style.display = 'block';
+            } else if (codeEl.parentElement) {
+              codeEl.parentElement.style.display = 'none';
+            }
+          }
+          if (lesson.warmup.options) {
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+              const labelEl = document.querySelector(`.poll-opt-btn[data-choice="${opt}"] .poll-label`);
+              if (labelEl && lesson.warmup.options[opt]) {
+                labelEl.textContent = lesson.warmup.options[opt];
+              }
+            });
+          }
+        }
+
         const choice = state.pollSelection;
         document.querySelectorAll('.poll-opt-btn').forEach(btn => {
           btn.classList.toggle('selected', btn.dataset.choice === choice);
+          btn.disabled = !!state.pollLocked;
+          btn.classList.toggle('locked-poll', !!state.pollLocked);
         });
 
         const statusMsg = document.getElementById('poll-status-msg');
         if (statusMsg) {
-          if (choice) {
+          if (state.pollLocked) {
+            statusMsg.innerHTML = `<i class="fas fa-lock" style="color:#ef4444"></i> <strong style="color:#ef4444">Thầy đã khóa lựa chọn!</strong> ${choice ? `Nhóm bạn đã chốt phương án: <strong>${choice}</strong>.` : 'Đã hết thời gian bình chọn.'}`;
+          } else if (choice) {
             statusMsg.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Nhóm bạn đã chọn phương án <strong>${choice}</strong>. Đang chờ Thầy tổng kết và chiếu kết quả...`;
           } else {
             statusMsg.innerHTML = `<i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:`;
@@ -2564,10 +2958,20 @@
       }
 
       if (currentPhase === 'discussion') {
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        if (lesson && lesson.discussion) {
+          const titleEl = document.getElementById('disc-task-title');
+          if (titleEl && lesson.discussion.title) titleEl.textContent = lesson.discussion.title;
+          const taskEl = document.getElementById('disc-task-text');
+          if (taskEl && lesson.discussion.task) taskEl.textContent = lesson.discussion.task;
+          const inputEl = document.getElementById('disc-answer-input');
+          if (inputEl && lesson.discussion.placeholder) inputEl.placeholder = lesson.discussion.placeholder;
+        }
+
         // Cột trái tra cứu
         const refContainer = document.getElementById('disc-theory-reference');
-        if (refContainer && lessonData && lessonData.theory) {
-          refContainer.innerHTML = lessonData.theory.map(c => `
+        if (refContainer && lesson && lesson.theory) {
+          refContainer.innerHTML = lesson.theory.map(c => `
             <div class="ref-mini-card">
               <div class="ref-mini-title">${c.title}</div>
               <div class="ref-mini-text">${c.summary}</div>
@@ -2587,9 +2991,23 @@
       }
 
       if (currentPhase === 'quiz') {
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        if (lesson && lesson.quiz) {
+          const qText = document.getElementById('quiz-question-text');
+          if (qText && lesson.quiz.question) qText.textContent = lesson.quiz.question;
+          if (lesson.quiz.options) {
+            ['A', 'B', 'C', 'D'].forEach(opt => {
+              const labelEl = document.querySelector(`.quiz-opt[data-qopt="${opt}"] .qo-label`);
+              if (labelEl && lesson.quiz.options[opt]) {
+                labelEl.textContent = lesson.quiz.options[opt];
+              }
+            });
+          }
+        }
+
         const choice = state.quizSelection;
         const isAnswered = state.quizAnswered;
-        const correct = lessonData.quiz.correct;
+        const correct = (lesson && lesson.quiz) ? lesson.quiz.correct : 'C';
 
         document.querySelectorAll('.quiz-opt').forEach(btn => {
           const opt = btn.dataset.qopt;
@@ -2611,7 +3029,8 @@
               feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
               feedback.style.color = '#fca5a5';
               feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
-              feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. Đáp án đúng là <strong>${correct}</strong>: ${lessonData.quiz.options[correct]}`;
+              const correctLabel = (lesson && lesson.quiz && lesson.quiz.options && lesson.quiz.options[correct]) ? lesson.quiz.options[correct] : '';
+              feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. Đáp án đúng là <strong>${correct}</strong>: ${correctLabel}`;
             }
           } else {
             feedback.style.display = 'none';
@@ -3082,7 +3501,7 @@
         if (reelM) {
           const targetItemIdx = 18 * 2 + (targetMachine - 1);
           reelM.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-          reelM.style.transform = `translateY(-${targetItemIdx * 100}px)`;
+          reelM.style.transform = `translateY(-${targetItemIdx * 110}px)`;
         }
 
         if (reelS) {
@@ -3097,7 +3516,7 @@
           const sTargetIdx = sList.length * 6 + sList.indexOf(targetStudent);
           setTimeout(() => {
             reelS.style.transition = `transform ${duration - 1000}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-            reelS.style.transform = `translateY(-${sTargetIdx * 100}px)`;
+            reelS.style.transform = `translateY(-${sTargetIdx * 110}px)`;
           }, 1000);
         }
       } else if (strategy === 'wheel_fortune') {
@@ -3331,6 +3750,7 @@
 
     if (tab === 'classes') {
       APP.renderSettingsSeatingGrid();
+      APP.renderClassesSeatingPreview();
     } else if (tab === 'studio') {
       APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin10_bai12');
     }
@@ -3417,13 +3837,15 @@
     STORE.setState({
       currentPhase: 'waiting',
       teacherPhase: 'waiting',
-      lastFinishedActivity: null
+      lastFinishedActivity: null,
+      pollLocked: false
     });
     SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', resetByTeacher: true });
     if (db) {
       db.ref('activeSession').update({
         currentPhase: 'waiting',
         lastFinishedActivity: null,
+        pollLocked: false,
         lastUpdated: Date.now()
       }).then(() => {
         console.log('[Firebase] Đã reset toàn bộ 18 máy về phòng chờ thành công!');
@@ -3489,10 +3911,19 @@
     } else {
       sel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh)</option><option value="10A2">Lớp 10A2 (36 học sinh)</option><option value="10A3">Lớp 10A3 (34 học sinh)</option>';
     }
+    const currentCls = sel.value;
+    STORE.setState({ classId: currentCls });
+    APP.renderClassesSeatingPreview();
   };
 
-  window.teacherSelectClassForEdit = function(_c) {
+  window.teacherSelectClassForEdit = function(c) {
+    if (c) STORE.setState({ classId: c });
     APP.renderSettingsSeatingGrid();
+    APP.renderClassesSeatingPreview();
+  };
+
+  window.onSelectDesk = window.onSelectMachine = function(num) {
+    APP.onSelectMachine(num);
   };
 
   // Khởi động ứng dụng khi DOM sẵn sàng
