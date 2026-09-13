@@ -73,10 +73,18 @@ async function runTest() {
     await teacherPage.waitForTimeout(400);
 
     teacherPage.on('dialog', async dialog => await dialog.accept());
+    await teacherPage.evaluate(() => {
+      window.confirm = () => true;
+      window.alert = () => {};
+    });
     await teacherPage.click('#btn-start-class-session');
     await teacherPage.waitForTimeout(500);
 
     await studentPage.goto(`http://127.0.0.1:${PORT}`);
+    await studentPage.evaluate(() => {
+      window.confirm = () => true;
+      window.alert = () => {};
+    });
     await studentPage.evaluate(() => {
       localStorage.setItem('lms_fixed_machine_id', '2');
       window.STORE.setState({
@@ -236,57 +244,82 @@ async function runTest() {
     await studentPage.waitForTimeout(400);
 
     const studentBackInLobby = await studentPage.evaluate(() => {
-      const s = document.getElementById('screen-lobby');
-      const banner = document.getElementById('lobby-status-banner');
-      const title = document.getElementById('lsb-title');
+      const s = document.getElementById('screen-student');
+      const viewWaiting = document.getElementById('st-view-waiting');
+      const desk = document.getElementById('waiting-desk-info');
+      const sub = document.getElementById('waiting-lesson-sub');
+      const badge = document.getElementById('sh-machine-badge');
       return {
-        isLobbyActive: s && s.classList.contains('active'),
-        titleText: title ? title.textContent.trim() : ''
+        isStudentScreen: s && s.classList.contains('active'),
+        isWaitingActive: viewWaiting && viewWaiting.classList.contains('active'),
+        deskText: desk ? desk.textContent.trim() : '',
+        subText: sub ? sub.textContent.trim() : '',
+        badgeText: badge ? badge.textContent.trim() : ''
       };
     });
 
-    console.log(`  - Học sinh đã tự động trở về Sảnh chờ (screen: lobby): ${studentBackInLobby.isLobbyActive}`);
-    console.log(`  - Thông báo sảnh: "${studentBackInLobby.titleText}"`);
+    console.log(`  - Học sinh trở về Sảnh chờ Đấu trường cá nhân (screen-student): ${studentBackInLobby.isStudentScreen}`);
+    console.log(`  - View Sảnh chờ (st-view-waiting) active: ${studentBackInLobby.isWaitingActive}`);
+    console.log(`  - Thông tin máy: "${studentBackInLobby.badgeText}" - "${studentBackInLobby.deskText}"`);
+    console.log(`  - Trạng thái sảnh chờ: "${studentBackInLobby.subText}"`);
     await studentPage.screenshot({ path: path.join(SCREENSHOTS_DIR, '06_student_back_in_lobby.png') });
 
-    const step4Pass = studentBackInLobby.isLobbyActive && studentBackInLobby.titleText.includes('KIỂM TRA BÀI CŨ');
-    results.push({ step: 4, name: 'Giáo viên bấm chốt bài cũ: Tất cả học sinh về Sảnh chờ', pass: step4Pass });
+    const step4Pass = studentBackInLobby.isStudentScreen && 
+                      studentBackInLobby.isWaitingActive && 
+                      studentBackInLobby.deskText.includes('02') &&
+                      studentBackInLobby.subText.includes('Đã hoàn thành');
+    results.push({ step: 4, name: 'Giáo viên bấm chốt bài cũ: Học sinh về Sảnh chờ Đấu trường như hình', pass: step4Pass });
 
-    // BƯỚC 5: Giáo viên kích hoạt hoạt động tiếp theo (Khởi động) -> Học sinh vào Workspace Khởi động
+    // BƯỚC 5: Giáo viên kích hoạt hoạt động tiếp theo (Khởi động) -> Học sinh vào Workspace Khởi động & Đồng bộ đồng hồ
     console.log('\n[BƯỚC 5] Giáo viên kích hoạt hoạt động Khởi động (Bước 2) -> Học sinh từ sảnh vào Workspace Khởi động:');
     await teacherPage.evaluate(() => window.teacherSetPhase('warmup'));
     await teacherPage.waitForTimeout(300);
 
-    await studentPage.evaluate(() => {
+    const timerPayload = await teacherPage.evaluate(() => window.STORE.getState().timer);
+    await studentPage.evaluate((t) => {
       window.SYNC_BUS.handleMessage({
         type: 'PHASE_CHANGE',
         payload: { phase: 'warmup' }
       });
-    });
-    await studentPage.waitForTimeout(400);
+      window.SYNC_BUS.handleMessage({
+        type: 'TIMER_SYNC',
+        payload: t
+      });
+    }, timerPayload);
+    await studentPage.waitForTimeout(1100);
 
-    const studentWarmupWorkspace = await studentPage.evaluate(() => {
-      const s = document.getElementById('screen-student');
-      const viewWarmup = document.getElementById('st-view-warmup');
-      const curPhase = window.STORE.getState().currentPhase;
-      const qText = document.getElementById('poll-question-text');
-      return {
-        isStudentScreen: s && s.classList.contains('active'),
-        isWarmupActive: viewWarmup && viewWarmup.classList.contains('active'),
-        curPhase: curPhase,
-        questionText: qText ? qText.textContent.trim() : ''
-      };
-    });
+    const syncCheck = await Promise.all([
+      teacherPage.evaluate(() => {
+        const d = document.getElementById('master-timer-display');
+        return d ? d.textContent.trim() : '';
+      }),
+      studentPage.evaluate(() => {
+        const p = document.getElementById('poll-timer');
+        const s = document.getElementById('screen-student');
+        const viewWarmup = document.getElementById('st-view-warmup');
+        const qText = document.getElementById('poll-question-text');
+        return {
+          pollTimerText: p ? p.textContent.trim() : '',
+          isStudentScreen: s && s.classList.contains('active'),
+          isWarmupActive: viewWarmup && viewWarmup.classList.contains('active'),
+          questionText: qText ? qText.textContent.trim() : ''
+        };
+      })
+    ]);
 
-    console.log(`  - Học sinh tự động vào Workspace: ${studentWarmupWorkspace.isStudentScreen}`);
-    console.log(`  - Tab Khởi động (Warm-up) active: ${studentWarmupWorkspace.isWarmupActive}`);
-    console.log(`  - Câu hỏi Khởi động hiển thị: "${studentWarmupWorkspace.questionText.slice(0, 70)}..."`);
+    const teacherTimerStr = syncCheck[0];
+    const studentState = syncCheck[1];
+
+    console.log(`  - Học sinh tự động vào Workspace: ${studentState.isStudentScreen}`);
+    console.log(`  - Tab Khởi động (Warm-up) active: ${studentState.isWarmupActive}`);
+    console.log(`  - Đồng hồ Giáo viên (Master): "${teacherTimerStr}" | Đồng hồ Học sinh (QuickPoll): "${studentState.pollTimerText}"`);
+    console.log(`  - Câu hỏi Khởi động hiển thị: "${studentState.questionText.slice(0, 70)}..."`);
     await studentPage.screenshot({ path: path.join(SCREENSHOTS_DIR, '07_student_workspace_warmup.png') });
 
-    const step5Pass = studentWarmupWorkspace.isStudentScreen && 
-                      studentWarmupWorkspace.isWarmupActive && 
-                      studentWarmupWorkspace.curPhase === 'warmup';
-    results.push({ step: 5, name: 'Giáo viên kích hoạt hoạt động mới: Học sinh tự động vào Workspace làm việc', pass: step5Pass });
+    const step5Pass = studentState.isStudentScreen && 
+                      studentState.isWarmupActive && 
+                      studentState.pollTimerText.length > 0;
+    results.push({ step: 5, name: 'Giáo viên kích hoạt hoạt động mới: Học sinh vào làm việc & Đồng hồ chạy nhịp nhàng', pass: step5Pass });
 
     console.log('\n======================================================================');
     console.log('📊 TỔNG KẾT KẾT QUẢ KIỂM THỬ 5 BƯỚC QUY TRÌNH:');

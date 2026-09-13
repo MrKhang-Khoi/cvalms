@@ -670,21 +670,32 @@
                 EMBEDDED_LESSONS[val.lessonData.id] = val.lessonData;
               }
 
-              // 3. Đồng bộ tiến trình sư phạm & Phòng chờ (Nguyên lý bất biến: waiting = lobby, active phase = student)
+              // 3. Đồng bộ tiến trình sư phạm & Phòng chờ (Nếu đã có máy -> Sảnh chờ Đấu trường cá nhân st-view-waiting như hình)
               if (state.role === 'student' && val.currentPhase !== undefined) {
+                let mId = state.machineId || state.fixedMachineId;
+                if (!mId) {
+                  try {
+                    const saved = localStorage.getItem('lms_fixed_machine_id');
+                    if (saved) mId = parseInt(saved, 10);
+                  } catch {}
+                }
+
                 if (val.currentPhase === 'waiting' || val.returnToLobby) {
-                  updates.screen = 'lobby';
-                  updates.currentPhase = 'waiting';
+                  if (mId) {
+                    const classData = APP.classes[state.classId] || APP.classes['10A1'];
+                    const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+                    updates.screen = 'student';
+                    updates.currentPhase = 'waiting';
+                    updates.machineId = mId;
+                    updates.fixedMachineId = mId;
+                    updates.students = pair;
+                  } else {
+                    updates.screen = 'lobby';
+                    updates.currentPhase = 'waiting';
+                  }
                   const overlay = document.getElementById('activity-countdown-overlay');
                   if (overlay) overlay.style.display = 'none';
                 } else if (val.currentPhase !== 'waiting') {
-                  let mId = state.machineId || state.fixedMachineId;
-                  if (!mId) {
-                    try {
-                      const saved = localStorage.getItem('lms_fixed_machine_id');
-                      if (saved) mId = parseInt(saved, 10);
-                    } catch {}
-                  }
                   if (mId) {
                     const classData = APP.classes[state.classId] || APP.classes['10A1'];
                     const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
@@ -701,10 +712,10 @@
               if (val.lastFinishedActivity !== undefined) {
                 updates.lastFinishedActivity = val.lastFinishedActivity;
               }
-              if (val.timer && state.role === 'student') {
+              if (val.timer) {
                 updates.timer = val.timer;
-                if (typeof val.timer.secondsLeft === 'number') {
-                  APP.updateMasterTimerDisplay(val.timer.secondsLeft);
+                if (window.APP && window.APP.syncMasterCountdown) {
+                  window.APP.syncMasterCountdown(val.timer);
                 }
               }
               if (val.sessionStarted !== undefined && val.sessionStarted !== state.sessionStarted) {
@@ -826,19 +837,30 @@
             currentPhase: nextPhase,
             lastFinishedActivity: data.payload.lastFinished || null
           };
+          let mId = state.machineId || state.fixedMachineId;
+          if (!mId) {
+            try {
+              const saved = localStorage.getItem('lms_fixed_machine_id');
+              if (saved) mId = parseInt(saved, 10);
+            } catch {}
+          }
+
           if (nextPhase === 'waiting' || data.payload.resetByTeacher || data.payload.returnToLobby) {
-            updates.screen = 'lobby';
-            updates.currentPhase = 'waiting';
+            if (mId) {
+              const classData = APP.classes[state.classId] || APP.classes['10A1'];
+              const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
+              updates.screen = 'student';
+              updates.currentPhase = 'waiting';
+              updates.machineId = mId;
+              updates.fixedMachineId = mId;
+              updates.students = pair;
+            } else {
+              updates.screen = 'lobby';
+              updates.currentPhase = 'waiting';
+            }
             const overlay = document.getElementById('activity-countdown-overlay');
             if (overlay) overlay.style.display = 'none';
           } else {
-            let mId = state.machineId || state.fixedMachineId;
-            if (!mId) {
-              try {
-                const saved = localStorage.getItem('lms_fixed_machine_id');
-                if (saved) mId = parseInt(saved, 10);
-              } catch {}
-            }
             if (mId) {
               const classData = APP.classes[state.classId] || APP.classes['10A1'];
               const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
@@ -851,6 +873,13 @@
             }
           }
           STORE.setState(updates);
+        }
+      } else if (data.type === 'TIMER_SYNC') {
+        if (data.payload) {
+          STORE.setState({ timer: data.payload });
+          if (window.APP && window.APP.syncMasterCountdown) {
+            window.APP.syncMasterCountdown(data.payload);
+          }
         }
       } else if (data.type === 'START_COUNTDOWN') {
         APP.handleRemoteCountdown(data.payload);
@@ -867,11 +896,26 @@
         }
       } else if (data.type === 'OLD_LESSON_DONE_RETURN_LOBBY') {
         if (state.role === 'student') {
+          let mId = state.machineId || state.fixedMachineId;
+          if (!mId) {
+            try {
+              const saved = localStorage.getItem('lms_fixed_machine_id');
+              if (saved) mId = parseInt(saved, 10);
+            } catch {}
+          }
+          const classData = APP.classes[state.classId] || APP.classes['10A1'];
+          const pair = mId ? (classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"]) : null;
+
           STORE.setState({
-            screen: 'lobby',
+            screen: mId ? 'student' : 'lobby',
             currentPhase: 'waiting',
+            machineId: mId,
+            fixedMachineId: mId,
+            students: pair,
             lastFinishedActivity: data.payload && data.payload.lastFinished ? data.payload.lastFinished : 'Kiểm tra bài cũ'
           });
+          const overlay = document.getElementById('activity-countdown-overlay');
+          if (overlay) overlay.style.display = 'none';
         }
       } else if (data.type === 'OLD_LESSON_SPOTLIGHT') {
         if (data.payload) {
@@ -3248,115 +3292,134 @@
       }
     },
 
-    masterTimerInterval: null,
+    syncTimerInterval: null,
 
+    // Cập nhật tất cả các vị trí hiển thị đồng hồ trên giao diện (GV & HS)
     updateMasterTimerDisplay(sec) {
-      const display = document.getElementById('master-timer-display');
-      const olTimer = document.getElementById('ol-timer');
       const safeSec = Math.max(0, Math.floor(sec || 0));
       const mins = Math.floor(safeSec / 60);
       const secs = safeSec % 60;
       const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 
-      if (display) {
-        display.textContent = formatted;
-        if (safeSec <= 30 && safeSec > 0) {
-          display.classList.add('tmc-timer-warning');
-        } else {
-          display.classList.remove('tmc-timer-warning');
-        }
+      const masterDisplay = document.getElementById('master-timer-display');
+      const otsDisplay = document.getElementById('ots-timer-display');
+      const olTimer = document.getElementById('ol-timer');
+      const pollTimer = document.getElementById('poll-timer');
+
+      if (masterDisplay) {
+        masterDisplay.textContent = formatted;
+        masterDisplay.classList.toggle('tmc-timer-warning', safeSec <= 30 && safeSec > 0);
       }
-      if (olTimer) {
-        olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
-      }
+      if (otsDisplay) otsDisplay.textContent = formatted;
+      if (olTimer) olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
+      if (pollTimer) pollTimer.innerHTML = `<i class="fas fa-clock"></i> ${safeSec > 60 ? formatted : safeSec + 's'}`;
     },
 
-    startMasterCountdown(seconds, phaseName, onExpire) {
-      if (this.masterTimerInterval) {
-        clearInterval(this.masterTimerInterval);
-        this.masterTimerInterval = null;
+    // Đồng bộ đồng hồ nhịp nhàng từng giây theo mốc NTP chung (Lockstep Sync)
+    syncMasterCountdown(timerData, onExpire) {
+      if (this.syncTimerInterval) {
+        clearInterval(this.syncTimerInterval);
+        this.syncTimerInterval = null;
       }
-      const initialSec = (typeof seconds === 'number' && seconds > 0) ? seconds : 120;
-      STORE.setState({
-        timer: {
-          secondsLeft: initialSec,
-          totalSeconds: initialSec,
-          isRunning: true,
-          paused: false,
-          phase: phaseName || STORE.getState().currentPhase || 'waiting'
+      if (!timerData || !timerData.isRunning) {
+        const sec = timerData ? (timerData.secondsLeft || 0) : 0;
+        this.updateMasterTimerDisplay(sec);
+        return;
+      }
+
+      const updateTick = () => {
+        const offset = window._serverTimeOffset || 0;
+        const nowServer = Date.now() + offset;
+        let remaining = 0;
+
+        if (timerData.paused) {
+          remaining = Math.max(0, Math.floor(timerData.secondsLeft || 0));
+        } else if (timerData.endTime) {
+          remaining = Math.max(0, Math.ceil((timerData.endTime - nowServer) / 1000));
+        } else {
+          remaining = Math.max(0, Math.floor(timerData.secondsLeft || 0));
         }
-      });
-      this.updateMasterTimerDisplay(initialSec);
 
-      const btnPause = document.getElementById('btn-master-pause-timer');
-      if (btnPause) btnPause.innerHTML = '<i class="fas fa-pause"></i> Tạm dừng';
+        this.updateMasterTimerDisplay(remaining);
+        STORE.setState({
+          timer: Object.assign({}, timerData, { secondsLeft: remaining })
+        });
 
-      if (db) {
-        db.ref('activeSession/timer').set({
-          secondsLeft: initialSec,
-          totalSeconds: initialSec,
-          isRunning: true,
-          paused: false,
-          phase: phaseName || STORE.getState().currentPhase || 'waiting',
-          updatedAt: Date.now()
-        }).catch(()=>{});
-      }
-
-      this.masterTimerInterval = setInterval(() => {
-        const state = STORE.getState();
-        const t = state.timer;
-        if (!t || !t.isRunning || t.paused) return;
-
-        if (t.secondsLeft <= 0) {
-          clearInterval(this.masterTimerInterval);
-          this.masterTimerInterval = null;
+        if (STORE.getState().currentPhase === 'old_lesson') {
           STORE.setState({
-            timer: Object.assign({}, t, { secondsLeft: 0, isRunning: false })
+            oldLesson: Object.assign({}, STORE.getState().oldLesson, { timeLeft: remaining })
           });
-          this.updateMasterTimerDisplay(0);
+        }
 
+        if (remaining <= 0 && !timerData.paused) {
+          clearInterval(this.syncTimerInterval);
+          this.syncTimerInterval = null;
+          this.updateMasterTimerDisplay(0);
           if (typeof onExpire === 'function') {
             onExpire();
           } else {
             this.onActivityAutoFinished();
           }
-          return;
         }
+      };
 
-        const nextSec = t.secondsLeft - 1;
-        STORE.setState({
-          timer: Object.assign({}, t, { secondsLeft: nextSec })
-        });
-        this.updateMasterTimerDisplay(nextSec);
+      updateTick();
+      this.syncTimerInterval = setInterval(updateTick, 1000);
+    },
 
-        if (state.currentPhase === 'old_lesson') {
-          STORE.setState({
-            oldLesson: Object.assign({}, state.oldLesson, { timeLeft: nextSec })
-          });
+    startMasterCountdown(seconds, phaseName, onExpire) {
+      if (this.syncTimerInterval) {
+        clearInterval(this.syncTimerInterval);
+        this.syncTimerInterval = null;
+      }
+      const initialSec = (typeof seconds === 'number' && seconds > 0) ? seconds : 120;
+      const offset = window._serverTimeOffset || 0;
+      const nowServer = Date.now() + offset;
+      const endTime = nowServer + (initialSec * 1000);
+
+      const timerObj = {
+        secondsLeft: initialSec,
+        totalSeconds: initialSec,
+        isRunning: true,
+        paused: false,
+        phase: phaseName || STORE.getState().currentPhase || 'waiting',
+        startedAt: nowServer,
+        endTime: endTime
+      };
+
+      STORE.setState({ timer: timerObj });
+      this.updateMasterTimerDisplay(initialSec);
+
+      const btnPause = document.getElementById('btn-master-pause-timer');
+      if (btnPause) btnPause.innerHTML = '<i class="fas fa-pause"></i> Tạm dừng';
+
+      SYNC_BUS.broadcast('TIMER_SYNC', timerObj);
+      safeFirebaseUpdate('activeSession/timer', timerObj).catch(()=>{});
+
+      this.syncMasterCountdown(timerObj, () => {
+        if (typeof onExpire === 'function') {
+          onExpire();
+        } else {
+          this.onActivityAutoFinished();
         }
-
-        if (nextSec % 5 === 0 || nextSec <= 10) {
-          if (db) {
-            db.ref('activeSession/timer/secondsLeft').set(nextSec).catch(()=>{});
-          }
-        }
-      }, 1000);
+      });
     },
 
     stopMasterTimer() {
-      if (this.masterTimerInterval) {
-        clearInterval(this.masterTimerInterval);
-        this.masterTimerInterval = null;
+      if (this.syncTimerInterval) {
+        clearInterval(this.syncTimerInterval);
+        this.syncTimerInterval = null;
       }
       const s = STORE.getState();
-      STORE.setState({
-        timer: Object.assign({}, s.timer, { isRunning: false, paused: false })
-      });
+      const stoppedTimer = Object.assign({}, s.timer, { isRunning: false, paused: false, secondsLeft: 0 });
+      STORE.setState({ timer: stoppedTimer });
+      this.updateMasterTimerDisplay(0);
+
       const btnPause = document.getElementById('btn-master-pause-timer');
       if (btnPause) btnPause.innerHTML = '<i class="fas fa-pause"></i> Tạm dừng';
-      if (db) {
-        db.ref('activeSession/timer/isRunning').set(false).catch(()=>{});
-      }
+
+      SYNC_BUS.broadcast('TIMER_SYNC', stoppedTimer);
+      safeFirebaseUpdate('activeSession/timer', stoppedTimer).catch(()=>{});
     },
 
     onActivityAutoFinished() {
@@ -4054,33 +4117,61 @@
     }, 3800);
   };
 
-  // Master Timer Controls
+  // Master Timer Controls với Lockstep NTP Sync
   window.masterPauseTimer = function() {
     const s = STORE.getState();
-    const isPaused = !s.timer.paused;
-    STORE.setState({ timer: Object.assign({}, s.timer, { paused: isPaused }) });
+    const t = s.timer || {};
+    const isPaused = !t.paused;
+    const offset = window._serverTimeOffset || 0;
+    const nowServer = Date.now() + offset;
+
+    let updatedTimer;
+    if (isPaused) {
+      const remaining = Math.max(0, Math.ceil(((t.endTime || (nowServer + (t.secondsLeft || 0) * 1000)) - nowServer) / 1000));
+      updatedTimer = Object.assign({}, t, {
+        paused: true,
+        secondsLeft: remaining
+      });
+    } else {
+      const remaining = Math.max(0, t.secondsLeft || 0);
+      updatedTimer = Object.assign({}, t, {
+        paused: false,
+        endTime: nowServer + (remaining * 1000)
+      });
+    }
+
+    STORE.setState({ timer: updatedTimer });
     const btn = document.getElementById('btn-master-pause-timer');
     if (btn) btn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Tiếp tục' : '<i class="fas fa-pause"></i> Tạm dừng';
-    if (db) {
-      db.ref('activeSession/timer/paused').set(isPaused).catch(()=>{});
-    }
+
+    APP.syncMasterCountdown(updatedTimer, () => APP.onActivityAutoFinished());
+    SYNC_BUS.broadcast('TIMER_SYNC', updatedTimer);
+    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(()=>{});
   };
 
   window.masterAddTime = function(sec = 30) {
     const s = STORE.getState();
-    const currentLeft = (s.timer && typeof s.timer.secondsLeft === 'number') ? s.timer.secondsLeft : 0;
+    const t = s.timer || {};
+    const offset = window._serverTimeOffset || 0;
+    const nowServer = Date.now() + offset;
+
+    const currentLeft = t.secondsLeft || 0;
     const newSecondsLeft = currentLeft + sec;
-    const newTotal = (s.timer && s.timer.totalSeconds ? s.timer.totalSeconds : currentLeft) + sec;
-    STORE.setState({
-      timer: Object.assign({}, s.timer, {
-        secondsLeft: newSecondsLeft,
-        totalSeconds: newTotal
-      })
+    const newTotal = (t.totalSeconds || currentLeft) + sec;
+    const newEndTime = (t.endTime || (nowServer + currentLeft * 1000)) + (sec * 1000);
+
+    const updatedTimer = Object.assign({}, t, {
+      secondsLeft: newSecondsLeft,
+      totalSeconds: newTotal,
+      endTime: newEndTime
     });
+
+    STORE.setState({ timer: updatedTimer });
     APP.updateMasterTimerDisplay(newSecondsLeft);
-    if (db) {
-      db.ref('activeSession/timer/secondsLeft').set(newSecondsLeft).catch(()=>{});
-    }
+
+    APP.syncMasterCountdown(updatedTimer, () => APP.onActivityAutoFinished());
+    SYNC_BUS.broadcast('TIMER_SYNC', updatedTimer);
+    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(()=>{});
   };
 
   // Nút RESET VỀ PHÒNG CHỜ từ Giáo viên
