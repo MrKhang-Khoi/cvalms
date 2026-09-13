@@ -610,33 +610,41 @@ print(s[4:])</code></pre>
         <div class="quiz-container">
           <div class="quiz-header-card">
             <span class="badge-tag"><i class="fas fa-trophy"></i> CHẶNG 4: TRẮC NGHIỆM THI ĐUA (LIVE QUIZ)</span>
-            <h2>Câu hỏi củng cố kiến thức</h2>
-            <p>Hệ thống tự động chấm điểm và tính vận tốc phản hồi để xếp hạng giữa 18 máy.</p>
+            <h2>Đấu trường Trắc nghiệm Tương tác</h2>
+            <p><i class="fas fa-shield-alt" style="color:#38bdf8;"></i> Hệ thống tự động đảo ngẫu nhiên đáp án chống nhìn bài & xếp hạng thi đua 18 máy theo thời gian thực.</p>
           </div>
 
           <div class="quiz-card">
-            <div class="quiz-q-num">Câu hỏi 1 / 1</div>
+            <div class="quiz-top-bar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <div class="quiz-q-num" id="quiz-q-num" style="color:#38bdf8;font-weight:700;">Câu hỏi 1 / 1</div>
+              <div class="quiz-nav-pills" id="quiz-nav-pills" style="display:flex;gap:6px;"></div>
+            </div>
             <div class="quiz-question" id="quiz-question-text">
               Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?
             </div>
-            <div class="quiz-options-grid">
-              <button class="quiz-opt" data-qopt="A">
-                <span class="qo-key">A</span>
-                <span class="qo-label">Không thể truy cập các ký tự qua chỉ số index</span>
-              </button>
-              <button class="quiz-opt" data-qopt="B">
-                <span class="qo-key">B</span>
-                <span class="qo-label">Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo</span>
-              </button>
-              <button class="quiz-opt" data-qopt="C">
-                <span class="qo-key">C</span>
-                <span class="qo-label">Không thể dùng hàm len() để tính độ dài xâu</span>
-              </button>
-              <button class="quiz-opt" data-qopt="D">
-                <span class="qo-key">D</span>
-                <span class="qo-label">Xâu chỉ chứa được chữ số, không chứa được chữ cái</span>
-              </button>
+            
+            <!-- Vùng hiển thị động các dạng câu hỏi (Single Choice đảo màu, Đúng/Sai 4 ý, Điền kết quả) -->
+            <div id="quiz-dynamic-body">
+              <div class="quiz-options-grid" id="quiz-options-grid">
+                <button class="quiz-opt" data-qopt="A">
+                  <span class="qo-key">A</span>
+                  <span class="qo-label">Không thể truy cập các ký tự qua chỉ số index</span>
+                </button>
+                <button class="quiz-opt" data-qopt="B">
+                  <span class="qo-key">B</span>
+                  <span class="qo-label">Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo</span>
+                </button>
+                <button class="quiz-opt" data-qopt="C">
+                  <span class="qo-key">C</span>
+                  <span class="qo-label">Không thể dùng hàm len() để tính độ dài xâu</span>
+                </button>
+                <button class="quiz-opt" data-qopt="D">
+                  <span class="qo-key">D</span>
+                  <span class="qo-label">Xâu chỉ chứa được chữ số, không chứa được chữ cái</span>
+                </button>
+              </div>
             </div>
+
             <div class="quiz-feedback" id="quiz-feedback-box" style="display:none;">
               <!-- Phản hồi sau khi chọn -->
             </div>
@@ -894,69 +902,12 @@ print(s[4:])</code></pre>
                   </div>
                 </div>
 
-                <!-- Bước 3: ĐẤU TRƯỜNG KAHOOT (LIVE QUIZ) -->
+                <!-- Bước 3: THỰC HÀNH & THẢO LUẬN TRÊN MÁY -->
                 <div class="studio-step-card" data-step="3">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 3: ĐẤU TRƯỜNG KAHOOT (QUIZ 4 MÀU)</div>
+                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 3: THỰC HÀNH & THẢO LUẬN (CODE PYTHON)</div>
                     <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
                       <input type="checkbox" checked id="step-toggle-3">
-                      <span class="slider round"></span>
-                    </label>
-                  </div>
-                  <div class="ssc-body">
-                    <div class="studio-form-row">
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-hourglass-half"></i> Thời gian mỗi câu hỏi:</label>
-                        <select class="studio-select" id="step-time-3">
-                          <option value="15">15 giây</option>
-                          <option value="20" selected>20 giây</option>
-                          <option value="30">30 giây</option>
-                        </select>
-                      </div>
-                      <div class="studio-form-col">
-                        <label class="studio-field-label"><i class="fas fa-check-circle"></i> Đáp án đúng:</label>
-                        <select class="studio-select" id="studio-quiz-correct">
-                          <option value="A">Đáp án A (Đỏ)</option>
-                          <option value="B" selected>Đáp án B (Lam)</option>
-                          <option value="C">Đáp án C (Vàng)</option>
-                          <option value="D">Đáp án D (Lục)</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi trắc nghiệm Đấu trường:</label>
-                      <textarea class="studio-textarea" id="studio-quiz-q" rows="2" placeholder="Nhập nội dung câu hỏi trắc nghiệm...">Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?</textarea>
-                    </div>
-                    <div class="studio-form-group">
-                      <label class="studio-field-label"><i class="fas fa-palette"></i> 4 Phương án trả lời (4 Màu Đấu trường Kahoot):</label>
-                      <div class="studio-kahoot-grid">
-                        <div class="sk-card sk-red">
-                          <div class="sk-badge">A (ĐỎ)</div>
-                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-a" value="Không thể truy cập các ký tự qua chỉ số index" placeholder="Phương án A (Đỏ)...">
-                        </div>
-                        <div class="sk-card sk-blue">
-                          <div class="sk-badge">B (LAM)</div>
-                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-b" value="Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" placeholder="Phương án B (Lam)...">
-                        </div>
-                        <div class="sk-card sk-yellow">
-                          <div class="sk-badge">C (VÀNG)</div>
-                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-c" value="Không thể dùng hàm len() để tính độ dài xâu" placeholder="Phương án C (Vàng)...">
-                        </div>
-                        <div class="sk-card sk-green">
-                          <div class="sk-badge">D (LỤC)</div>
-                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-d" value="Xâu chỉ chứa được chữ số, không chứa được chữ cái" placeholder="Phương án D (Lục)...">
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Bước 4: THỰC HÀNH TRÊN MÁY -->
-                <div class="studio-step-card" data-step="4">
-                  <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-laptop-code"></i> BƯỚC 4: THỰC HÀNH TRÊN MÁY (CODE PYTHON)</div>
-                    <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
-                      <input type="checkbox" checked id="step-toggle-4">
                       <span class="slider round"></span>
                     </label>
                   </div>
@@ -968,7 +919,7 @@ print(s[4:])</code></pre>
                       </div>
                       <div class="studio-form-col">
                         <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng thực hành:</label>
-                        <select class="studio-select" id="step-time-4">
+                        <select class="studio-select" id="step-time-3">
                           <option value="300">5 phút</option>
                           <option value="600" selected>10 phút</option>
                           <option value="720">12 phút</option>
@@ -996,17 +947,120 @@ print("2. Cắt xâu:", s[10:17])
                   </div>
                 </div>
 
-                <!-- Bước 5: TỔNG KẾT & VINH DANH -->
-                <div class="studio-step-card" data-step="5">
+                <!-- Bước 4: ĐẤU TRƯỜNG KAHOOT & VINH DANH PODIUM -->
+                <div class="studio-step-card" data-step="4">
                   <div class="ssc-header">
-                    <div class="ssc-title"><i class="fas fa-award"></i> BƯỚC 5: TỔNG KẾT & VINH DANH PODIUM</div>
+                    <div class="ssc-title"><i class="fas fa-trophy"></i> BƯỚC 4: ĐẤU TRƯỜNG KAHOOT & VINH DANH PODIUM</div>
                     <label class="switch-toggle" title="Bật/Tắt bước này trong tiết dạy">
-                      <input type="checkbox" checked id="step-toggle-5">
+                      <input type="checkbox" checked id="step-toggle-4">
                       <span class="slider round"></span>
                     </label>
                   </div>
                   <div class="ssc-body">
-                    <p style="color:#94a3b8;margin:0;font-size:13.5px;"><i class="fas fa-trophy" style="color:#fbbf24;"></i> Tự động kích hoạt Bục vinh danh Podium Top 1, 2, 3 dựa trên tổng điểm thi đua của 18 máy và tổng kết tiết học.</p>
+                    <div class="studio-form-row">
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-list-ul"></i> Dạng câu hỏi trắc nghiệm:</label>
+                        <select class="studio-select" id="studio-quiz-type" onchange="window.studioOnQuizTypeChange(this.value)">
+                          <option value="single_choice" selected>1. Trắc nghiệm 4 lựa chọn (A, B, C, D)</option>
+                          <option value="true_false">2. Trắc nghiệm Đúng / Sai 4 ý (Chuẩn BGD&ĐT 2025)</option>
+                          <option value="short_answer">3. Trắc nghiệm Điền kết quả ngắn / Nhẩm code</option>
+                        </select>
+                      </div>
+                      <div class="studio-form-col">
+                        <label class="studio-field-label"><i class="fas fa-hourglass-half"></i> Thời gian mỗi câu hỏi:</label>
+                        <select class="studio-select" id="step-time-4">
+                          <option value="15">15 giây</option>
+                          <option value="20" selected>20 giây</option>
+                          <option value="30">30 giây</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Công tắc Đảo đáp án chống nhìn bài -->
+                    <div class="studio-anti-cheat-box" style="margin:10px 0 14px 0;padding:8px 12px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.25);border-radius:8px;">
+                      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;color:#38bdf8;font-size:13.5px;font-weight:600;margin:0;">
+                        <input type="checkbox" id="studio-quiz-shuffle" checked style="width:16px;height:16px;accent-color:#38bdf8;">
+                        <span><i class="fas fa-shield-alt"></i> Tự động đảo đáp án ngẫu nhiên giữa 18 máy trạm (Chống nhìn bài nhau)</span>
+                      </label>
+                    </div>
+
+                    <div class="studio-form-group">
+                      <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi trắc nghiệm Đấu trường:</label>
+                      <textarea class="studio-textarea" id="studio-quiz-q" rows="2" placeholder="Nhập nội dung câu hỏi trắc nghiệm...">Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?</textarea>
+                    </div>
+
+                    <!-- Dạng 1: 4 Phương án Kahoot -->
+                    <div class="studio-form-group" id="studio-quiz-single-wrap">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                        <label class="studio-field-label"><i class="fas fa-palette"></i> 4 Phương án trả lời (4 Màu Đấu trường Kahoot):</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                          <label class="studio-field-label" style="margin:0;"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                          <select class="studio-select" id="studio-quiz-correct" style="width:120px;padding:4px 8px;">
+                            <option value="A">Đáp án A (Đỏ)</option>
+                            <option value="B" selected>Đáp án B (Lam)</option>
+                            <option value="C">Đáp án C (Vàng)</option>
+                            <option value="D">Đáp án D (Lục)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="studio-kahoot-grid">
+                        <div class="sk-card sk-red">
+                          <div class="sk-badge">A (ĐỎ)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-a" value="Không thể truy cập các ký tự qua chỉ số index" placeholder="Phương án A (Đỏ)...">
+                        </div>
+                        <div class="sk-card sk-blue">
+                          <div class="sk-badge">B (LAM)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-b" value="Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" placeholder="Phương án B (Lam)...">
+                        </div>
+                        <div class="sk-card sk-yellow">
+                          <div class="sk-badge">C (VÀNG)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-c" value="Không thể dùng hàm len() để tính độ dài xâu" placeholder="Phương án C (Vàng)...">
+                        </div>
+                        <div class="sk-card sk-green">
+                          <div class="sk-badge">D (LỤC)</div>
+                          <input type="text" class="studio-input sk-input" id="studio-quiz-opt-d" value="Xâu chỉ chứa được chữ số, không chứa được chữ cái" placeholder="Phương án D (Lục)...">
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Dạng 2: Đúng / Sai 4 ý chuẩn 2025 -->
+                    <div class="studio-form-group" id="studio-quiz-tf-wrap" style="display:none;">
+                      <label class="studio-field-label"><i class="fas fa-tasks"></i> 4 Mệnh đề Đúng / Sai (Định dạng thi THPT mới):</label>
+                      <div class="studio-tf-list" style="display:flex;flex-direction:column;gap:8px;">
+                        <div class="tf-item-row" style="display:flex;gap:8px;align-items:center;">
+                          <span style="color:#38bdf8;font-weight:700;width:24px;">a)</span>
+                          <input type="text" class="studio-input" id="studio-tf-stmt-a" value="s[0] trả về ký tự đầu tiên của xâu" style="flex:1;">
+                          <select class="studio-select" id="studio-tf-ans-a" style="width:110px;"><option value="true" selected>ĐÚNG</option><option value="false">SAI</option></select>
+                        </div>
+                        <div class="tf-item-row" style="display:flex;gap:8px;align-items:center;">
+                          <span style="color:#38bdf8;font-weight:700;width:24px;">b)</span>
+                          <input type="text" class="studio-input" id="studio-tf-stmt-b" value="s[-1] trả về ký tự đầu tiên của xâu" style="flex:1;">
+                          <select class="studio-select" id="studio-tf-ans-b" style="width:110px;"><option value="true">ĐÚNG</option><option value="false" selected>SAI</option></select>
+                        </div>
+                        <div class="tf-item-row" style="display:flex;gap:8px;align-items:center;">
+                          <span style="color:#38bdf8;font-weight:700;width:24px;">c)</span>
+                          <input type="text" class="studio-input" id="studio-tf-stmt-c" value="Cú pháp cắt xâu s[start:end] lấy đến vị trí end-1" style="flex:1;">
+                          <select class="studio-select" id="studio-tf-ans-c" style="width:110px;"><option value="true" selected>ĐÚNG</option><option value="false">SAI</option></select>
+                        </div>
+                        <div class="tf-item-row" style="display:flex;gap:8px;align-items:center;">
+                          <span style="color:#38bdf8;font-weight:700;width:24px;">d)</span>
+                          <input type="text" class="studio-input" id="studio-tf-stmt-d" value="Có thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo" style="flex:1;">
+                          <select class="studio-select" id="studio-tf-ans-d" style="width:110px;"><option value="true">ĐÚNG</option><option value="false" selected>SAI</option></select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Dạng 3: Điền kết quả ngắn -->
+                    <div class="studio-form-group" id="studio-quiz-sa-wrap" style="display:none;">
+                      <label class="studio-field-label"><i class="fas fa-keyboard"></i> Đáp án kết quả đúng (Học sinh gõ kết quả):</label>
+                      <input type="text" class="studio-input" id="studio-sa-correct" value="TinHoc" placeholder="Ví dụ: TinHoc hoặc 5...">
+                    </div>
+
+                    <!-- Tự động kích hoạt Podium khi kết thúc -->
+                    <div style="margin-top:10px;padding:8px 12px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:8px;display:flex;align-items:center;gap:10px;">
+                      <i class="fas fa-trophy" style="color:#fbbf24;font-size:16px;"></i>
+                      <span style="color:#fcd34d;font-size:13px;">Tự động kích hoạt <strong>Bục vinh danh Podium Top 1, 2, 3</strong> dựa trên tổng điểm thi đua của 18 máy khi hoàn thành.</span>
+                    </div>
                   </div>
                 </div>
               </div>

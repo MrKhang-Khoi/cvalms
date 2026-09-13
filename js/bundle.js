@@ -259,6 +259,8 @@
         "timeLimit": 720
       },
       "quiz": {
+        "type": "single_choice",
+        "shuffle": true,
         "question": "Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?",
         "options": {
           "A": "Không thể truy cập các ký tự qua chỉ số index",
@@ -267,6 +269,13 @@
           "D": "Xâu chỉ chứa được chữ số, không chứa được chữ cái"
         },
         "correct": "B",
+        "subItems": [
+          { "id": "a", "statement": "s[0] trả về ký tự đầu tiên của xâu", "correct": true },
+          { "id": "b", "statement": "s[-1] trả về ký tự đầu tiên của xâu", "correct": false },
+          { "id": "c", "statement": "Cú pháp cắt xâu s[start:end] lấy đến vị trí end-1", "correct": true },
+          { "id": "d", "statement": "Có thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo", "correct": false }
+        ],
+        "shortAnswer": "TinHoc",
         "timeLimit": 20
       },
       "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
@@ -1503,52 +1512,18 @@
         });
       }
 
-      // 9. Chặng 4: Bấm chọn Live Quiz
-      document.querySelectorAll('.quiz-opt').forEach(btn => {
-        btn.addEventListener('click', e => {
-          const opt = e.currentTarget.dataset.qopt;
-          const state = STORE.getState();
-          const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
-          const isCorrect = (opt === lesson.quiz.correct);
-          const mId = state.machineId || 1;
-          const stuList = (state.students && state.students.length > 0) ? state.students : [`Máy ${mId}`];
-          const nowTs = Date.now();
-
-          STORE.setState({
-            quizSelection: opt,
-            quizAnswered: true
-          });
-
-          if (db && mId) {
-            db.ref(`activeSession/quizAnswers/${mId}`).set({
-              machineId: mId,
-              students: stuList,
-              choice: opt,
-              isCorrect: isCorrect,
-              timestamp: nowTs
-            }).catch(()=>{});
-          }
-          if (typeof SYNC_BUS !== 'undefined') {
-            SYNC_BUS.broadcast('QUIZ_ANSWER', {
-              machineId: mId,
-              students: stuList,
-              choice: opt,
-              isCorrect: isCorrect,
-              timestamp: nowTs
-            });
-          }
-
-          // Hiệu ứng pháo hoa chúc mừng nếu đúng
-          if (isCorrect && typeof confetti === 'function') {
-            try {
-              confetti({
-                particleCount: 80,
-                spread: 70,
-                origin: { y: 0.6 }
-              });
-            } catch {}
-          }
-        });
+      // 9. Chặng 4: Bấm chọn Live Quiz (Ủy quyền sự kiện cho mọi dạng câu hỏi)
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('.quiz-opt');
+        if (!btn || btn.disabled) return;
+        const opt = btn.dataset.qopt;
+        if (!opt) return;
+        const state = STORE.getState();
+        if (state.quizAnswered) return;
+        const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
+        const correct = (lesson && lesson.quiz) ? lesson.quiz.correct : 'B';
+        const isCorrect = (opt === correct);
+        this.submitQuizAnswer(opt, isCorrect);
       });
 
       // 10. Bước 1: Học sinh gõ văn bản tự luận ngắn
@@ -2454,13 +2429,37 @@
       const tog2 = document.getElementById('step-toggle-2');
       if (tog2) tog2.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[2] !== false : true);
 
-      // Bước 3: Đấu trường Kahoot
+      // Bước 3: Thực hành & Thảo luận (Discussion / Python)
+      const dTitle = document.getElementById('studio-disc-title');
+      if (dTitle && lesson.discussion) dTitle.value = lesson.discussion.title || '';
       const time3 = document.getElementById('step-time-3');
-      if (time3 && lesson.quiz && lesson.quiz.timeLimit) time3.value = String(lesson.quiz.timeLimit);
-      const cor3 = document.getElementById('studio-quiz-correct');
-      if (cor3 && lesson.quiz && lesson.quiz.correct) cor3.value = lesson.quiz.correct;
-      const q3 = document.getElementById('studio-quiz-q');
-      if (q3 && lesson.quiz) q3.value = lesson.quiz.question || '';
+      if (time3) time3.value = String((lesson.discussion && lesson.discussion.timeLimit) || 600);
+      const dTask = document.getElementById('studio-disc-task');
+      if (dTask && lesson.discussion) dTask.value = lesson.discussion.task || '';
+      const dStart = document.getElementById('studio-disc-starter');
+      if (dStart && lesson.discussion) dStart.value = lesson.discussion.placeholder || '';
+      const tog3 = document.getElementById('step-toggle-3');
+      if (tog3) tog3.checked = (lesson.stepsEnabled ? (lesson.stepsEnabled[3] !== false) : true);
+
+      // Bước 4: Đấu trường Kahoot & Live Quiz
+      const quizType = (lesson.quiz && lesson.quiz.type) || 'single_choice';
+      const typeSel = document.getElementById('studio-quiz-type');
+      if (typeSel) {
+        typeSel.value = quizType;
+        if (typeof window.studioOnQuizTypeChange === 'function') {
+          window.studioOnQuizTypeChange(quizType);
+        }
+      }
+      const togShuffle = document.getElementById('studio-quiz-shuffle');
+      if (togShuffle) {
+        togShuffle.checked = (lesson.quiz && lesson.quiz.shuffle !== undefined) ? !!lesson.quiz.shuffle : true;
+      }
+      const time4 = document.getElementById('step-time-4');
+      if (time4 && lesson.quiz && lesson.quiz.timeLimit) time4.value = String(lesson.quiz.timeLimit);
+      const cor4 = document.getElementById('studio-quiz-correct');
+      if (cor4 && lesson.quiz && lesson.quiz.correct) cor4.value = lesson.quiz.correct;
+      const q4 = document.getElementById('studio-quiz-q');
+      if (q4 && lesson.quiz) q4.value = lesson.quiz.question || '';
       const optA = document.getElementById('studio-quiz-opt-a');
       if (optA && lesson.quiz && lesson.quiz.options) optA.value = lesson.quiz.options.A || '';
       const optB = document.getElementById('studio-quiz-opt-b');
@@ -2469,20 +2468,25 @@
       if (optC && lesson.quiz && lesson.quiz.options) optC.value = lesson.quiz.options.C || '';
       const optD = document.getElementById('studio-quiz-opt-d');
       if (optD && lesson.quiz && lesson.quiz.options) optD.value = lesson.quiz.options.D || '';
-      const tog3 = document.getElementById('step-toggle-3');
-      if (tog3) tog3.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[3] !== false : true);
 
-      // Bước 4: Thực hành
-      const dTitle = document.getElementById('studio-disc-title');
-      if (dTitle && lesson.discussion) dTitle.value = lesson.discussion.title || '';
-      const time4 = document.getElementById('step-time-4');
-      if (time4) time4.value = String((lesson.discussion && lesson.discussion.timeLimit) || 600);
-      const dTask = document.getElementById('studio-disc-task');
-      if (dTask && lesson.discussion) dTask.value = lesson.discussion.task || '';
-      const dStart = document.getElementById('studio-disc-starter');
-      if (dStart && lesson.discussion) dStart.value = lesson.discussion.placeholder || '';
+      // Mệnh đề Đúng/Sai (True/False)
+      if (lesson.quiz && Array.isArray(lesson.quiz.subItems)) {
+        ['a', 'b', 'c', 'd'].forEach((k, i) => {
+          const item = lesson.quiz.subItems[i];
+          if (item) {
+            const stmtEl = document.getElementById(`studio-tf-stmt-${k}`);
+            if (stmtEl && item.statement) stmtEl.value = item.statement;
+            const ansEl = document.getElementById(`studio-tf-ans-${k}`);
+            if (ansEl) ansEl.value = item.correct ? 'true' : 'false';
+          }
+        });
+      }
+      // Điền kết quả ngắn
+      const saEl = document.getElementById('studio-sa-correct');
+      if (saEl && lesson.quiz && lesson.quiz.shortAnswer) saEl.value = lesson.quiz.shortAnswer;
+
       const tog4 = document.getElementById('step-toggle-4');
-      if (tog4) tog4.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[4] !== false : true);
+      if (tog4) tog4.checked = (lesson.stepsEnabled ? (lesson.stepsEnabled[4] !== false) : true);
 
       // Bước 5: Vinh danh
       const tog5 = document.getElementById('step-toggle-5');
@@ -2504,18 +2508,29 @@
       const doc2 = document.getElementById('studio-theory-doc')?.value.trim() || '';
       const time2 = parseInt(document.getElementById('step-time-2')?.value || '300', 10);
 
-      const time3 = parseInt(document.getElementById('step-time-3')?.value || '20', 10);
-      const cor3 = document.getElementById('studio-quiz-correct')?.value || 'B';
-      const q3 = document.getElementById('studio-quiz-q')?.value.trim() || '';
+      // Bước 3: Thảo luận & Thực hành Python
+      const dTitle = document.getElementById('studio-disc-title')?.value.trim() || 'Nhiệm vụ Thảo luận & Thực hành';
+      const time3 = parseInt(document.getElementById('step-time-3')?.value || '600', 10);
+      const dTask = document.getElementById('studio-disc-task')?.value.trim() || '';
+      const dStart = document.getElementById('studio-disc-starter')?.value || '';
+
+      // Bước 4: Đấu trường Kahoot & Live Quiz
+      const quizType = document.getElementById('studio-quiz-type')?.value || 'single_choice';
+      const quizShuffle = document.getElementById('studio-quiz-shuffle')?.checked !== false;
+      const time4 = parseInt(document.getElementById('step-time-4')?.value || '20', 10);
+      const cor4 = document.getElementById('studio-quiz-correct')?.value || 'B';
+      const q4 = document.getElementById('studio-quiz-q')?.value.trim() || '';
       const optA = document.getElementById('studio-quiz-opt-a')?.value.trim() || '';
       const optB = document.getElementById('studio-quiz-opt-b')?.value.trim() || '';
       const optC = document.getElementById('studio-quiz-opt-c')?.value.trim() || '';
       const optD = document.getElementById('studio-quiz-opt-d')?.value.trim() || '';
 
-      const dTitle = document.getElementById('studio-disc-title')?.value.trim() || 'Nhiệm vụ Thảo luận & Thực hành';
-      const time4 = parseInt(document.getElementById('step-time-4')?.value || '600', 10);
-      const dTask = document.getElementById('studio-disc-task')?.value.trim() || '';
-      const dStart = document.getElementById('studio-disc-starter')?.value || '';
+      const subItems = ['a', 'b', 'c', 'd'].map(k => {
+        const stmt = document.getElementById(`studio-tf-stmt-${k}`)?.value.trim() || '';
+        const isTrue = document.getElementById(`studio-tf-ans-${k}`)?.value === 'true';
+        return { id: k, statement: stmt, correct: isTrue };
+      });
+      const shortAns = document.getElementById('studio-sa-correct')?.value.trim() || '';
 
       const stepsEnabled = {
         1: document.getElementById('step-toggle-1')?.checked !== false,
@@ -2541,22 +2556,26 @@
           if (idx === 0) return Object.assign({}, t, { summary: task2, title: doc2 || t.title });
           return t;
         }) : [{ id: 'card-1', title: doc2 || 'Lý thuyết', summary: task2, code: '' }],
+        discussion: {
+          title: dTitle,
+          task: dTask,
+          placeholder: dStart,
+          timeLimit: time3
+        },
         quiz: {
-          timeLimit: time3,
-          correct: cor3,
-          question: q3,
+          type: quizType,
+          shuffle: quizShuffle,
+          timeLimit: time4,
+          correct: cor4,
+          question: q4,
           options: {
             A: optA,
             B: optB,
             C: optC,
             D: optD
-          }
-        },
-        discussion: {
-          title: dTitle,
-          task: dTask,
-          placeholder: dStart,
-          timeLimit: time4
+          },
+          subItems: subItems,
+          shortAnswer: shortAns
         },
         stepsEnabled: stepsEnabled
       };
@@ -2825,48 +2844,48 @@
       const list = [];
       let idx = 1;
 
-      // 1. Kiểm tra bài cũ
+      // 1. Khởi động & Kiểm tra bài cũ
       if (se['1'] !== false && (lesson.oldLesson || lesson.warmup)) {
         list.push({
           key: 'old_lesson',
           index: idx++,
-          title: 'Kiểm tra bài cũ',
+          title: 'Khởi động & Kiểm tra bài cũ',
           duration: (lesson.oldLesson && lesson.oldLesson.timeLimit) ? lesson.oldLesson.timeLimit : 120,
-          icon: 'fa-gift',
+          icon: 'fa-dice',
           panelId: 'tw-panel-old-lesson'
         });
       }
 
-      // 2. Khởi động / Khám phá SGK
+      // 2. Khám phá kiến thức mới (SGK)
       if (se['2'] !== false && (lesson.theory || lesson.theoryTask || lesson.warmup)) {
         list.push({
           key: 'warmup',
           index: idx++,
-          title: 'Khởi động & Khám phá',
+          title: 'Khám phá kiến thức mới (SGK)',
           duration: lesson.theoryTimeLimit || 300,
-          icon: 'fa-bolt',
+          icon: 'fa-book-open',
           panelId: 'tw-panel-warmup'
         });
       }
 
-      // 3. Thảo luận - Thực hành
-      if (se['4'] !== false && lesson.discussion) {
+      // 3. Thực hành & Thảo luận (Python / Nhóm đôi)
+      if (se['3'] !== false && lesson.discussion) {
         list.push({
           key: 'discussion',
           index: idx++,
-          title: 'Thực hành - Thảo luận',
+          title: 'Thực hành & Thảo luận',
           duration: (lesson.discussion && lesson.discussion.timeLimit) ? lesson.discussion.timeLimit : 600,
           icon: 'fa-laptop-code',
           panelId: 'tw-panel-discussion'
         });
       }
 
-      // 4. Đấu trường Kahoot / Live Quiz
-      if (se['3'] !== false && lesson.quiz) {
+      // 4. Đấu trường Kahoot & Vinh danh Podium
+      if (se['4'] !== false && lesson.quiz) {
         list.push({
           key: 'quiz',
           index: idx++,
-          title: 'Đấu trường Kahoot / Quiz',
+          title: 'Đấu trường Kahoot & Vinh danh',
           duration: (lesson.quiz && lesson.quiz.timeLimit) ? lesson.quiz.timeLimit : 20,
           icon: 'fa-trophy',
           panelId: 'tw-panel-quiz'
@@ -2878,9 +2897,9 @@
         list.push({
           key: 'old_lesson',
           index: 1,
-          title: 'Kiểm tra bài cũ',
+          title: 'Khởi động & Kiểm tra bài cũ',
           duration: 120,
-          icon: 'fa-gift',
+          icon: 'fa-dice',
           panelId: 'tw-panel-old-lesson'
         });
       }
@@ -3708,51 +3727,280 @@
 
       if (currentPhase === 'quiz') {
         const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
-        if (lesson && lesson.quiz) {
-          const qText = document.getElementById('quiz-question-text');
-          if (qText && lesson.quiz.question) qText.textContent = lesson.quiz.question;
-          if (lesson.quiz.options) {
-            ['A', 'B', 'C', 'D'].forEach(opt => {
-              const labelEl = document.querySelector(`.quiz-opt[data-qopt="${opt}"] .qo-label`);
-              if (labelEl && lesson.quiz.options[opt]) {
-                labelEl.textContent = lesson.quiz.options[opt];
-              }
+        const quiz = (lesson && lesson.quiz) ? lesson.quiz : {};
+        const qType = quiz.type || 'single_choice';
+        const qShuffle = quiz.shuffle !== false;
+        const mId = state.machineId || 1;
+
+        // Cập nhật câu hỏi
+        const qText = document.getElementById('quiz-question-text');
+        if (qText && quiz.question) qText.textContent = quiz.question;
+
+        const dynBody = document.getElementById('quiz-dynamic-body');
+        const choice = state.quizSelection;
+        const isAnswered = !!state.quizAnswered;
+
+        if (dynBody) {
+          if (qType === 'single_choice' || !qType) {
+            const correct = quiz.correct || 'B';
+            const shuffledItems = this.getShuffledOptions(quiz.options, mId, 0, qShuffle);
+
+            let optsHtml = '<div class="quiz-options-grid" id="quiz-options-grid">';
+            shuffledItems.forEach((item, slotIdx) => {
+              const isSel = (choice === item.key);
+              const isCorr = (isAnswered && item.key === correct);
+              const isWrong = (isAnswered && isSel && !isCorr);
+              const slotClass = 'opt-slot-' + slotIdx;
+              const statusClass = isCorr ? 'correct' : (isWrong ? 'wrong' : (isSel ? 'selected' : ''));
+              optsHtml += `<button type="button" class="quiz-opt ${slotClass} ${statusClass}" data-qopt="${item.key}" ${isAnswered ? 'disabled' : ''}>
+                <span class="qo-key">${item.key}</span>
+                <span class="qo-label">${item.text || ''}</span>
+              </button>`;
             });
+            optsHtml += '</div>';
+            dynBody.innerHTML = optsHtml;
+
+            if (!isAnswered) {
+              dynBody.querySelectorAll('.quiz-opt').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                  const opt = e.currentTarget.dataset.qopt;
+                  const isCorrect = (opt === correct);
+                  this.submitQuizAnswer(opt, isCorrect);
+                });
+              });
+            }
+          } else if (qType === 'true_false') {
+            const subItems = quiz.subItems || [
+              { id: 'a', statement: 'Mệnh đề a', correct: true },
+              { id: 'b', statement: 'Mệnh đề b', correct: false },
+              { id: 'c', statement: 'Mệnh đề c', correct: true },
+              { id: 'd', statement: 'Mệnh đề d', correct: false }
+            ];
+
+            let tfHtml = '<div class="quiz-tf-table" id="quiz-tf-table">';
+            subItems.forEach((sub, sIdx) => {
+              const rowKey = sub.id || String.fromCharCode(97 + sIdx);
+              tfHtml += `
+                <div class="quiz-tf-row" data-row-key="${rowKey}">
+                  <div class="quiz-tf-stmt"><strong style="color:#38bdf8;">${rowKey})</strong> ${sub.statement}</div>
+                  <div class="quiz-tf-btn-group">
+                    <button type="button" class="btn-tf-toggle btn-true" data-tf="true" ${isAnswered ? 'disabled' : ''}>ĐÚNG</button>
+                    <button type="button" class="btn-tf-toggle btn-false" data-tf="false" ${isAnswered ? 'disabled' : ''}>SAI</button>
+                  </div>
+                </div>
+              `;
+            });
+            if (!isAnswered) {
+              tfHtml += `
+                <div style="margin-top:14px;display:flex;justify-content:flex-end;">
+                  <button type="button" class="btn-submit-short" id="btn-submit-tf">
+                    <i class="fas fa-paper-plane"></i> NỘP CÂU TRẢ LỜI ĐÚNG / SAI
+                  </button>
+                </div>
+              `;
+            }
+            tfHtml += '</div>';
+            dynBody.innerHTML = tfHtml;
+
+            if (!isAnswered) {
+              const currentTfAnswers = {};
+              dynBody.querySelectorAll('.quiz-tf-row').forEach(row => {
+                const rKey = row.dataset.rowKey;
+                const btnTrue = row.querySelector('.btn-true');
+                const btnFalse = row.querySelector('.btn-false');
+                btnTrue.addEventListener('click', () => {
+                  currentTfAnswers[rKey] = true;
+                  btnTrue.classList.add('selected');
+                  btnFalse.classList.remove('selected');
+                });
+                btnFalse.addEventListener('click', () => {
+                  currentTfAnswers[rKey] = false;
+                  btnFalse.classList.add('selected');
+                  btnTrue.classList.remove('selected');
+                });
+              });
+
+              const btnSubmitTf = document.getElementById('btn-submit-tf');
+              if (btnSubmitTf) {
+                btnSubmitTf.addEventListener('click', () => {
+                  if (Object.keys(currentTfAnswers).length < subItems.length) {
+                    alert('Hai em hãy chọn ĐÚNG hoặc SAI cho tất cả các mệnh đề trước khi nộp bài!');
+                    return;
+                  }
+                  let allCorrect = true;
+                  const choiceArr = [];
+                  subItems.forEach((sub, sIdx) => {
+                    const rKey = sub.id || String.fromCharCode(97 + sIdx);
+                    const userVal = !!currentTfAnswers[rKey];
+                    const expVal = !!sub.correct;
+                    if (userVal !== expVal) allCorrect = false;
+                    choiceArr.push(`${rKey}:${userVal ? 'Đ' : 'S'}`);
+                  });
+                  this.submitQuizAnswer(choiceArr.join(', '), allCorrect);
+                });
+              }
+            } else if (choice) {
+              const parts = String(choice).split(', ');
+              parts.forEach(p => {
+                const [rKey, valStr] = p.split(':');
+                const row = dynBody.querySelector(`.quiz-tf-row[data-row-key="${rKey}"]`);
+                if (row) {
+                  if (valStr === 'Đ') row.querySelector('.btn-true')?.classList.add('selected');
+                  if (valStr === 'S') row.querySelector('.btn-false')?.classList.add('selected');
+                }
+              });
+            }
+          } else if (qType === 'short_answer') {
+            const expAnswer = (quiz.shortAnswer || '').trim();
+            const saHtml = `
+              <div class="quiz-short-wrap">
+                <input type="text" id="quiz-short-input" class="quiz-short-input" placeholder="Gõ câu trả lời kết quả vào đây..." value="${choice || ''}" ${isAnswered ? 'disabled' : ''}>
+                ${!isAnswered ? `
+                  <button type="button" class="btn-submit-short" id="btn-submit-short">
+                    <i class="fas fa-paper-plane"></i> NỘP KẾT QUẢ
+                  </button>
+                ` : ''}
+              </div>
+            `;
+            dynBody.innerHTML = saHtml;
+
+            if (!isAnswered) {
+              const btnSa = document.getElementById('btn-submit-short');
+              const saInp = document.getElementById('quiz-short-input');
+              const doSubmitSa = () => {
+                const val = (saInp ? saInp.value : '').trim();
+                if (!val) {
+                  alert('Hai em hãy gõ kết quả câu trả lời vào ô trống trước khi bấm nộp!');
+                  return;
+                }
+                const isCorrect = (val.toLowerCase() === expAnswer.toLowerCase());
+                this.submitQuizAnswer(val, isCorrect);
+              };
+              if (btnSa) btnSa.addEventListener('click', doSubmitSa);
+              if (saInp) {
+                saInp.addEventListener('keydown', (e) => {
+                  if (e.key === 'Enter') doSubmitSa();
+                });
+              }
+            }
           }
         }
 
-        const choice = state.quizSelection;
-        const isAnswered = state.quizAnswered;
-        const correct = (lesson && lesson.quiz) ? lesson.quiz.correct : 'C';
-
-        document.querySelectorAll('.quiz-opt').forEach(btn => {
-          const opt = btn.dataset.qopt;
-          btn.classList.toggle('selected', opt === choice);
-          if (isAnswered && opt === correct) {
-            btn.classList.add('correct');
-          }
-        });
-
+        // Feedback box
         const feedback = document.getElementById('quiz-feedback-box');
         if (feedback) {
           if (isAnswered) {
             feedback.style.display = 'block';
-            if (choice === correct) {
+            const isCorrect = (state.quizAnswers && state.quizAnswers[mId])
+              ? state.quizAnswers[mId].isCorrect
+              : (qType === 'single_choice' ? choice === (quiz.correct || 'B') : false);
+
+            if (isCorrect) {
               feedback.className = 'quiz-feedback success';
-              feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của câu hỏi củng cố.`;
+              feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của Đấu trường tương tác.`;
             } else {
               feedback.className = 'quiz-feedback';
               feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
               feedback.style.color = '#fca5a5';
               feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
-              const correctLabel = (lesson && lesson.quiz && lesson.quiz.options && lesson.quiz.options[correct]) ? lesson.quiz.options[correct] : '';
-              feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. Đáp án đúng là <strong>${correct}</strong>: ${correctLabel}`;
+              let correctInfo = '';
+              if (qType === 'single_choice') {
+                const cor = quiz.correct || 'B';
+                const correctLabel = (quiz.options && quiz.options[cor]) ? quiz.options[cor] : '';
+                correctInfo = `Đáp án đúng là <strong>${cor}</strong>: ${correctLabel}`;
+              } else if (qType === 'true_false') {
+                const subItems = quiz.subItems || [];
+                correctInfo = 'Đáp án đúng: ' + subItems.map(s => `<strong>${s.id})</strong> ${s.correct ? 'ĐÚNG' : 'SAI'}`).join(' • ');
+              } else if (qType === 'short_answer') {
+                correctInfo = `Đáp án đúng là: <strong>${quiz.shortAnswer || ''}</strong>`;
+              }
+              feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. ${correctInfo}`;
             }
           } else {
             feedback.style.display = 'none';
           }
         }
       }
+    },
+
+    getShuffledOptions(optionsObj, machineId, qIndex, shuffle) {
+      const keys = ['A', 'B', 'C', 'D'];
+      const items = keys.map(k => ({
+        key: k,
+        text: (optionsObj && optionsObj[k]) ? optionsObj[k] : ''
+      }));
+      if (shuffle === false) return items;
+
+      const mId = parseInt(machineId, 10) || 1;
+      const qIdx = parseInt(qIndex, 10) || 0;
+      let seed = (Math.imul(mId, 1597334677) ^ Math.imul(qIdx + 1, 3812015801)) >>> 0;
+      function nextRnd() {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        return (seed >>> 8) / 16777216;
+      }
+
+      // Fisher-Yates / Knuth shuffle
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(nextRnd() * (i + 1));
+        const temp = items[i];
+        items[i] = items[j];
+        items[j] = temp;
+      }
+      return items;
+    },
+
+    submitQuizAnswer(choice, isCorrect) {
+      const state = STORE.getState();
+      if (state.quizAnswered) return;
+      const mId = state.machineId || 1;
+      const stuList = (state.students && state.students.length > 0) ? state.students : [`Máy ${mId}`];
+      const nowTs = Date.now();
+
+      const newAnswers = Object.assign({}, state.quizAnswers || {});
+      newAnswers[mId] = {
+        machineId: mId,
+        students: stuList,
+        choice: choice,
+        isCorrect: isCorrect,
+        timestamp: nowTs
+      };
+
+      STORE.setState({
+        quizSelection: choice,
+        quizAnswered: true,
+        quizAnswers: newAnswers
+      });
+
+      if (db && mId) {
+        db.ref(`activeSession/quizAnswers/${mId}`).set({
+          machineId: mId,
+          students: stuList,
+          choice: choice,
+          isCorrect: isCorrect,
+          timestamp: nowTs
+        }).catch(()=>{});
+      }
+      if (typeof SYNC_BUS !== 'undefined') {
+        SYNC_BUS.broadcast('QUIZ_ANSWER', {
+          machineId: mId,
+          students: stuList,
+          choice: choice,
+          isCorrect: isCorrect,
+          timestamp: nowTs
+        });
+      }
+
+      if (isCorrect && typeof confetti === 'function') {
+        try {
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 }
+          });
+        } catch {}
+      }
+
+      this.renderStudentWorkspace(STORE.getState());
     },
 
     // -------------------------------------------------------------
@@ -5132,6 +5380,8 @@
       APP.renderClassesSeatingPreview();
     } else if (tab === 'studio') {
       APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin10_bai12');
+    } else if (tab === 'stage') {
+      APP.renderDynamicStagePipeline();
     }
   };
 
@@ -5312,6 +5562,15 @@
 
   window.studioSaveLesson = function() {
     APP.saveStudioLesson();
+  };
+
+  window.studioOnQuizTypeChange = function(type) {
+    const singleWrap = document.getElementById('studio-quiz-single-wrap');
+    const tfWrap = document.getElementById('studio-quiz-tf-wrap');
+    const saWrap = document.getElementById('studio-quiz-sa-wrap');
+    if (singleWrap) singleWrap.style.display = (type === 'single_choice' || !type) ? 'block' : 'none';
+    if (tfWrap) tfWrap.style.display = (type === 'true_false') ? 'block' : 'none';
+    if (saWrap) saWrap.style.display = (type === 'short_answer') ? 'block' : 'none';
   };
 
   window.filterClassesByGrade = function(g) {

@@ -7,7 +7,8 @@
     "test:mesh18": "node tests/test_full_mesh_18_seats.js",
     "test:resilience": "node tests/test_network_resilience_cdp.js",
     "test:visual": "node tests/test_visual_and_layout_responsiveness.js",
-    "test:all": "node tests/verify_pedagogical_spin_and_timers.js && node tests/test_full_mesh_18_seats.js && node tests/test_network_resilience_cdp.js && node tests/test_visual_and_layout_responsiveness.js",
+    "test:quiz": "node tests/test_quiz_anti_cheat_and_consistency.js",
+    "test:all": "node tests/verify_pedagogical_spin_and_timers.js && node tests/test_quiz_anti_cheat_and_consistency.js && node tests/test_visual_and_layout_responsiveness.js",
     "lint": "npx --yes oxlint js/ -D correctness -A no-unused-vars"
   },
   "devDependencies": {
