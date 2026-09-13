@@ -25,11 +25,11 @@
     if (window._impl_startLuckyDrawSpin) return window._impl_startLuckyDrawSpin();
   };
 
-  // 1. DỮ LIỆU CƠ SỞ (TÍCH HỢP SẴN ĐỂ CHẠY CỰC NHANH KỂ CẢ KHI OFFLINE)
+  // 1. DỮ LIỆU CƠ SỞ (TÍCH HỢP SẴN ĐỂ CHẠY CỰC NHANH KỂ CẢ KHI OFFLINE - THCS KHỐI 6, 7, 8, 9)
   const EMBEDDED_CLASSES = {
-    "10A1": {
-      "className": "Lớp 10A1",
-      "grade": 10,
+    "6A1": {
+      "className": "Lớp 6A1",
+      "grade": 6,
       "totalStudents": 35,
       "seatingPlan": {
         "1": ["Lê Hoàng Nam", "Phạm Ngọc Ánh"],
@@ -52,9 +52,9 @@
         "18": ["Đặng Quốc Tuấn", "Dự bị máy 18"]
       }
     },
-    "10A2": {
-      "className": "Lớp 10A2",
-      "grade": 10,
+    "6A2": {
+      "className": "Lớp 6A2",
+      "grade": 6,
       "totalStudents": 36,
       "seatingPlan": {
         "1": ["Nguyễn Gia Huy", "Trần Mai Anh"],
@@ -75,6 +75,131 @@
         "16": ["Mai Hữu Phước", "Nguyễn Cẩm Ly"],
         "17": ["Đặng Văn Hậu", "Lê Thị Bích"],
         "18": ["Trần Tiến Đạt", "Vũ Hoàng My"]
+      }
+    },
+    "6A3": {
+      "className": "Lớp 6A3",
+      "grade": 6,
+      "totalStudents": 34,
+      "seatingPlan": {
+        "1": ["Trần Tuấn Kiệt", "Nguyễn Thảo Vy"],
+        "2": ["Phạm Hoàng Long", "Lê Quỳnh Như"],
+        "3": ["Hoàng Gia Bảo", "Vũ Mai Phương"],
+        "4": ["Đỗ Minh Trí", "Bùi Khánh Huyền"],
+        "5": ["Nguyễn Đức Thắng", "Phan Thùy Trang"],
+        "6": ["Vũ Hải Nam", "Trịnh Bảo Ngọc"],
+        "7": ["Đặng Văn Khoa", "Trần Thanh Hằng"],
+        "8": ["Lê Công Vinh", "Nguyễn Thu Hà"],
+        "9": ["Hồ Tấn Tài", "Đoàn Thị Mơ"],
+        "10": ["Ngô Văn Toản", "Dương Ánh Nguyệt"],
+        "11": ["Lý Quang Diệu", "Phạm Kim Cương"],
+        "12": ["Trương Tấn Sang", "Lâm Hải Yến"],
+        "13": ["Chu Bá Thông", "Đinh Bích Thủy"],
+        "14": ["Vương Đình Huệ", "Mai Hồng Gấm"],
+        "15": ["Tạ Quang Bửu", "Phạm Tuyết Nhung"],
+        "16": ["Hà Huy Tập", "Nguyễn Bích Liên"],
+        "17": ["Thái Bình Dương", "Cao Thùy Chi"],
+        "18": ["Lê Quý Đôn", "Dự bị máy 18"]
+      }
+    },
+    "7A1": {
+      "className": "Lớp 7A1",
+      "grade": 7,
+      "totalStudents": 36,
+      "seatingPlan": {
+        "1": ["Nguyễn Quốc Cường", "Trần Thúy Nga"],
+        "2": ["Lê Hồng Phong", "Phạm Diệu Linh"],
+        "3": ["Vũ Trọng Phụng", "Đặng Mỹ Linh"],
+        "4": ["Bùi Bích Phương", "Hoàng Thùy Linh"],
+        "5": ["Đinh Bộ Lĩnh", "Ngô Thanh Vân"],
+        "6": ["Lý Thường Kiệt", "Võ Hoàng Yến"],
+        "7": ["Trịnh Kiểm", "Dương Cẩm Thúy"],
+        "8": ["Phan Bội Châu", "Cao Thái Hà"],
+        "9": ["Hà Huy Giáp", "Đoàn Thiên Ân"],
+        "10": ["Chu Văn An", "Lâm Khánh Chi"],
+        "11": ["Tạ Hiện", "Nguyễn Thúc Thùy Tiên"],
+        "12": ["Thái Phiên", "Trần Tiểu Vy"],
+        "13": ["Lâm Đồng", "Bùi Quỳnh Hoa"],
+        "14": ["Vương Thừa Vũ", "Đặng Thu Thảo"],
+        "15": ["Hồ Xuân Hương", "Phạm Hương"],
+        "16": ["Mai Thúc Loan", "Nguyễn Thị Huyền"],
+        "17": ["Đặng Dung", "Lê Âu Ngân Anh"],
+        "18": ["Trần Hưng Đạo", "Dự bị máy 18"]
+      }
+    },
+    "7A2": {
+      "className": "Lớp 7A2",
+      "grade": 7,
+      "totalStudents": 35,
+      "seatingPlan": {
+        "1": ["Nguyễn Văn An", "Trần Thị Bình"],
+        "2": ["Lê Hoàng Cường", "Phạm Minh Đức"],
+        "3": ["Hoàng Thu Giang", "Võ Thị Hạnh"],
+        "4": ["Đỗ Minh Khang", "Bùi Như Lan"],
+        "5": ["Nguyễn Hữu Mai", "Phan Thanh Nam"],
+        "6": ["Vũ Hải Oanh", "Trịnh Quốc Phúc"],
+        "7": ["Đặng Như Quỳnh", "Trần Văn Sơn"],
+        "8": ["Lê Thị Thu", "Nguyễn Minh Uyên"],
+        "9": ["Hồ Quang Vinh", "Đoàn Kim Xuân"],
+        "10": ["Ngô Gia Bảo", "Dương Thuỳ Châu"],
+        "11": ["Lý Minh Dũng", "Phạm Ngọc Em"],
+        "12": ["Trương Hoàng Giao", "Lâm Quốc Hùng"],
+        "13": ["Chu Thị Kim", "Đinh Văn Long"],
+        "14": ["Vương Tuyết Mai", "Mai Văn Nhân"],
+        "15": ["Tạ Thị Oanh", "Phạm Hoàng Phương"],
+        "16": ["Hà Minh Quân", "Nguyễn Thị Sâm"],
+        "17": ["Thái Văn Tài", "Cao Minh Uy"],
+        "18": ["Lê Văn Việt", "Trần Như Ý"]
+      }
+    },
+    "8A1": {
+      "className": "Lớp 8A1",
+      "grade": 8,
+      "totalStudents": 38,
+      "seatingPlan": {
+        "1": ["Nguyễn Tất Thành", "Trần Lệ Xuân"],
+        "2": ["Lê Duẩn", "Phạm Thị Yến"],
+        "3": ["Võ Nguyên Giáp", "Hoàng Diệu Nhi"],
+        "4": ["Đỗ Mười", "Bùi Lan Hương"],
+        "5": ["Nguyễn Văn Linh", "Phan Thị Mơ"],
+        "6": ["Vũ Đình Hòe", "Trịnh Kim Chi"],
+        "7": ["Đặng Thai Mai", "Trần Kiều Trinh"],
+        "8": ["Lê Văn Hưu", "Nguyễn Thị Sen"],
+        "9": ["Hồ Đắc Di", "Đoàn Thị Điểm"],
+        "10": ["Ngô Sĩ Liên", "Dương Thị Hải"],
+        "11": ["Lý Tự Trọng", "Phạm Thị Loan"],
+        "12": ["Trương Vĩnh Ký", "Lâm Thị Mỹ"],
+        "13": ["Chu Mạnh Trinh", "Đinh Thị Vân"],
+        "14": ["Vương Hồng Sển", "Mai Thị Nương"],
+        "15": ["Tạ Uyên", "Phạm Thị Đào"],
+        "16": ["Hà Văn Lâu", "Nguyễn Thị Lựu"],
+        "17": ["Thái Văn Lung", "Cao Thị Bầu"],
+        "18": ["Lê Hồng Sơn", "Trần Văn Ơn"]
+      }
+    },
+    "8A2": {
+      "className": "Lớp 8A2",
+      "grade": 8,
+      "totalStudents": 37,
+      "seatingPlan": {
+        "1": ["Nguyễn Thái Học", "Trần Thị Dung"],
+        "2": ["Lê Lợi", "Phạm Thị Hậu"],
+        "3": ["Vũ Khâm Lân", "Đặng Thị Nhu"],
+        "4": ["Bùi Viện", "Hoàng Thị Loan"],
+        "5": ["Đinh Tiên Hoàng", "Ngô Gia Tự"],
+        "6": ["Lý Thái Tổ", "Võ Thị Sáu"],
+        "7": ["Trịnh Hoài Đức", "Dương Vân Nga"],
+        "8": ["Phan Chu Trinh", "Cao Bá Quát"],
+        "9": ["Hà Tôn Quyền", "Đoàn Nhữ Hài"],
+        "10": ["Chu Đạt", "Lâm Hoài Thu"],
+        "11": ["Tạ Mỹ Duật", "Nguyễn Thị Định"],
+        "12": ["Thái Thuận", "Trần Quốc Toản"],
+        "13": ["Lâm Văn Bền", "Bùi Thị Xuân"],
+        "14": ["Vương Chí Sình", "Đặng Thùy Trâm"],
+        "15": ["Hồ Tùng Mậu", "Phạm Ngọc Thạch"],
+        "16": ["Mai Chí Thọ", "Nguyễn Văn Cừ"],
+        "17": ["Đặng Tất", "Lê Văn Tám"],
+        "18": ["Trần Nhật Duật", "Dự bị máy 18"]
       }
     },
     "9A1": {
@@ -102,34 +227,9 @@
         "18": ["Lê Văn Việt", "Trần Như Ý"]
       }
     },
-    "11A1": {
-      "className": "Lớp 11A1",
-      "grade": 11,
-      "totalStudents": 36,
-      "seatingPlan": {
-        "1": ["Trần Tuấn Kiệt", "Nguyễn Thảo Vy"],
-        "2": ["Phạm Hoàng Long", "Lê Quỳnh Như"],
-        "3": ["Hoàng Gia Bảo", "Vũ Mai Phương"],
-        "4": ["Đỗ Minh Trí", "Bùi Khánh Huyền"],
-        "5": ["Nguyễn Đức Thắng", "Phan Thùy Trang"],
-        "6": ["Vũ Hải Nam", "Trịnh Bảo Ngọc"],
-        "7": ["Đặng Văn Khoa", "Trần Thanh Hằng"],
-        "8": ["Lê Công Vinh", "Nguyễn Thu Hà"],
-        "9": ["Hồ Tấn Tài", "Đoàn Thị Mơ"],
-        "10": ["Ngô Văn Toản", "Dương Ánh Nguyệt"],
-        "11": ["Lý Quang Diệu", "Phạm Kim Cương"],
-        "12": ["Trương Tấn Sang", "Lâm Hải Yến"],
-        "13": ["Chu Bá Thông", "Đinh Bích Thủy"],
-        "14": ["Vương Đình Huệ", "Mai Hồng Gấm"],
-        "15": ["Tạ Quang Bửu", "Phạm Tuyết Nhung"],
-        "16": ["Hà Huy Tập", "Nguyễn Bích Liên"],
-        "17": ["Thái Bình Dương", "Cao Thùy Chi"],
-        "18": ["Lê Quý Đôn", "Trần Mộng Điệp"]
-      }
-    },
-    "11A2": {
-      "className": "Lớp 11A2",
-      "grade": 11,
+    "9A2": {
+      "className": "Lớp 9A2",
+      "grade": 9,
       "totalStudents": 35,
       "seatingPlan": {
         "1": ["Nguyễn Quốc Cường", "Trần Thúy Nga"],
@@ -151,327 +251,445 @@
         "17": ["Đặng Dung", "Lê Âu Ngân Anh"],
         "18": ["Trần Hưng Đạo", "Dự bị máy 18"]
       }
-    },
-    "12A1": {
-      "className": "Lớp 12A1",
-      "grade": 12,
-      "totalStudents": 38,
-      "seatingPlan": {
-        "1": ["Nguyễn Tất Thành", "Trần Lệ Xuân"],
-        "2": ["Lê Duẩn", "Phạm Thị Yến"],
-        "3": ["Võ Nguyên Giáp", "Hoàng Diệu Nhi"],
-        "4": ["Đỗ Mười", "Bùi Lan Hương"],
-        "5": ["Nguyễn Văn Linh", "Phan Thị Mơ"],
-        "6": ["Vũ Đình Hòe", "Trịnh Kim Chi"],
-        "7": ["Đặng Thai Mai", "Trần Kiều Trinh"],
-        "8": ["Lê Văn Hưu", "Nguyễn Thị Sen"],
-        "9": ["Hồ Đắc Di", "Đoàn Thị Điểm"],
-        "10": ["Ngô Sĩ Liên", "Dương Thị Hải"],
-        "11": ["Lý Tự Trọng", "Phạm Thị Loan"],
-        "12": ["Trương Vĩnh Ký", "Lâm Thị Mỹ"],
-        "13": ["Chu Mạnh Trinh", "Đinh Thị Vân"],
-        "14": ["Vương Hồng Sển", "Mai Thị Nương"],
-        "15": ["Tạ Uyên", "Phạm Thị Đào"],
-        "16": ["Hà Văn Lâu", "Nguyễn Thị Lựu"],
-        "17": ["Thái Văn Lung", "Cao Thị Bầu"],
-        "18": ["Lê Hồng Sơn", "Trần Văn Ơn"]
-      }
-    },
-    "12A2": {
-      "className": "Lớp 12A2",
-      "grade": 12,
-      "totalStudents": 37,
-      "seatingPlan": {
-        "1": ["Nguyễn Thái Học", "Trần Thị Dung"],
-        "2": ["Lê Lợi", "Phạm Thị Hậu"],
-        "3": ["Vũ Khâm Lân", "Đặng Thị Nhu"],
-        "4": ["Bùi Viện", "Hoàng Thị Loan"],
-        "5": ["Đinh Tiên Hoàng", "Ngô Gia Tự"],
-        "6": ["Lý Thái Tổ", "Võ Thị Sáu"],
-        "7": ["Trịnh Hoài Đức", "Dương Vân Nga"],
-        "8": ["Phan Chu Trinh", "Cao Bá Quát"],
-        "9": ["Hà Tôn Quyền", "Đoàn Nhữ Hài"],
-        "10": ["Chu Đạt", "Lâm Hoài Thu"],
-        "11": ["Tạ Mỹ Duật", "Nguyễn Thị Định"],
-        "12": ["Thái Thuận", "Trần Quốc Toản"],
-        "13": ["Lâm Văn Bền", "Bùi Thị Xuân"],
-        "14": ["Vương Chí Sình", "Đặng Thùy Trâm"],
-        "15": ["Hồ Tùng Mậu", "Phạm Ngọc Thạch"],
-        "16": ["Mai Chí Thọ", "Nguyễn Văn Cừ"],
-        "17": ["Đặng Tất", "Lê Văn Tám"],
-        "18": ["Trần Nhật Duật", "Dự bị máy 18"]
-      }
     }
   };
-
+  // Fallback an toàn cho dữ liệu cũ nếu có trong bộ nhớ
+  EMBEDDED_CLASSES["10A1"] = EMBEDDED_CLASSES["6A1"];
+  EMBEDDED_CLASSES["10A2"] = EMBEDDED_CLASSES["6A2"];
+  EMBEDDED_CLASSES["11A1"] = EMBEDDED_CLASSES["7A1"];
+  EMBEDDED_CLASSES["12A1"] = EMBEDDED_CLASSES["9A1"];
 
   const DEFAULT_LESSONS = {
-    "tin10_bai12": {
-      "id": "tin10_bai12",
-      "title": "Bài 12: Kiểu dữ liệu xâu trong Python",
-      "grade": "10",
-      "objective": "Hiểu khái niệm xâu, thành thạo phép cắt xâu (slicing) và nắm vững tính chất bất biến của xâu.",
+    // KHỐI 6
+    "tin6_bai12": {
+      "id": "tin6_bai12",
+      "title": "Bài 12: Thuật toán và sơ đồ khối",
+      "grade": "6",
+      "objective": "Hiểu khái niệm thuật toán, nhận biết ý nghĩa các hình khối quy ước và vẽ sơ đồ khối giải quyết vấn đề.",
       "oldLesson": {
         "tool": "wheel",
         "timeLimit": 120,
-        "question": "Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là \"bộ não\" điều khiển mọi hoạt động của máy tính?"
+        "question": "Thuật toán là gì? Nêu 3 tính chất quan trọng của một thuật toán trong đời sống và tin học."
       },
-      "theoryTask": "Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.",
-      "theoryDoc": "SGK Tin học 10 Cánh Diều - Mục 1 Trang 92",
+      "theoryTask": "Đọc SGK Tin học 6 Bài 12 (trang 54-56), thảo luận theo cặp đôi về khái niệm thuật toán và quy tắc vẽ sơ đồ khối.",
+      "theoryDoc": "SGK Tin học 6 Cánh Diều / Kết Nối - Bài 12 Trang 54",
       "warmup": {
-        "question": "Quan sát đoạn mã sau và cho biết kết quả in ra màn hình là gì?",
-        "code": "s = \"Tin hoc\"\nprint(s[4:])",
+        "question": "Trong sơ đồ khối thuật toán, hình nào quy ước dùng để biểu thị thao tác Bắt đầu hoặc Kết thúc?",
         "options": {
-          "A": "\"Tin\"",
-          "B": "\"hoc\"",
-          "C": "\"h\"",
-          "D": "Báo lỗi IndexError"
+          "A": "Hình chữ nhật",
+          "B": "Hình Oval (elip)",
+          "C": "Hình thoi",
+          "D": "Hình bình hành"
         },
         "timeLimit": 45
       },
       "theory": [
         {
           "id": "card-1",
-          "title": "1. Khái niệm & Khởi tạo Xâu ký tự",
-          "summary": "Xâu ký tự (string) trong Python là dãy các ký tự được đặt trong cặp dấu nháy đơn '...' hoặc nháy kép \"...\".",
-          "code": "# Khởi tạo xâu\ns1 = 'Xin chao'\ns2 = \"Tin hoc 10\"\n\n# Độ dài xâu (hàm len)\nprint(len(s1))  # Kết quả: 8",
-          "note": "Ký tự khoảng trắng (dấu cách) cũng được tính là một ký tự trong xâu."
+          "title": "1. Khái niệm Thuật toán",
+          "summary": "Thuật toán là dãy các chỉ dẫn từng bước rõ ràng, chính xác để giải quyết một nhiệm vụ từ đầu vào (Input) đến đầu ra (Output).",
+          "code": "# Ví dụ thuật toán tìm số lớn hơn trong 2 số a, b:\nif a > b:\n    max = a\nelse:\n    max = b\nprint('Số lớn hơn là:', max)",
+          "note": "Thuật toán phải có tính dừng, tính xác định và tính đúng đắn."
         },
         {
           "id": "card-2",
-          "title": "2. Phép cắt xâu (Slicing)",
-          "summary": "Mỗi ký tự có một chỉ số (index): chỉ số dương bắt đầu từ 0 (từ trái qua), chỉ số âm từ -1 (từ phải qua). Cú pháp cắt xâu: s[bắt_đầu : kết_thúc].",
-          "code": "s = \"Python\"\nprint(s[0])    # 'P' (ký tự đầu)\nprint(s[-1])   # 'n' (ký tự cuối)\nprint(s[0:2])  # 'Py' (từ vị trí 0 đến trước 2)\nprint(s[2:])   # 'thon' (từ vị trí 2 đến hết)",
-          "note": "Cắt xâu s[start:end] lấy các ký tự từ vị trí start đến vị trí end - 1."
-        },
-        {
-          "id": "card-3",
-          "title": "3. Tính chất bất biến của xâu (Immutability)",
-          "summary": "Xâu trong Python là đối tượng bất biến: không thể gán lại hay thay đổi trực tiếp từng ký tự trong xâu đã tạo.",
-          "code": "s = \"Hello\"\n# s[0] = 'J' -> SẼ BÁO LỖI TypeError!\n\n# Cách thay đổi đúng: tạo một xâu mới\ns_moi = 'J' + s[1:]\nprint(s_moi)  # 'Jello'",
-          "note": "Để biến đổi xâu, ta luôn ghép nối để tạo ra xâu mới."
+          "title": "2. Các hình khối quy ước trong sơ đồ khối",
+          "summary": "Sơ đồ khối dùng các hình hình học liên kết bằng mũi tên: Oval (Bắt đầu/Kết thúc), Chữ nhật (Xử lý/Tính toán), Hình thoi (Kiểm tra điều kiện rẽ nhánh), Bình hành (Vào/Ra dữ liệu).",
+          "code": "[Bắt đầu] -> [Nhập a, b] -> <a > b?> --(Đúng)--> [In ra a]\n                                    --(Sai)--> [In ra b] -> [Kết thúc]",
+          "note": "Mũi tên chỉ hướng thực hiện tuần tự của thuật toán."
         }
       ],
       "discussion": {
         "title": "Nhiệm vụ Thảo luận & Thực hành Nhóm đôi",
-        "task": "Cho xâu ký tự: s = 'chuc mung nam moi 2026'\nHai em hãy thảo luận và viết các câu lệnh Python để thực hiện:\n1. In ra độ dài của xâu s.\n2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.\n3. Trình bày ít nhất 1 cách để đếm số lượng ký tự khoảng trắng có trong xâu s.",
-        "placeholder": "# Gợi ý bài thực hành xâu ký tự:\ns = 'chuc mung nam moi 2026'\nprint(\"1. Độ dài xâu:\", len(s))\nprint(\"2. Cắt xâu:\", s[10:17])",
+        "task": "Hai em hãy thảo luận và mô tả các bước thuật toán:\n1. Thuật toán pha trà chanh hoặc nấu mì tôm theo các bước tuần tự.\n2. Thuật toán tìm số lớn nhất trong hai số a và b.\n3. Hãy nêu ý nghĩa của khối hình thoi trong thuật toán rẽ nhánh.",
+        "placeholder": "# Ghi các bước thuật toán của nhóm vào đây:\nBước 1: Bắt đầu...\nBước 2: Nhập dữ liệu...\nBước 3: Kiểm tra điều kiện...",
         "timeLimit": 720
       },
       "quiz": {
         "type": "single_choice",
         "shuffle": true,
-        "question": "Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?",
+        "question": "Hình khối nào trong sơ đồ khối được dùng để kiểm tra điều kiện rẽ nhánh (Đúng / Sai)?",
         "options": {
-          "A": "Không thể truy cập các ký tự qua chỉ số index",
-          "B": "Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo",
-          "C": "Không thể dùng hàm len() để tính độ dài xâu",
-          "D": "Xâu chỉ chứa được chữ số, không chứa được chữ cái"
+          "A": "Hình chữ nhật (Xử lý)",
+          "B": "Hình thoi (Điều kiện)",
+          "C": "Hình oval (Bắt đầu/Kết thúc)",
+          "D": "Hình tròn (Điểm nối)"
         },
         "correct": "B",
         "subItems": [
-          { "id": "a", "statement": "s[0] trả về ký tự đầu tiên của xâu", "correct": true },
-          { "id": "b", "statement": "s[-1] trả về ký tự đầu tiên của xâu", "correct": false },
-          { "id": "c", "statement": "Cú pháp cắt xâu s[start:end] lấy đến vị trí end-1", "correct": true },
-          { "id": "d", "statement": "Có thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo", "correct": false }
+          { "id": "a", "statement": "Hình oval dùng cho Bắt đầu và Kết thúc", "correct": true },
+          { "id": "b", "statement": "Hình chữ nhật dùng để kiểm tra điều kiện", "correct": false },
+          { "id": "c", "statement": "Hình thoi có ít nhất hai hướng rẽ nhánh Đúng và Sai", "correct": true },
+          { "id": "d", "statement": "Mũi tên thể hiện thứ tự thực hiện các bước", "correct": true }
         ],
-        "shortAnswer": "TinHoc",
+        "shortAnswer": "HinhThoi",
         "timeLimit": 20
       },
       "sections": [
         {
           "id": 1,
-          "title": "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự",
+          "title": "Mục 1: Khái niệm Thuật toán & Mô tả bằng lời",
           "theory": {
-            "task": "Đọc SGK mục 1 (trang 92-93), thảo luận theo cặp đôi về khái niệm xâu ký tự và quy tắc đánh chỉ số index trong Python.",
-            "doc": "SGK Tin học 10 Cánh Diều - Mục 1 Trang 92",
+            "task": "Đọc SGK mục 1 (trang 54), thảo luận theo cặp đôi về khái niệm thuật toán và phân tích Input, Output của bài toán.",
+            "doc": "SGK Tin học 6 - Bài 12 Mục 1",
             "timeLimit": 300
           },
           "quiz": {
-            "question": "Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?",
-            "correct": "A",
+            "question": "Đặc điểm nào sau đây KHÔNG PHẢI là tính chất của một thuật toán?",
+            "correct": "D",
             "timeLimit": 60
           },
+          "quizzes": [
+            {
+              "id": "q1_1",
+              "type": "single_choice",
+              "question": "Đặc điểm nào sau đây KHÔNG PHẢI là tính chất của một thuật toán?",
+              "options": {
+                "A": "Tính dừng (hữu hạn số bước)",
+                "B": "Tính xác định (rõ ràng)",
+                "C": "Tính đúng đắn",
+                "D": "Tính vô tận (chạy mãi không dừng)"
+              },
+              "correct": "D",
+              "timeLimit": 60
+            }
+          ],
           "practice": {
-            "title": "Nhiệm vụ Thảo luận & Thực hành Nhóm đôi",
-            "task": "Cho xâu ký tự: s = 'chuc mung nam moi 2026'\nHai em hãy thảo luận và viết các câu lệnh Python để thực hiện:\n1. In ra độ dài của xâu s.\n2. Dùng phép cắt xâu (slicing) để trích xuất ra cụm từ 'nam moi'.",
-            "placeholder": "# Gợi ý bài thực hành xâu ký tự:\ns = 'chuc mung nam moi 2026'\nprint(\"1. Độ dài xâu:\", len(s))\nprint(\"2. Cắt xâu:\", s[10:17])",
+            "title": "Nhiệm vụ Thảo luận thuật toán đời sống",
+            "task": "Hai em hãy liệt kê các bước tuần tự để giải quyết nhiệm vụ: \"Đánh răng mỗi sáng\" hoặc \"Tính tiền mua bánh mì\".",
+            "placeholder": "# Nhập các bước tuần tự tại đây...",
             "timeLimit": 600
           }
         },
         {
           "id": 2,
-          "title": "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)",
+          "title": "Mục 2: Các hình khối quy ước trong Sơ đồ khối",
           "theory": {
-            "task": "Đọc SGK mục 2 (trang 94), thảo luận cú pháp cắt xâu s[start:stop] và tính chất bất biến (immutable) của xâu.",
-            "doc": "SGK Tin học 10 Cánh Diều - Mục 2 Trang 94",
+            "task": "Đọc SGK mục 2 (trang 55-56), nắm vững ý nghĩa của 4 hình khối: Oval, Chữ nhật, Hình thoi, Bình hành.",
+            "doc": "SGK Tin học 6 - Bài 12 Mục 2",
             "timeLimit": 300
           },
           "quiz": {
-            "question": "Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?",
+            "question": "Trong sơ đồ khối, thao tác tính toán 'tong = a + b' được đặt trong hình nào?",
             "correct": "A",
             "timeLimit": 60
           },
+          "quizzes": [
+            {
+              "id": "q2_1",
+              "type": "single_choice",
+              "question": "Trong sơ đồ khối, thao tác tính toán 'tong = a + b' được đặt trong hình nào?",
+              "options": {
+                "A": "Hình chữ nhật",
+                "B": "Hình thoi",
+                "C": "Hình oval",
+                "D": "Hình bình hành"
+              },
+              "correct": "A",
+              "timeLimit": 60
+            }
+          ],
           "practice": {
-            "title": "Thực hành nhóm cắt và ghép xâu",
-            "task": "Cho xâu s = 'chuc mung nam moi 2026'. Viết lệnh cắt ra cụm từ 'nam moi' và in ra màn hình.",
+            "title": "Thực hành vẽ sơ đồ khối rẽ nhánh",
+            "task": "Vẽ sơ đồ khối thuật toán kiểm tra một học sinh: nếu điểm >= 5 thì in \"Đạt\", ngược lại in \"Chưa đạt\".",
             "timeLimit": 600
           }
         }
       ],
       "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
     },
-    "tin10_bai1": {
-      "id": "tin10_bai1",
-      "title": "Bài 01: Thông tin và xử lý thông tin",
-      "grade": "10",
-      "objective": "Hiểu khái niệm thông tin và dữ liệu, phân biệt các bước trong quy trình xử lý thông tin.",
+    "tin6_bai1": {
+      "id": "tin6_bai1",
+      "title": "Bài 01: Thông tin và thu nhận thông tin",
+      "grade": "6",
+      "objective": "Phân biệt được thông tin và vật mang tin, nắm được các giác quan thu nhận thông tin của con người.",
       "oldLesson": {
         "tool": "wheel",
         "timeLimit": 120,
-        "question": "Hãy nêu khái niệm thông tin và dữ liệu? Cho ví dụ minh họa phân biệt giữa chúng."
+        "question": "Con người thu nhận thông tin từ thế giới xung quanh qua những giác quan nào?"
       },
-      "theoryTask": "Đọc SGK mục 1 (trang 5-8), thảo luận theo cặp đôi về sự khác nhau giữa Thông tin và Dữ liệu.",
-      "theoryDoc": "SGK Tin học 10 Cánh Diều - Trang 5",
-      "warmup": {
-        "question": "Dãy các số 38, 39, 40 khi chưa gắn với ngữ cảnh cụ thể được gọi là gì?",
-        "options": {
-          "A": "Thông tin",
-          "B": "Dữ liệu",
-          "C": "Tri thức",
-          "D": "Vật mang tin"
-        },
-        "timeLimit": 30
-      },
-      "theory": [
-        {
-          "id": "card-1",
-          "title": "1. Thông tin và Dữ liệu",
-          "summary": "Dữ liệu là các con số, văn bản, hình ảnh thô. Thông tin là ý nghĩa được rút ra từ việc xử lý dữ liệu.",
-          "code": "# Ví dụ dữ liệu thô:\ndiem = [8.5, 9.0, 10]\n# Thông tin xử lý:\ntb = sum(diem)/len(diem)\nprint('Điểm TB:', tb)",
-          "note": "Máy tính chỉ xử lý dữ liệu ở dạng số nhị phân 0 và 1."
-        }
-      ],
-      "discussion": {
-        "title": "Thực hành thu thập và mã hóa dữ liệu",
-        "task": "Hai em hãy thảo luận và nêu 3 ví dụ thực tế về dữ liệu đa phương tiện được thu thập và số hóa.",
-        "placeholder": "# Nhập ví dụ của nhóm vào đây...",
-        "timeLimit": 600
-      },
+      "theoryTask": "Đọc SGK Tin học 6 Bài 1, thảo luận về vai trò của thông tin trong học tập và sinh hoạt hàng ngày.",
+      "theoryDoc": "SGK Tin học 6 - Bài 1 Trang 5",
       "quiz": {
-        "question": "Thiết bị nào sau đây vừa là thiết bị vào vừa là thiết bị ra của máy tính?",
+        "question": "Vật nào sau đây được xem là vật mang tin?",
         "options": {
-          "A": "Bàn phím cơ",
-          "B": "Chuột quang",
-          "C": "Màn hình cảm ứng",
-          "D": "Máy in laser"
-        },
-        "correct": "C",
-        "timeLimit": 20
-      },
-      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
-    },
-    "tin11_bai1": {
-      "id": "tin11_bai1",
-      "title": "Bài 01: Hệ điều hành và Phần mềm ứng dụng",
-      "grade": "11",
-      "objective": "Nắm vai trò của hệ điều hành, phân biệt phần mềm nguồn mở và nguồn đóng.",
-      "oldLesson": {
-        "tool": "wheel",
-        "timeLimit": 120,
-        "question": "Hệ điều hành đóng vai trò gì trong việc quản lý và điều phối tài nguyên phần cứng máy tính?"
-      },
-      "theoryTask": "Đọc mục 2 SGK Tin 11 về chức năng của hệ điều hành Linux so với Windows.",
-      "theoryDoc": "SGK Tin học 11 - Trang 12",
-      "warmup": {
-        "question": "Hệ điều hành nào sau đây là phần mềm nguồn mở tiêu biểu?",
-        "options": {
-          "A": "Ubuntu Linux",
-          "B": "Microsoft Windows 11",
-          "C": "Apple macOS",
-          "D": "Apple iOS"
-        },
-        "timeLimit": 30
-      },
-      "theory": [
-        {
-          "id": "card-1",
-          "title": "1. Vai trò của Hệ điều hành",
-          "summary": "Hệ điều hành làm trung gian giao tiếp giữa phần cứng, phần mềm ứng dụng và người dùng.",
-          "code": "# Linux command check kernel:\nuname -a",
-          "note": "Linux là mã nguồn mở, Windows là mã nguồn đóng."
-        }
-      ],
-      "discussion": {
-        "title": "So sánh Hệ điều hành Windows và Linux",
-        "task": "Thảo luận về ưu điểm và nhược điểm của Linux đối với lập trình viên và doanh nghiệp.",
-        "placeholder": "# Gõ nội dung thảo luận nhóm...",
-        "timeLimit": 600
-      },
-      "quiz": {
-        "question": "Hệ điều hành nào sau đây là hệ điều hành mã nguồn mở?",
-        "options": {
-          "A": "Ubuntu Linux",
-          "B": "Microsoft Windows 11",
-          "C": "Apple macOS",
-          "D": "Apple iOS"
+          "A": "Quyển sách giáo khoa",
+          "B": "Tiếng trống trường",
+          "C": "Lời cô giáo giảng",
+          "D": "Mùi hương hoa hồng"
         },
         "correct": "A",
         "timeLimit": 20
       },
-      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
-    },
-    "tin12_bai1": {
-      "id": "tin12_bai1",
-      "title": "Bài 01: Giới thiệu Trí tuệ nhân tạo (AI)",
-      "grade": "12",
-      "objective": "Hiểu khái niệm AI, phân biệt AI hẹp và AGI, các ứng dụng của AI tạo sinh.",
-      "oldLesson": {
-        "tool": "slot",
-        "timeLimit": 120,
-        "question": "Trí tuệ nhân tạo hẹp (Narrow AI) khác gì so với Trí tuệ nhân tạo tổng quát (AGI)?"
-      },
-      "theoryTask": "Đọc SGK Tin 12 mục AI tạo sinh (Generative AI) và ứng dụng trong cuộc sống hiện đại.",
-      "theoryDoc": "SGK Tin học 12 - Trang 8",
-      "warmup": {
-        "question": "Công nghệ nào sau đây là nền tảng cốt lõi của các mô hình ngôn ngữ lớn (LLM)?",
-        "options": {
-          "A": "Mạng cục bộ LAN",
-          "B": "Cơ sở dữ liệu quan hệ SQL",
-          "C": "Giải thuật sắp xếp nhanh",
-          "D": "Kiến trúc Transformer & Deep Learning"
-        },
-        "timeLimit": 30
-      },
-      "theory": [
-        {
-          "id": "card-1",
-          "title": "1. Khái niệm Trí tuệ nhân tạo",
-          "summary": "AI là khả năng của máy tính mô phỏng các hành vi thông minh của con người như học hỏi, suy luận, thích nghi.",
-          "code": "# Phân loại AI:\n# 1. Narrow AI (Siri, ChatGPT)\n# 2. General AI (AGI)",
-          "note": "AI hiện tại chủ yếu là Narrow AI (chuyên biệt)."
-        }
-      ],
       "discussion": {
-        "title": "Đạo đức AI và Trách nhiệm sử dụng công nghệ",
-        "task": "Hai em hãy thảo luận về các nguy cơ đạo đức và tin giả khi sử dụng AI tạo sinh.",
-        "placeholder": "# Ghi chú ý kiến nhóm đôi...",
+        "title": "Thảo luận về các dạng thông tin cơ bản",
+        "task": "Kể tên 3 dạng thông tin cơ bản mà máy tính có thể xử lý được.",
+        "placeholder": "# Nhập câu trả lời nhóm...",
         "timeLimit": 600
       },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin6_bai4": {
+      "id": "tin6_bai4",
+      "title": "Bài 04: Mạng máy tính và Internet",
+      "grade": "6",
+      "objective": "Hiểu mạng máy tính là gì, nhận biết các thiết bị mạng cơ bản như cáp mạng, switch, modem, wifi.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Mạng máy tính đem lại những lợi ích gì cho việc chia sẻ dữ liệu và học tập?"
+      },
+      "theoryTask": "Đọc SGK mục 1 và 2 về các thành phần của mạng máy tính.",
+      "theoryDoc": "SGK Tin học 6 - Bài 4 Trang 18",
       "quiz": {
-        "question": "Công nghệ nào sau đây là nền tảng cốt lõi của các mô hình ngôn ngữ lớn (LLM)?",
+        "question": "Thiết bị nào sau đây dùng để phát sóng mạng không dây trong phòng máy?",
         "options": {
-          "A": "Mạng cục bộ LAN",
-          "B": "Cơ sở dữ liệu quan hệ SQL",
-          "C": "Giải thuật sắp xếp nhanh",
-          "D": "Kiến trúc Transformer & Deep Learning"
+          "A": "Bộ phát Wifi (Wireless Access Point)",
+          "B": "Màn hình máy tính",
+          "C": "Máy in",
+          "D": "Chuột máy tính"
         },
-        "correct": "D",
+        "correct": "A",
         "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Khám phá phòng máy thực hành",
+        "task": "Quan sát phòng máy tính của trường và xác định switch mạng, dây cáp mạng kết nối 18 máy tính.",
+        "placeholder": "# Nhập quan sát của nhóm...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+
+    // KHỐI 7
+    "tin7_bai1": {
+      "id": "tin7_bai1",
+      "title": "Bài 01: Thiết bị vào - Thiết bị ra",
+      "grade": "7",
+      "objective": "Phân biệt thiết bị vào (chuột, bàn phím, webcam) và thiết bị ra (màn hình, máy in, loa) của máy tính.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Kể tên 3 thiết bị vào và 3 thiết bị ra của máy tính để bàn?"
+      },
+      "theoryTask": "Đọc SGK Tin 7 Bài 1 về chức năng các cổng kết nối USB, HDMI, Audio.",
+      "theoryDoc": "SGK Tin học 7 - Bài 1 Trang 6",
+      "quiz": {
+        "question": "Màn hình cảm ứng trên điện thoại thông minh thuộc loại thiết bị nào?",
+        "options": {
+          "A": "Chỉ là thiết bị vào",
+          "B": "Chỉ là thiết bị ra",
+          "C": "Vừa là thiết bị vào vừa là thiết bị ra",
+          "D": "Không phải thiết bị vào hay ra"
+        },
+        "correct": "C",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thực hành kiểm tra thiết bị vào/ra máy trạm",
+        "task": "Kiểm tra bàn phím, chuột và màn hình của máy tính nhóm đang ngồi.",
+        "placeholder": "# Nhập báo cáo trạng thái máy...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin7_bai8": {
+      "id": "tin7_bai8",
+      "title": "Bài 08: Sử dụng các hàm trong bảng tính Excel",
+      "grade": "7",
+      "objective": "Sử dụng thành thạo các hàm tính toán cơ bản: SUM, AVERAGE, MAX, MIN, COUNT trong bảng tính.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Cú pháp của hàm tính trung bình cộng trong bảng tính là gì?"
+      },
+      "theoryTask": "Đọc SGK mục các hàm tính toán trong phần mềm bảng tính.",
+      "theoryDoc": "SGK Tin học 7 - Bài 8 Trang 36",
+      "quiz": {
+        "question": "Công thức =SUM(A1:A5) có chức năng gì?",
+        "options": {
+          "A": "Tính tổng các ô từ A1 đến A5",
+          "B": "Tìm giá trị lớn nhất từ A1 đến A5",
+          "C": "Tính trung bình cộng từ A1 đến A5",
+          "D": "Đếm số ô có dữ liệu"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thực hành tính điểm trung bình học kỳ",
+        "task": "Viết công thức tính điểm trung bình cho cột Toán, Tin, Văn bằng hàm AVERAGE.",
+        "placeholder": "# Nhập công thức Excel...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+
+    // KHỐI 8
+    "tin8_bai1": {
+      "id": "tin8_bai1",
+      "title": "Bài 01: Lịch sử phát triển của máy tính",
+      "grade": "8",
+      "objective": "Nắm được 5 thế hệ máy tính và sự thu nhỏ kích thước nhưng tăng vọt về tốc độ xử lý.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Thế hệ máy tính thứ nhất sử dụng linh kiện điện tử nào làm nòng cốt?"
+      },
+      "theoryTask": "Đọc SGK Tin 8 Bài 1 về đèn điện tử chân không, bóng bán dẫn và vi mạch IC.",
+      "theoryDoc": "SGK Tin học 8 - Bài 1 Trang 5",
+      "quiz": {
+        "question": "Máy tính điện tử thế hệ đầu tiên ENIAC sử dụng linh kiện gì?",
+        "options": {
+          "A": "Đèn điện tử chân không",
+          "B": "Bóng bán dẫn (Transistor)",
+          "C": "Mạch tích hợp (IC)",
+          "D": "Bộ vi xử lý siêu lớn (VLSI)"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thảo luận về máy tính lượng tử tương lai",
+        "task": "Nêu cảm nhận về tốc độ phát triển công nghệ máy tính từ cỗ máy nặng 30 tấn đến điện thoại nhỏ gọn trên tay.",
+        "placeholder": "# Nhập cảm nhận nhóm...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin8_bai11": {
+      "id": "tin8_bai11",
+      "title": "Bài 11: Lập trình trực quan Scratch và giải quyết vấn đề",
+      "grade": "8",
+      "objective": "Hiểu cấu trúc lặp, rẽ nhánh và tạo trò chơi hoặc hoạt hình tương tác bằng Scratch.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Khối lệnh 'lặp lại 10 lần' thuộc nhóm lệnh nào trong Scratch?"
+      },
+      "theoryTask": "Đọc SGK Tin 8 mục cấu trúc lặp và biến số trong Scratch.",
+      "theoryDoc": "SGK Tin học 8 - Bài 11 Trang 52",
+      "quiz": {
+        "question": "Để nhân vật di chuyển liên tục khi chạm vào cạnh sân khấu thì bật lại, dùng khối lệnh nào?",
+        "options": {
+          "A": "nếu chạm cạnh, bật lại",
+          "B": "di chuyển 10 bước",
+          "C": "xoay phải 15 độ",
+          "D": "dừng lại tất cả"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thiết kế kịch bản nhân vật di chuyển",
+        "task": "Lập trình chú mèo di chuyển theo 4 phím mũi tên trên bàn phím.",
+        "placeholder": "# Mô tả kịch bản khối lệnh Scratch...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+
+    // KHỐI 9
+    "tin9_bai1": {
+      "id": "tin9_bai1",
+      "title": "Bài 01: Thế giới thiết bị số và trí tuệ nhân tạo",
+      "grade": "9",
+      "objective": "Hiểu sự hiện diện của thiết bị số thông minh và bước đầu làm quen với khái niệm trí tuệ nhân tạo (AI).",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Kể tên 3 ứng dụng của Trí tuệ nhân tạo (AI) mà em biết trong cuộc sống?"
+      },
+      "theoryTask": "Đọc SGK Tin 9 Bài 1 về xe tự lái, trợ lý ảo và nhận diện khuôn mặt.",
+      "theoryDoc": "SGK Tin học 9 - Bài 1 Trang 5",
+      "quiz": {
+        "question": "Ứng dụng nào sau đây sử dụng công nghệ nhận diện giọng nói bằng AI?",
+        "options": {
+          "A": "Trợ lý ảo Google Assistant / Siri",
+          "B": "Phần mềm gõ văn bản Notepad",
+          "C": "Bảng tính Calculator",
+          "D": "Ứng dụng vẽ Paint"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thảo luận về ứng dụng AI trong học tập",
+        "task": "Thảo luận theo cặp đôi về lợi ích và những lưu ý khi sử dụng AI để hỗ trợ học tập.",
+        "placeholder": "# Nhập ý kiến thảo luận...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin9_bai8": {
+      "id": "tin9_bai8",
+      "title": "Bài 08: Thực hành phần mềm bảng tính và trình chiếu",
+      "grade": "9",
+      "objective": "Tạo bài trình chiếu đa phương tiện kết hợp biểu đồ thống kê từ phần mềm bảng tính.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Để tạo biểu đồ hình cột trong Excel, em vào dải lệnh nào?"
+      },
+      "theoryTask": "Đọc SGK Tin 9 về cách liên kết dữ liệu bảng tính sang trang chiếu.",
+      "theoryDoc": "SGK Tin học 9 - Bài 8 Trang 38",
+      "quiz": {
+        "question": "Phím tắt nào để bắt đầu trình chiếu toàn màn hình từ trang đầu tiên trong PowerPoint?",
+        "options": {
+          "A": "F5",
+          "B": "Shift + F5",
+          "C": "F1",
+          "D": "Ctrl + P"
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Thực hành thiết kế 3 trang slide báo cáo",
+        "task": "Thiết kế bài trình chiếu giới thiệu về phòng máy tương tác 18 máy tính của trường.",
+        "placeholder": "# Ghi nội dung 3 slide...",
+        "timeLimit": 600
+      },
+      "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
+    },
+    "tin9_bai12": {
+      "id": "tin9_bai12",
+      "title": "Bài 12: Làm quen với ngôn ngữ lập trình Python cơ bản",
+      "grade": "9",
+      "objective": "Làm quen với cú pháp Python, biến, kiểu dữ liệu số và xâu ký tự cơ bản.",
+      "oldLesson": {
+        "tool": "wheel",
+        "timeLimit": 120,
+        "question": "Hàm nào trong Python được dùng để in thông tin ra màn hình?"
+      },
+      "theoryTask": "Đọc SGK Tin 9 Bài 12 về môi trường chạy Python và lệnh print().",
+      "theoryDoc": "SGK Tin học 9 - Bài 12 Trang 60",
+      "quiz": {
+        "question": "Lệnh nào sau đây in ra màn hình dòng chữ 'Xin chao' trong Python?",
+        "options": {
+          "A": "print(\"Xin chao\")",
+          "B": "echo \"Xin chao\"",
+          "C": "write(\"Xin chao\")",
+          "D": "cout << \"Xin chao\""
+        },
+        "correct": "A",
+        "timeLimit": 20
+      },
+      "discussion": {
+        "title": "Viết chương trình Python tính chu vi hình chữ nhật",
+        "task": "Nhập 2 cạnh a, b và in ra chu vi hình chữ nhật (a + b) * 2.",
+        "placeholder": "# Viết code Python tại đây:\na = int(input())\nb = int(input())\nprint(\"Chu vi:\", (a + b) * 2)",
+        "timeLimit": 600
       },
       "stepsEnabled": { "1": true, "2": true, "3": true, "4": true, "5": true }
     }
   };
+
+  // Tương thích ngược với các ID bài dạy cũ để tránh lỗi cache
+  DEFAULT_LESSONS["tin10_bai12"] = DEFAULT_LESSONS["tin6_bai12"];
+  DEFAULT_LESSONS["tin10_bai1"] = DEFAULT_LESSONS["tin6_bai1"];
+  DEFAULT_LESSONS["tin11_bai1"] = DEFAULT_LESSONS["tin7_bai1"];
+  DEFAULT_LESSONS["tin12_bai1"] = DEFAULT_LESSONS["tin9_bai1"];
 
   let customLessons = {};
   try {
@@ -611,9 +829,9 @@
     state: {
       role: 'student',          // 'student' hoặc 'teacher'
       screen: 'lobby',          // 'lobby', 'student', hoặc 'teacher'
-      classId: '10A1',          // Lớp hiện tại
-      lessonId: 'tin10_bai12',
-      lessonData: EMBEDDED_LESSONS['tin10_bai12'],
+      classId: '6A1',          // Lớp hiện tại
+      lessonId: 'tin6_bai12',
+      lessonData: EMBEDDED_LESSONS['tin6_bai12'],
       fixedMachineId: null,     // Số máy đã lưu cố định trên thiết bị này
       machineId: null,          // Số máy hiện tại đang mở trong phiên
       pendingMachineId: null,   // Số máy đang chờ bấm xác nhận trong modal
@@ -658,7 +876,7 @@
       teacherPhase: 'waiting',
       sessionStarted: false,
       unlocked: false,          // Mặc định sảnh chọn máy bị khóa cứng
-      grade: '10',              // Khối lớp đang chọn
+      grade: '6',              // Khối lớp đang chọn
       countdown: { active: false, title: '', number: 3 },
       timer: { endsAt: 0, paused: false, secondsLeft: 0, totalSeconds: 0, isRunning: false },
       lastFinishedActivity: null,
@@ -693,7 +911,7 @@
             this.state.fixedMachineId = num;
             this.state.machineId = num;
             this.state.screen = 'lobby';
-            const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
+            const cData = EMBEDDED_CLASSES[this.state.classId || '6A1'];
             if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
               this.state.students = cData.seatingPlan[num];
             }
@@ -707,7 +925,7 @@
             this.state.fixedMachineId = num;
             this.state.machineId = num;
             this.state.screen = 'lobby';
-            const cData = EMBEDDED_CLASSES[this.state.classId || '10A1'];
+            const cData = EMBEDDED_CLASSES[this.state.classId || '6A1'];
             if (cData && cData.seatingPlan && cData.seatingPlan[num]) {
               this.state.students = cData.seatingPlan[num];
             }
@@ -866,7 +1084,7 @@
 
                 if (val.currentPhase === 'waiting' || val.returnToLobby) {
                   if (mId) {
-                    const classData = APP.classes[state.classId] || APP.classes['10A1'];
+                    const classData = APP.classes[state.classId] || APP.classes['6A1'];
                     const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
                     updates.screen = 'student';
                     updates.currentPhase = 'waiting';
@@ -881,7 +1099,7 @@
                   if (overlay) overlay.style.display = 'none';
                 } else if (val.currentPhase !== 'waiting') {
                   if (mId) {
-                    const classData = APP.classes[state.classId] || APP.classes['10A1'];
+                    const classData = APP.classes[state.classId] || APP.classes['6A1'];
                     const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
                     updates.screen = 'student';
                     updates.machineId = mId;
@@ -1075,7 +1293,7 @@
 
           if (nextPhase === 'waiting' || data.payload.resetByTeacher || data.payload.returnToLobby) {
             if (mId) {
-              const classData = APP.classes[state.classId] || APP.classes['10A1'];
+              const classData = APP.classes[state.classId] || APP.classes['6A1'];
               const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
               updates.screen = 'student';
               updates.currentPhase = 'waiting';
@@ -1090,7 +1308,7 @@
             if (overlay) overlay.style.display = 'none';
           } else {
             if (mId) {
-              const classData = APP.classes[state.classId] || APP.classes['10A1'];
+              const classData = APP.classes[state.classId] || APP.classes['6A1'];
               const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
               updates.screen = 'student';
               updates.machineId = mId;
@@ -1147,7 +1365,7 @@
               if (saved) mId = parseInt(saved, 10);
             } catch {}
           }
-          const classData = APP.classes[state.classId] || APP.classes['10A1'];
+          const classData = APP.classes[state.classId] || APP.classes['6A1'];
           const pair = mId ? (classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"]) : null;
 
           STORE.setState({
@@ -1530,7 +1748,7 @@
             localStorage.setItem('lms_fixed_machine_id', machineId.toString());
           } catch {}
 
-          const classData = this.classes[state.classId] || this.classes['10A1'];
+          const classData = this.classes[state.classId] || this.classes['6A1'];
           const pair = classData.seatingPlan[machineId] || ["Học sinh 1", "Học sinh 2"];
 
           // Đánh dấu máy này đang active
@@ -1677,7 +1895,7 @@
         if (!opt) return;
         const state = STORE.getState();
         if (state.quizAnswered) return;
-        const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
+        const lesson = state.lessonData || EMBEDDED_LESSONS['tin6_bai12'];
         const correct = (lesson && lesson.quiz) ? lesson.quiz.correct : 'B';
         const isCorrect = (opt === correct);
         this.submitQuizAnswer(opt, isCorrect);
@@ -1816,9 +2034,9 @@
           const selGrade = document.getElementById('teacher-select-grade');
           const selClass = document.getElementById('teacher-select-class');
           const selLesson = document.getElementById('teacher-select-lesson');
-          const chosenGrade = selGrade ? selGrade.value : '10';
-          const chosenClass = selClass ? selClass.value : '10A1';
-          const chosenLesson = selLesson ? selLesson.value : 'tin10_bai12';
+          const chosenGrade = selGrade ? selGrade.value : '6';
+          const chosenClass = selClass ? selClass.value : '6A1';
+          const chosenLesson = selLesson ? selLesson.value : 'tin6_bai12';
           const lessonObj = this.getLesson(chosenLesson);
 
           STORE.setState({
@@ -2002,7 +2220,7 @@
         btnRandom.addEventListener('click', () => {
           const randNum = Math.floor(Math.random() * 18) + 1;
           const state = STORE.getState();
-          const classData = this.classes[state.classId] || this.classes['10A1'];
+          const classData = this.classes[state.classId] || this.classes['6A1'];
           const pair = classData.seatingPlan[randNum] || ["Học sinh 1", "Học sinh 2"];
           alert('🎲 KẾT QUẢ BỐC THĂM NGẪU NHIÊN:\n\n🖥️ MÁY SỐ ' + String(randNum).padStart(2, '0') + '!\n👥 ' + pair.join(' & '));
         });
@@ -2096,7 +2314,7 @@
       const state = STORE.getState();
       const selectCls = document.getElementById('settings-select-class');
       if (selectCls) {
-        selectCls.value = state.classId || '10A1';
+        selectCls.value = state.classId || '6A1';
       }
       this.renderSettingsSeatingGrid();
       const modal = document.getElementById('modal-teacher-settings');
@@ -2110,8 +2328,8 @@
 
     renderSettingsSeatingGrid() {
       const selectCls = document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
       const grid = document.getElementById('settings-seating-grid');
       const badge = document.getElementById('settings-student-count-badge');
       if (!grid) return;
@@ -2160,8 +2378,8 @@
 
     renderClassesSeatingPreview() {
       const selectCls = document.getElementById('classes-select-class');
-      const clsId = selectCls ? selectCls.value : (STORE.getState().classId || '10A1');
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : (STORE.getState().classId || '6A1');
+      const classData = this.classes[clsId] || this.classes['6A1'];
       const preview = document.getElementById('classes-seating-preview');
       if (!preview) return;
 
@@ -2201,8 +2419,8 @@
 
     addStudentToDesk(deskNum) {
       const selectCls = document.getElementById('classes-select-class') || document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
       const input = document.getElementById(`add-student-input-${deskNum}`) || document.getElementById(`classes-add-student-input-${deskNum}`);
       if (!input) return;
 
@@ -2220,8 +2438,8 @@
 
     removeStudentFromDesk(deskNum, idx) {
       const selectCls = document.getElementById('classes-select-class') || document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
       if (classData && classData.seatingPlan[deskNum]) {
         classData.seatingPlan[deskNum].splice(idx, 1);
         this.renderSettingsSeatingGrid();
@@ -2259,8 +2477,8 @@
 
     downloadExcelTemplate() {
       const selectCls = document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
 
       const rows = [
         ["Số máy", "Lớp", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
@@ -2297,8 +2515,8 @@
 
     exportCurrentClassExcel() {
       const selectCls = document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
 
       const rows = [
         ["Số máy", "Lớp", "Học sinh 1", "Học sinh 2", "Học sinh 3", "Học sinh 4", "Ghi chú"]
@@ -2336,8 +2554,8 @@
     importExcelFile(file) {
       if (!file) return;
       const selectCls = document.getElementById('settings-select-class');
-      const clsId = selectCls ? selectCls.value : '10A1';
-      const classData = this.classes[clsId] || this.classes['10A1'];
+      const clsId = selectCls ? selectCls.value : '6A1';
+      const classData = this.classes[clsId] || this.classes['6A1'];
 
       const isXlsx = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
 
@@ -2394,8 +2612,8 @@
       let classData = targetClassData;
       if (!classData) {
         const selectCls = document.getElementById('settings-select-class');
-        const clsId = selectCls ? selectCls.value : '10A1';
-        classData = this.classes[clsId] || this.classes['10A1'];
+        const clsId = selectCls ? selectCls.value : '6A1';
+        classData = this.classes[clsId] || this.classes['6A1'];
       }
 
       let importedCount = 0;
@@ -2437,7 +2655,7 @@
     },
 
     addNewClassModal() {
-      const className = prompt('Nhập tên lớp mới (ví dụ: 10A3, 11A1, 9A2):', '');
+      const className = prompt('Nhập tên lớp mới (ví dụ: 6A3, 7A1, 8A1, 9A2):', '');
       if (!className || !className.trim()) return;
       const cleanName = className.trim();
       const classId = cleanName.replace(/^(lớp|lop)\s*/i, '').replace(/\s+/g, '');
@@ -2452,7 +2670,7 @@
 
       this.classes[classId] = {
         className: 'Lớp ' + classId,
-        grade: parseInt(classId.replace(/[^\d]/g, ''), 10) || 10,
+        grade: parseInt(classId.replace(/[^\d]/g, ''), 10) || 6,
         totalStudents: 0,
         seatingPlan: {
           "1": [], "2": [], "3": [], "4": [], "5": [], "6": [],
@@ -2486,15 +2704,15 @@
     },
 
     // === CÁC PHƯƠNG THỨC QUẢN LÝ BÀI HỌC & XƯỞNG SOẠN KỊCH BẢN (STUDIO EDITOR) ===
-    currentStudioGrade: '10',
-    currentStudioLessonId: 'tin10_bai12',
+    currentStudioGrade: '6',
+    currentStudioLessonId: 'tin6_bai12',
 
     getAllLessons() {
       return EMBEDDED_LESSONS;
     },
 
     getLesson(id) {
-      return EMBEDDED_LESSONS[id] || EMBEDDED_LESSONS['tin10_bai12'] || DEFAULT_LESSONS['tin10_bai12'];
+      return EMBEDDED_LESSONS[id] || EMBEDDED_LESSONS['tin6_bai12'] || DEFAULT_LESSONS['tin6_bai12'];
     },
 
     getLessonsByGrade(grade) {
@@ -2531,7 +2749,7 @@
     },
 
     initStudio() {
-      this.updateStageLessonDropdown(STORE.getState().grade || '10');
+      this.updateStageLessonDropdown(STORE.getState().grade || '6');
       this.renderStudioLessonList(this.currentStudioGrade);
       this.loadLessonToStudio(this.currentStudioLessonId);
     },
@@ -2555,7 +2773,7 @@
     loadLessonToStudio(lessonId) {
       const lesson = this.getLesson(lessonId);
       this.currentStudioLessonId = lesson.id;
-      this.currentStudioGrade = String(lesson.grade || '10');
+      this.currentStudioGrade = String(lesson.grade || '6');
 
       document.querySelectorAll('.sg-btn').forEach(b => {
         b.classList.toggle('active', b.textContent.includes(this.currentStudioGrade));
@@ -2983,7 +3201,7 @@
         return;
       }
 
-      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const lessonId = this.currentStudioLessonId || 'tin6_bai12';
       const lesson = this.getLesson(lessonId) || {};
       lesson.sections = sections;
 
@@ -2995,11 +3213,11 @@
     },
 
     saveStudioLesson() {
-      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const lessonId = this.currentStudioLessonId || 'tin6_bai12';
       const existing = this.getLesson(lessonId) || {};
 
       const title = document.getElementById('studio-lesson-title-input')?.value.trim() || existing.title || 'Bài dạy mới';
-      const grade = this.currentStudioGrade || existing.grade || '10';
+      const grade = this.currentStudioGrade || existing.grade || '6';
 
       const tool1 = document.getElementById('step-tool-1')?.value || 'wheel';
       const time1 = parseInt(document.getElementById('step-time-1')?.value || '120', 10);
@@ -3170,7 +3388,7 @@
     studioCreateNewLesson() {
       const title = prompt('Nhập tên bài dạy mới:', 'Bài mới: ');
       if (!title || !title.trim()) return;
-      const grade = this.currentStudioGrade || '10';
+      const grade = this.currentStudioGrade || '6';
       const id = `lesson_${grade}_${Date.now()}`;
       const newLesson = {
         id: id,
@@ -3214,7 +3432,7 @@
     },
 
     studioPreviewLesson() {
-      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const lessonId = this.currentStudioLessonId || 'tin6_bai12';
       const l = this.getLesson(lessonId) || {};
       const titleInp = document.getElementById('studio-lesson-title-input');
       const title = (titleInp && titleInp.value.trim()) || l.title || 'Bài dạy thực hành';
@@ -3534,7 +3752,7 @@
       }
 
       // 3. Mở Modal xác nhận máy
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
       const pair = classData.seatingPlan[num] || ["Học sinh 1", "Học sinh 2"];
 
       STORE.setState({ pendingMachineId: num });
@@ -3924,7 +4142,7 @@
 
     // GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC ĐIỂM DANH & 4 CHẶNG
     renderTeacherActiveSession(state) {
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
       const sessionTitle = document.getElementById('th-session-title');
       if (sessionTitle) {
         sessionTitle.textContent = classData.className + ' • ' + (state.lessonData ? state.lessonData.title : 'Môn Tin học');
@@ -4077,7 +4295,7 @@
           });
 
           const colors = { A: '#ef4444', B: '#3b82f6', C: '#f59e0b', D: '#10b981' };
-          const lesson = state.lessonData || EMBEDDED_LESSONS['tin10_bai12'];
+          const lesson = state.lessonData || EMBEDDED_LESSONS['tin6_bai12'];
           const warmupOptions = (lesson && lesson.warmup && lesson.warmup.options) ? lesson.warmup.options : {
             A: 'Phương án A', B: 'Phương án B', C: 'Phương án C', D: 'Phương án D'
           };
@@ -4252,7 +4470,7 @@
     },
 
     renderLobby(state) {
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
       const grid = document.getElementById('computers-grid');
       const banner = document.getElementById('lobby-status-banner');
       const icon = document.getElementById('lsb-icon');
@@ -4381,7 +4599,7 @@
       const classLabel = document.getElementById('sh-class-label');
       if (classLabel) {
         const c = this.classes[state.classId];
-        classLabel.textContent = `${c ? c.className : 'Lớp 10A1'} • Môn Tin học`;
+        classLabel.textContent = `${c ? c.className : 'Lớp 6A1'} • Môn Tin học THCS`;
       }
 
       const sosBtn = document.getElementById('btn-student-sos');
@@ -4515,7 +4733,7 @@
       }
 
       if (currentPhase === 'warmup') {
-        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin6_bai12'];
         if (lesson && lesson.warmup) {
           const qEl = document.getElementById('poll-question-text');
           if (qEl && lesson.warmup.question) qEl.textContent = lesson.warmup.question;
@@ -4572,7 +4790,7 @@
       }
 
       if (currentPhase === 'discussion') {
-        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin6_bai12'];
         if (lesson && lesson.discussion) {
           const titleEl = document.getElementById('disc-task-title');
           if (titleEl && lesson.discussion.title) titleEl.textContent = lesson.discussion.title;
@@ -4605,7 +4823,7 @@
       }
 
       if (currentPhase === 'quiz') {
-        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
+        const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin6_bai12'];
         const curSec = state.currentSection || 1;
 
         // Xác định danh sách gói câu hỏi
@@ -5753,7 +5971,7 @@
     renderH2PreviewGrid() {
       const container = document.getElementById('h2-theory-preview-grid');
       if (!container) return;
-      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || EMBEDDED_LESSONS['tin10_bai12'] || {};
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || EMBEDDED_LESSONS['tin6_bai12'] || {};
       const theory = lesson.theory || [
         { title: "1. Khái niệm kiểu xâu", summary: "Xâu ký tự (str) là tập hợp các ký tự trong bảng mã Unicode, đặt trong dấu ngoặc kép hoặc đơn.", code: "s = \"Hello 2026\"\nprint(type(s))", note: "Xâu là kiểu bất biến (immutable)" },
         { title: "2. Đánh chỉ số xâu (Index)", summary: "Chỉ số dương từ 0 đến len(s)-1. Chỉ số âm từ -1 ngược về -len(s).", code: "s = \"Python\"\nprint(s[0])   # 'P'\nprint(s[-1])  # 'n'", note: "Cấm gán s[0] = 'J' (Báo lỗi TypeError)" },
@@ -6158,7 +6376,7 @@
     initLuckyDrawViews() {
       const state = STORE.getState();
       const strat = (state.luckyDraw && state.luckyDraw.strategy) ? state.luckyDraw.strategy : 'slot_machine';
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
 
       if (strat === 'slot_machine') {
         const reelM = document.getElementById('slot-reel-machine');
@@ -6218,7 +6436,7 @@
       if (!canvas || !canvas.getContext) return;
       const ctx = canvas.getContext('2d');
       const state = STORE.getState();
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
 
       const totalSlices = 18;
       const sliceAngle = (2 * Math.PI) / totalSlices;
@@ -6324,7 +6542,7 @@
 
     startLuckyDrawSpin() {
       const state = STORE.getState();
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
 
       // Chọn ngẫu nhiên máy từ 1..18
       const targetMachine = Math.floor(Math.random() * 18) + 1;
@@ -6377,7 +6595,7 @@
 
       SOUNDS.init();
       const state = STORE.getState();
-      const classData = this.classes[state.classId] || this.classes['10A1'];
+      const classData = this.classes[state.classId] || this.classes['6A1'];
 
       if (strategy === 'slot_machine') {
         const reelM = document.getElementById('slot-reel-machine');
@@ -6826,7 +7044,7 @@
           } catch {}
         }
         if (mId) {
-          const classData = APP.classes[curState.classId] || APP.classes['10A1'];
+          const classData = APP.classes[curState.classId] || APP.classes['6A1'];
           const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
           STORE.setState({
             screen: 'student',
@@ -6866,7 +7084,7 @@
             } catch {}
           }
           if (mId) {
-            const classData = APP.classes[curState.classId] || APP.classes['10A1'];
+            const classData = APP.classes[curState.classId] || APP.classes['6A1'];
             const pair = classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"];
             STORE.setState({
               screen: 'student',
@@ -6901,7 +7119,7 @@
       APP.renderSettingsSeatingGrid();
       APP.renderClassesSeatingPreview();
     } else if (tab === 'studio') {
-      APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin10_bai12');
+      APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin6_bai12');
     } else if (tab === 'stage') {
       APP.renderDynamicStagePipeline();
     }
@@ -6910,18 +7128,20 @@
   window.teacherOnGradeChange = function(grade) {
     if (!grade) {
       const gSel = document.getElementById('teacher-select-grade');
-      grade = gSel ? gSel.value : (STORE.getState().grade || '10');
+      grade = gSel ? gSel.value : (STORE.getState().grade || '6');
     }
     grade = String(grade);
     STORE.setState({ grade });
     const classSel = document.getElementById('teacher-select-class');
     if (classSel) {
-      if (grade === '11') {
-        classSel.innerHTML = '<option value="11A1">Lớp 11A1 (36 học sinh • 18 máy)</option><option value="11A2">Lớp 11A2 (35 học sinh • 18 máy)</option>';
-      } else if (grade === '12') {
-        classSel.innerHTML = '<option value="12A1">Lớp 12A1 (38 học sinh • 18 máy)</option><option value="12A2">Lớp 12A2 (37 học sinh • 18 máy)</option>';
+      if (grade === '7') {
+        classSel.innerHTML = '<option value="7A1">Lớp 7A1 (36 học sinh • 18 máy)</option><option value="7A2">Lớp 7A2 (35 học sinh • 18 máy)</option>';
+      } else if (grade === '8') {
+        classSel.innerHTML = '<option value="8A1">Lớp 8A1 (38 học sinh • 18 máy)</option><option value="8A2">Lớp 8A2 (37 học sinh • 18 máy)</option>';
+      } else if (grade === '9') {
+        classSel.innerHTML = '<option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option><option value="9A2">Lớp 9A2 (35 học sinh • 18 máy)</option>';
       } else {
-        classSel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option><option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option><option value="10A3">Lớp 10A3 (34 học sinh • 18 máy)</option>';
+        classSel.innerHTML = '<option value="6A1">Lớp 6A1 (35 học sinh • 18 máy)</option><option value="6A2">Lớp 6A2 (36 học sinh • 18 máy)</option><option value="6A3">Lớp 6A3 (34 học sinh • 18 máy)</option>';
       }
     }
     // Cập nhật danh sách bài dạy theo khối đã chọn
@@ -7147,12 +7367,14 @@
   window.filterClassesByGrade = function(g) {
     const sel = document.getElementById('classes-select-class');
     if (!sel) return;
-    if (g === '11') {
-      sel.innerHTML = '<option value="11A1">Lớp 11A1 (36 học sinh)</option><option value="11A2">Lớp 11A2 (35 học sinh)</option>';
-    } else if (g === '12') {
-      sel.innerHTML = '<option value="12A1">Lớp 12A1 (38 học sinh)</option><option value="12A2">Lớp 12A2 (37 học sinh)</option>';
+    if (g === '7') {
+      sel.innerHTML = '<option value="7A1">Lớp 7A1 (36 học sinh)</option><option value="7A2">Lớp 7A2 (35 học sinh)</option>';
+    } else if (g === '8') {
+      sel.innerHTML = '<option value="8A1">Lớp 8A1 (38 học sinh)</option><option value="8A2">Lớp 8A2 (37 học sinh)</option>';
+    } else if (g === '9') {
+      sel.innerHTML = '<option value="9A1">Lớp 9A1 (36 học sinh)</option><option value="9A2">Lớp 9A2 (35 học sinh)</option>';
     } else {
-      sel.innerHTML = '<option value="10A1">Lớp 10A1 (35 học sinh)</option><option value="10A2">Lớp 10A2 (36 học sinh)</option><option value="10A3">Lớp 10A3 (34 học sinh)</option>';
+      sel.innerHTML = '<option value="6A1">Lớp 6A1 (35 học sinh)</option><option value="6A2">Lớp 6A2 (36 học sinh)</option><option value="6A3">Lớp 6A3 (34 học sinh)</option>';
     }
     const currentCls = sel.value;
     STORE.setState({ classId: currentCls });

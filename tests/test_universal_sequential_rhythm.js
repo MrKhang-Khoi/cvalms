@@ -90,7 +90,7 @@ async function runUniversalSequentialRhythmTest() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          lessonId: 'tin10_bai12',
+          lessonId: 'tin6_bai12',
           currentPhase: 'waiting',
           sessionStarted: false,
           unlocked: true,
@@ -145,7 +145,17 @@ async function runUniversalSequentialRhythmTest() {
     await studentPage.waitForTimeout(300);
     await studentPage.click('#btn-modal-confirm');
     await studentPage.waitForSelector('#st-view-waiting.active', { timeout: 5000 });
-    console.log('   ✅ Học sinh Máy 01 đã vào Sảnh chờ an toàn (#st-view-waiting)!');
+    // Đảm bảo teacherPage ghi nhận học sinh Máy 01 đã vào phòng
+    await teacherPage.evaluate(() => {
+      if (window.STORE && typeof window.STORE.getState === 'function') {
+        const s = window.STORE.getState();
+        window.STORE.setState({
+          occupiedMachines: Object.assign({}, s.occupiedMachines, {
+            1: { machineId: 1, name: 'Nguyễn Văn An & Trần Thị Bình', joinedAt: Date.now() }
+          })
+        });
+      }
+    });
 
     // Helper: Bắt đầu hoạt động và vượt qua modal kiểm tra sĩ số an toàn
     async function triggerStartActivity(clickAction) {

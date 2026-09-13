@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="LMS Phòng Máy Tương Tác 18 Máy - Môn Tin học THPT">
+  <meta name="description" content="LMS Phòng Máy Tương Tác 18 Máy - Môn Tin học THCS">
   <title>LMS Phòng Máy Tương Tác 18 Máy</title>
 
   <!-- Google Fonts: Inter & Fira Code cho Code Tin học -->
@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=3.1.0">
+  <link rel="stylesheet" href="style.css?v=3.2.0">
 
   <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
@@ -333,8 +333,10 @@
         <div class="class-picker-wrap">
           <label for="select-lobby-class"><i class="fas fa-users-class"></i> Lớp học:</label>
           <select id="select-lobby-class" class="class-select">
-            <option value="10A1">Lớp 10A1</option>
-            <option value="10A2">Lớp 10A2</option>
+            <option value="6A1">Lớp 6A1</option>
+            <option value="6A2">Lớp 6A2</option>
+            <option value="7A1">Lớp 7A1</option>
+            <option value="8A1">Lớp 8A1</option>
             <option value="9A1">Lớp 9A1</option>
           </select>
         </div>
@@ -390,7 +392,7 @@
         <div class="sh-machine-badge" id="sh-machine-badge">MÁY 04</div>
         <div class="sh-pair-info">
           <div class="sh-students-label" id="sh-students-label">Đỗ Gia Huy & Bùi Phương Mai</div>
-          <div class="sh-class-label" id="sh-class-label">Lớp 10A1 • Môn Tin học</div>
+          <div class="sh-class-label" id="sh-class-label">Lớp 6A1 • Môn Tin học THCS</div>
         </div>
       </div>
 
@@ -420,7 +422,7 @@
               <span class="kl-badge-text"><i class="fas fa-satellite-dish"></i> SẢNH CHỜ PHÒNG MÁY TƯƠNG TÁC</span>
             </div>
 
-            <h1 class="kl-lesson-title" id="waiting-lesson-title">Bài 12: Kiểu dữ liệu xâu trong Python</h1>
+            <h1 class="kl-lesson-title" id="waiting-lesson-title">Bài 12: Thuật toán và sơ đồ khối trong Tin học 6</h1>
             <p class="kl-lesson-sub" id="waiting-lesson-sub">Môn Tin học • Thầy đang kiểm tra sĩ số và chuẩn bị phát lệnh bắt đầu</p>
 
             <!-- Thẻ Danh Tính Học Sinh (Neon Hologram Card) -->
@@ -682,7 +684,7 @@ print(s[4:])</code></pre>
         <h3 id="modal-machine-title">XÁC NHẬN MÁY BÀN SỐ 01</h3>
       </div>
       <div class="modal-body">
-        <p class="mb-text">Theo sơ đồ lớp <strong id="modal-class-name">10A1</strong>, vị trí này được phân công cho:</p>
+        <p class="mb-text">Theo sơ đồ lớp <strong id="modal-class-name">6A1</strong>, vị trí này được phân công cho:</p>
         <div class="modal-pair-tags" id="modal-pair-tags">
           <div class="pair-tag"><i class="fas fa-user-graduate"></i> Nguyễn Văn An</div>
           <div class="pair-tag"><i class="fas fa-user-graduate"></i> Trần Thị Bình</div>
@@ -782,17 +784,18 @@ print(s[4:])</code></pre>
             <div class="s1-form-group">
               <label><i class="fas fa-layer-group"></i> KHỐI:</label>
               <select id="classes-filter-grade" class="th-select" onchange="window.filterClassesByGrade(this.value)">
-                <option value="10">Khối 10 (THPT)</option>
-                <option value="11">Khối 11 (THPT)</option>
-                <option value="12">Khối 12 (THPT)</option>
+                <option value="6">Khối 6 (THCS)</option>
+                <option value="7">Khối 7 (THCS)</option>
+                <option value="8">Khối 8 (THCS)</option>
+                <option value="9">Khối 9 (THCS)</option>
               </select>
             </div>
             <div class="s1-form-group">
               <label><i class="fas fa-users"></i> LỚP ĐANG CHỌN:</label>
               <select id="classes-select-class" class="th-select" onchange="window.teacherSelectClassForEdit(this.value)">
-                <option value="10A1">Lớp 10A1 (35 học sinh)</option>
-                <option value="10A2">Lớp 10A2 (36 học sinh)</option>
-                <option value="10A3">Lớp 10A3 (34 học sinh)</option>
+                <option value="6A1">Lớp 6A1 (35 học sinh)</option>
+                <option value="6A2">Lớp 6A2 (36 học sinh)</option>
+                <option value="6A3">Lớp 6A3 (34 học sinh)</option>
               </select>
             </div>
           </div>
@@ -812,18 +815,19 @@ print(s[4:])</code></pre>
             <div class="studio-sidebar">
               <div class="sb-header"><i class="fas fa-book"></i> KHO BÀI DẠY GỐC</div>
               <div class="sb-grade-picker">
-                <button type="button" class="sg-btn active" onclick="window.studioSelectGrade('10')">Khối 10</button>
-                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('11')">Khối 11</button>
-                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('12')">Khối 12</button>
+                <button type="button" class="sg-btn active" onclick="window.studioSelectGrade('6')">Khối 6</button>
+                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('7')">Khối 7</button>
+                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('8')">Khối 8</button>
+                <button type="button" class="sg-btn" onclick="window.studioSelectGrade('9')">Khối 9</button>
               </div>
               <div class="sb-lesson-list" id="studio-lesson-list">
-                <div class="sb-lesson-item active" onclick="window.studioLoadLesson('tin10_bai12')">
-                  <div class="sli-title">Bài 12: Kiểu dữ liệu xâu</div>
-                  <div class="sli-meta">5 bước • Đã lưu</div>
+                <div class="sb-lesson-item active" onclick="window.studioLoadLesson('tin6_bai12')">
+                  <div class="sli-title">Bài 12: Thuật toán & Sơ đồ khối</div>
+                  <div class="sli-meta">Khối 6 • 5 bước • Đã lưu</div>
                 </div>
-                <div class="sb-lesson-item" onclick="window.studioLoadLesson('tin10_bai1')">
-                  <div class="sli-title">Bài 01: Thông tin và xử lý thông tin</div>
-                  <div class="sli-meta">4 bước • Đã lưu</div>
+                <div class="sb-lesson-item" onclick="window.studioLoadLesson('tin6_bai1')">
+                  <div class="sli-title">Bài 01: Thông tin và thu nhận thông tin</div>
+                  <div class="sli-meta">Khối 6 • 5 bước • Đã lưu</div>
                 </div>
               </div>
               <button type="button" class="btn-tool-sm btn-block" onclick="window.studioCreateNewLesson()">
@@ -831,13 +835,12 @@ print(s[4:])</code></pre>
               </button>
             </div>
 
-            <!-- Cột phải: Dòng thời gian Timeline 5 bước có Bật/Tắt -->
             <!-- Cột phải: Dòng thời gian Timeline 5 bước có Bật/Tắt & CHỈNH SỬA TOÀN BỘ NỘI DUNG -->
             <div class="studio-timeline-area">
               <div class="sta-header">
                 <div class="sta-title-box">
                   <div class="sta-badge"><i class="fas fa-edit"></i> BỘ SOẠN KỊCH BẢN BÀI DẠY (STUDIO EDITOR)</div>
-                  <input type="text" id="studio-lesson-title-input" class="studio-title-input" value="Bài 12: Kiểu dữ liệu xâu trong Python" placeholder="Nhập tên bài dạy tại đây..." title="Bấm vào để đổi tên bài dạy">
+                  <input type="text" id="studio-lesson-title-input" class="studio-title-input" value="Bài 12: Thuật toán và sơ đồ khối trong Tin học 6" placeholder="Nhập tên bài dạy tại đây..." title="Bấm vào để đổi tên bài dạy">
                 </div>
                 <div class="sta-actions">
                   <button type="button" class="btn-tool-sm" id="btn-download-excel-template" onclick="window.studioDownloadExcelTemplate()" title="Tải file Excel mẫu để soạn bài nhanh">
@@ -847,7 +850,7 @@ print(s[4:])</code></pre>
                     <i class="fas fa-file-import" style="color:#38bdf8;"></i> Nhập Excel
                   </button>
                   <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="window.studioHandleExcelImport(event)">
-                  <button type="button" class="btn-tool-sm" onclick="window.studioPreviewLesson()">
+                  <button type="button" class="btn-tool-sm" id="btn-studio-preview" onclick="window.studioPreviewLesson()">
                     <i class="fas fa-eye"></i> Xem trước
                   </button>
                   <button type="button" class="btn-primary btn-save-studio" id="btn-studio-save-lesson" onclick="window.studioSaveLesson()">
@@ -1399,26 +1402,28 @@ print("2. Cắt xâu:", s[10:17])</textarea>
               <div class="s1-form-group">
                 <label for="teacher-select-grade"><i class="fas fa-layer-group"></i> 1. KHỐI LỚP:</label>
                 <select id="teacher-select-grade" class="th-select" onchange="window.teacherOnGradeChange(this.value)">
-                  <option value="10">Khối 10 (THPT)</option>
-                  <option value="11">Khối 11 (THPT)</option>
-                  <option value="12">Khối 12 (THPT)</option>
+                  <option value="6">Khối 6 (THCS)</option>
+                  <option value="7">Khối 7 (THCS)</option>
+                  <option value="8">Khối 8 (THCS)</option>
+                  <option value="9">Khối 9 (THCS)</option>
                 </select>
               </div>
 
               <div class="s1-form-group">
                 <label for="teacher-select-class"><i class="fas fa-users-class"></i> 2. CHỌN LỚP DẠY:</label>
                 <select id="teacher-select-class" class="th-select">
-                  <option value="10A1">Lớp 10A1 (35 học sinh • 18 máy)</option>
-                  <option value="10A2">Lớp 10A2 (36 học sinh • 18 máy)</option>
-                  <option value="10A3">Lớp 10A3 (34 học sinh • 18 máy)</option>
+                  <option value="6A1">Lớp 6A1 (35 học sinh • 18 máy)</option>
+                  <option value="6A2">Lớp 6A2 (36 học sinh • 18 máy)</option>
+                  <option value="6A3">Lớp 6A3 (34 học sinh • 18 máy)</option>
                 </select>
               </div>
 
               <div class="s1-form-group">
                 <label for="teacher-select-lesson"><i class="fas fa-book"></i> 3. CHỌN BÀI DẠY:</label>
                 <select id="teacher-select-lesson" class="th-select">
-                  <option value="tin10_bai12">Bài 12: Kiểu dữ liệu xâu trong Python</option>
-                  <option value="tin10_bai1">Bài 01: Thông tin và xử lý thông tin</option>
+                  <option value="tin6_bai12">Bài 12: Thuật toán và sơ đồ khối</option>
+                  <option value="tin6_bai1">Bài 01: Thông tin và thu nhận thông tin</option>
+                  <option value="tin6_bai4">Bài 04: Mạng máy tính và Internet</option>
                 </select>
               </div>
 
@@ -1453,7 +1458,7 @@ print("2. Cắt xâu:", s[10:17])</textarea>
           <!-- Cụm bên trái: Bài học & Sĩ số phòng chờ -->
           <div class="tdch-left">
             <div class="tdch-lesson-title" id="tdch-lesson-title">
-              <i class="fas fa-book-open" style="color:#38bdf8;"></i> <span id="tdch-lesson-name">Bài 12: Kiểu dữ liệu xâu</span>
+              <i class="fas fa-book-open" style="color:#38bdf8;"></i> <span id="tdch-lesson-name">Bài 12: Thuật toán và sơ đồ khối</span>
             </div>
             <div class="tdch-status-badge" id="tdch-waiting-badge">
               <span class="pulse-dot"></span> <span id="tdch-waiting-count">Phòng chờ: 0/18 máy</span>
@@ -1640,7 +1645,7 @@ print("2. Cắt xâu:", s[10:17])</textarea>
                   <div class="ots-icon"><i class="fas fa-laptop-code"></i></div>
                   <div class="ots-info">
                     <div class="ots-label">NHIỆM VỤ THỰC HÀNH & THẢO LUẬN NHÓM ĐÔI:</div>
-                    <div class="ots-name" id="h3-disc-task-display">Thực hành lập trình Python: Kiểu dữ liệu xâu ký tự theo cặp đôi</div>
+                    <div class="ots-name" id="h3-disc-task-display">Thực hành vẽ và mô tả thuật toán bằng sơ đồ khối theo cặp đôi</div>
                     <div id="h3-disc-meta-display" style="color:#a78bfa;font-size:13px;margin-top:4px;font-weight:600;">
                       <i class="fas fa-code-branch"></i> Hỗ trợ nộp bài theo thời gian thực & Spotlight bài xuất sắc lên bảng
                     </div>
@@ -1794,8 +1799,10 @@ print("2. Cắt xâu:", s[10:17])</textarea>
         <div class="st-group">
           <label for="settings-select-class"><i class="fas fa-users"></i> Lớp học:</label>
           <select id="settings-select-class" class="th-select">
-            <option value="10A1">Lớp 10A1</option>
-            <option value="10A2">Lớp 10A2</option>
+            <option value="6A1">Lớp 6A1</option>
+            <option value="6A2">Lớp 6A2</option>
+            <option value="7A1">Lớp 7A1</option>
+            <option value="8A1">Lớp 8A1</option>
             <option value="9A1">Lớp 9A1</option>
           </select>
           <button type="button" class="btn-tool-sm" id="btn-add-new-class-modal" title="Thêm lớp học mới">
@@ -2042,7 +2049,7 @@ print("2. Cắt xâu:", s[10:17])</textarea>
           </div>
           <div>
             <div style="font-size:12px;font-weight:700;color:#38bdf8;text-transform:uppercase;letter-spacing:1px;">BẢN ĐỒ TIẾN TRÌNH SƯ PHẠM CHI TIẾT (LESSON BLUEPRINT)</div>
-            <h3 id="bp-modal-title" style="margin:2px 0 0 0;font-size:18px;font-weight:800;color:#f8fafc;">Bài 12: Kiểu dữ liệu xâu trong Python</h3>
+            <h3 id="bp-modal-title" style="margin:2px 0 0 0;font-size:18px;font-weight:800;color:#f8fafc;">Bài 12: Thuật toán và sơ đồ khối trong Tin học 6</h3>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
@@ -2095,7 +2102,7 @@ print("2. Cắt xâu:", s[10:17])</textarea>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v3.1.0 Cache-Busted) -->
-  <script src="js/bundle.js?v=3.1.0"></script>
+  <script src="js/bundle.js?v=3.2.0"></script>
 </body>
 </html>
 
