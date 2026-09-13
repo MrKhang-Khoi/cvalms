@@ -3559,49 +3559,88 @@ body {
   position: relative;
 }
 
-/* PHƯƠNG ÁN A: TRỤC LĂN MA TRẬN (ARCADE SLOT MACHINE) */
+/* ==========================================================================
+   PHƯƠNG ÁN A: TRỤC LĂN MA TRẬN 3D (ARCADE CYBERPUNK SLOT CABINET)
+   ========================================================================== */
+.slot-arcade-cabinet {
+  width: 100%;
+  max-width: 720px;
+  background: linear-gradient(180deg, #0b1120 0%, #030712 100%);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.25), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+  position: relative;
+}
+
 .slot-machine-wrapper {
   display: flex;
-  gap: 24px;
+  gap: 18px;
   width: 100%;
-  max-width: 660px;
   justify-content: center;
 }
 
 .slot-column {
   flex: 1;
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  border: 2px solid #38bdf8;
+  border: 2px solid #334155;
   border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 0 25px rgba(56, 189, 248, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.15), 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.1), 0 8px 20px rgba(0, 0, 0, 0.6);
+  transition: border-color 0.3s ease;
+}
+
+.slot-column.slot-locked-gold {
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), inset 0 0 15px rgba(251, 191, 36, 0.2) !important;
 }
 
 .slot-col-title {
   text-align: center;
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 800;
-  color: #fbbf24;
-  letter-spacing: 0.5px;
-  margin-bottom: 10px;
+  color: #38bdf8;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+.slot-col-student .slot-col-title {
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
 }
 
 .slot-window {
   position: relative;
-  height: 110px;
+  height: 120px;
   overflow: hidden;
-  background: linear-gradient(to bottom, #000000 0%, #0f172a 50%, #000000 100%);
+  background: radial-gradient(ellipse at center, #0f172a 0%, #020617 100%);
   border-radius: 10px;
   border: 2px solid #f59e0b;
-  box-shadow: inset 0 16px 20px rgba(0, 0, 0, 0.85), inset 0 -16px 20px rgba(0, 0, 0, 0.85);
+  box-shadow: inset 0 24px 30px rgba(0, 0, 0, 0.95), inset 0 -24px 30px rgba(0, 0, 0, 0.95), 0 0 15px rgba(245, 158, 11, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  perspective: 800px;
+}
+
+/* Kính vòm 3D tạo chiều sâu khối trụ hình tròn */
+.slot-cylinder-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+  background: linear-gradient(180deg, 
+    rgba(0, 0, 0, 0.85) 0%, 
+    rgba(255, 255, 255, 0.08) 35%, 
+    transparent 50%, 
+    rgba(0, 0, 0, 0.85) 100%
+  );
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.25);
 }
 
 .slot-reel {
@@ -3609,28 +3648,55 @@ body {
   flex-direction: column;
   align-items: center;
   transition: transform 0.1s linear;
+  will-change: transform;
+}
+
+.slot-reel.reel-spinning {
+  filter: blur(2.5px);
 }
 
 .slot-item {
-  height: 110px;
+  height: 120px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-code);
-  font-size: 26px;
-  font-weight: 900;
-  color: #38bdf8;
-  text-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
-  text-align: center;
-  padding: 0 10px;
+  gap: 4px;
+  padding: 0 12px;
   white-space: nowrap;
 }
 
-.slot-col-student .slot-item {
+.slot-item .sim-badge {
+  font-family: var(--font-code);
+  font-size: 24px;
+  font-weight: 900;
+  color: #38bdf8;
+  text-shadow: 0 0 16px rgba(56, 189, 248, 0.9);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-item .sis-badge {
   font-family: var(--font-main);
-  font-size: 19px;
-  color: #f8fafc;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.slot-item .sis-desk {
+  font-size: 11px;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
 }
 
 .slot-pointer {
@@ -3639,11 +3705,13 @@ body {
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  height: 52px;
+  height: 60px;
   border-top: 2px solid #fbbf24;
   border-bottom: 2px solid #fbbf24;
-  background: rgba(245, 158, 11, 0.12);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05), rgba(245, 158, 11, 0.15));
   pointer-events: none;
+  z-index: 6;
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
 }
 
 .slot-pointer::before {
@@ -3668,102 +3736,177 @@ body {
   text-shadow: 0 0 8px #fbbf24;
 }
 
-/* PHƯƠNG ÁN B: CHIẾC NÓN KỲ DIỆU */
+/* ==========================================================================
+   PHƯƠNG ÁN B: CHIẾC NÓN KỲ DIỆU 18 MÁY (LUXURY WHEEL OF NAMES)
+   ========================================================================== */
 .wheel-stage-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   position: relative;
+}
+
+/* HUD Trực tiếp quét 18 máy & học sinh khi quay */
+.wheel-live-tracker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1.5px solid #38bdf8;
+  border-radius: 30px;
+  padding: 6px 18px;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+  animation: trackerPulse 2s infinite alternate;
+}
+
+@keyframes trackerPulse {
+  0% { border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.25); }
+  100% { border-color: #fbbf24; box-shadow: 0 0 25px rgba(251, 191, 36, 0.4); }
+}
+
+.wlt-badge {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.wlt-desk {
+  font-family: var(--font-code);
+  font-size: 14px;
+  font-weight: 900;
+  color: #38bdf8;
+}
+
+.wlt-arrow {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.wlt-student {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fbbf24;
 }
 
 .wheel-outer-box {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: 360px;
+  height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 1) 100%);
+  padding: 10px;
+  box-shadow: 0 0 45px rgba(56, 189, 248, 0.3), 0 0 0 6px #1e293b, 0 0 0 8px #fbbf24;
 }
 
 #wheel-canvas {
-  width: 320px;
-  height: 320px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  box-shadow: 0 0 35px rgba(56, 189, 248, 0.4), 0 0 0 4px #1e293b;
-  transition: transform 3.5s cubic-bezier(0.15, 0.9, 0.2, 1.0);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+  display: block;
 }
 
+/* Kim chỉ tương tác vật lý (Spring Flapper) */
 .wheel-pointer-arrow {
   position: absolute;
-  top: -12px;
+  top: -14px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 20;
+  transform-origin: 50% 0%;
+  transition: transform 0.05s ease-out;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8));
+}
+
+.wpa-needle {
   width: 0;
   height: 0;
-  border-left: 14px solid transparent;
-  border-right: 14px solid transparent;
-  border-top: 26px solid #ef4444;
-  z-index: 10;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.7));
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  border-top: 30px solid #ef4444;
+  position: relative;
 }
 
-.wheel-student-subbox {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
-  border: 1px solid #f59e0b;
-  border-radius: 8px;
-  padding: 8px 16px;
-  text-align: center;
-  animation: modalFadeIn 0.3s ease-out;
+.wpa-needle::after {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: -6px;
+  width: 12px;
+  height: 12px;
+  background: #fbbf24;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
 }
 
-.wss-badge {
-  font-size: 10px;
-  font-weight: 800;
-  color: #f59e0b;
-  letter-spacing: 0.5px;
-}
-
-.wss-flipper {
-  font-size: 16px;
-  font-weight: 800;
-  color: #ffffff;
-  margin-top: 2px;
-}
-
-/* BANNER KẾT QUẢ BÙNG NỔ */
+/* ==========================================================================
+   THẺ BÀI VINH DANH HOLOGRAM 3D (CHÚC MỪNG KẾT QUẢ QUAY SỐ)
+   ========================================================================== */
 .ld-result-banner {
-  margin-top: 18px;
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(124, 58, 237, 0.35));
+  margin-top: 16px;
+  width: 100%;
+  max-width: 620px;
+  animation: podiumPop 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.25);
+}
+
+@keyframes podiumPop {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.lrb-podium-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(124, 58, 237, 0.35));
   border: 2px solid #fbbf24;
-  border-radius: 12px;
-  padding: 14px 28px;
+  border-radius: 16px;
+  padding: 16px 28px;
   text-align: center;
-  box-shadow: 0 0 35px rgba(245, 158, 11, 0.5);
-  animation: modalFadeIn 0.3s ease-out;
+  box-shadow: 0 0 40px rgba(245, 158, 11, 0.5), inset 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
 .lrb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
   font-weight: 800;
   color: #fbbf24;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 4px 14px;
+  border-radius: 9999px;
+  margin-bottom: 8px;
 }
 
 .lrb-machine {
   font-family: var(--font-code);
-  font-size: 28px !important;
+  font-size: 24px !important;
   font-weight: 900;
   color: #38bdf8 !important;
-  text-shadow: 0 0 15px rgba(56, 189, 248, 0.8) !important;
-  margin: 6px 0;
+  text-shadow: 0 0 15px rgba(56, 189, 248, 0.9) !important;
+  margin: 4px 0;
 }
 
 .lrb-student {
-  font-size: 22px !important;
-  font-weight: 800;
-  color: #fbbf24 !important;
-  text-shadow: 0 0 15px rgba(251, 191, 36, 0.8) !important;
+  font-size: 26px !important;
+  font-weight: 900;
+  color: #ffffff !important;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7), 0 0 20px rgba(251, 191, 36, 0.8) !important;
+  margin: 4px 0 8px 0;
+}
+
+.lrb-sub-hint {
+  font-size: 13px;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .ld-footer {
@@ -5400,5 +5543,123 @@ input:checked + .slider:before {
   color: #94a3b8;
 }
 
+/* ==========================================================================
+   BÀN ĐIỀU KHIỂN 4 BƯỚC TUẦN TỰ SƯ PHẠM (PHƯƠNG ÁN B - METHOD B)
+   ========================================================================== */
+.ol-sequential-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
 
+@media (max-width: 900px) {
+  .ol-sequential-actions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 
+.btn-ol-step {
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+
+/* Nút 1: Bốc thăm (Tím Neon) */
+.btn-ol-step.btn-ol-draw {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #ffffff;
+  border-color: #a78bfa;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+}
+
+.btn-ol-step.btn-ol-draw:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Nút 2: Câu hỏi (Xanh dương) */
+.btn-ol-step.btn-ol-question {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border-color: #38bdf8;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+.btn-ol-step.btn-ol-question:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Nút 3: Đáp án (Xanh lục / Emerald) */
+.btn-ol-step.btn-ol-answer {
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #ffffff;
+  border-color: #34d399;
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.35);
+}
+
+.btn-ol-step.btn-ol-answer:hover:not(:disabled) {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Nút 4: Phòng chờ (Hổ phách / Cam) */
+.btn-ol-step.btn-ol-waiting {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #ffffff;
+  border-color: #fbbf24;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
+}
+
+.btn-ol-step.btn-ol-waiting:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
+  transform: translateY(-1px);
+}
+
+/* TRẠNG THÁI PHƯƠNG ÁN B: BƯỚC ĐÃ HOÀN THÀNH (COMPLETED - KHÓA XÁM ĐẬM) */
+.btn-ol-step.step-completed,
+.btn-ol-step:disabled.step-completed {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.82 !important;
+}
+
+/* TRẠNG THÁI BỊ KHÓA (CHƯA ĐẾN LƯỢT) */
+.btn-ol-step.disabled,
+.btn-ol-step:disabled:not(.step-completed) {
+  background: rgba(15, 23, 42, 0.6) !important;
+  color: #64748b !important;
+  border: 1px dashed rgba(255, 255, 255, 0.12) !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* TRẠNG THÁI KÍCH HOẠT NHẤP NHÁY BƯỚC TIẾP THEO (ACTIVE PULSE) */
+.btn-ol-step.step-active-pulse {
+  animation: stepGlowPulse 1.6s infinite alternate ease-in-out !important;
+}
+
+@keyframes stepGlowPulse {
+  0% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.35); border-color: rgba(56, 189, 248, 0.4); }
+  100% { box-shadow: 0 0 24px rgba(56, 189, 248, 0.85); border-color: rgba(56, 189, 248, 0.95); }
+}

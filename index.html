@@ -1407,26 +1407,30 @@ print("2. Cắt xâu:", s[10:17])
       <div class="ld-stage-container">
         <!-- Vùng hiển thị Phương án A: Trục Lăn Ma Trận -->
         <div class="ld-view-slot" id="ld-view-slot">
-          <div class="slot-machine-wrapper">
-            <!-- Cột 1: Chọn Số Máy -->
-            <div class="slot-column slot-col-machine">
-              <div class="slot-col-title"><i class="fas fa-desktop"></i> TẦNG 1: CHỌN SỐ MÁY</div>
-              <div class="slot-window">
-                <div class="slot-reel" id="slot-reel-machine">
-                  <!-- Render động các số máy -->
+          <div class="slot-arcade-cabinet">
+            <div class="slot-machine-wrapper">
+              <!-- Cột 1: Chọn Số Máy -->
+              <div class="slot-column slot-col-machine">
+                <div class="slot-col-title"><i class="fas fa-desktop"></i> TẦNG 1: 18 MÁY PHÒNG HỌC</div>
+                <div class="slot-window">
+                  <div class="slot-cylinder-overlay"></div>
+                  <div class="slot-reel" id="slot-reel-machine">
+                    <!-- Render động các số máy kèm icon -->
+                  </div>
+                  <div class="slot-pointer"></div>
                 </div>
-                <div class="slot-pointer"></div>
               </div>
-            </div>
 
-            <!-- Cột 2: Chọn Đích Danh Học Sinh Trong Máy -->
-            <div class="slot-column slot-col-student">
-              <div class="slot-col-title"><i class="fas fa-user-graduate"></i> TẦNG 2: CHỌN HỌC SINH TẠI MÁY</div>
-              <div class="slot-window">
-                <div class="slot-reel" id="slot-reel-student">
-                  <!-- Render động tên học sinh -->
+              <!-- Cột 2: Chọn Đích Danh Học Sinh Trong Máy -->
+              <div class="slot-column slot-col-student">
+                <div class="slot-col-title"><i class="fas fa-user-graduate"></i> TẦNG 2: HỌC SINH TẠI MÁY</div>
+                <div class="slot-window">
+                  <div class="slot-cylinder-overlay"></div>
+                  <div class="slot-reel" id="slot-reel-student">
+                    <!-- Render động tên học sinh kèm số máy -->
+                  </div>
+                  <div class="slot-pointer"></div>
                 </div>
-                <div class="slot-pointer"></div>
               </div>
             </div>
           </div>
@@ -1435,23 +1439,31 @@ print("2. Cắt xâu:", s[10:17])
         <!-- Vùng hiển thị Phương án B: Chiếc Nón Kỳ Diệu (Canvas Wheel) -->
         <div class="ld-view-wheel" id="ld-view-wheel" style="display:none;">
           <div class="wheel-stage-wrapper">
-            <div class="wheel-outer-box">
-              <div class="wheel-pointer-arrow"></div>
-              <canvas id="wheel-canvas" width="400" height="400"></canvas>
+            <!-- HUD Trực tiếp quét 18 máy & học sinh khi quay -->
+            <div class="wheel-live-tracker" id="wheel-live-tracker">
+              <span class="wlt-badge"><i class="fas fa-crosshairs"></i> VỊ TRÍ ĐANG QUÉT:</span>
+              <span class="wlt-desk" id="wlt-desk-text">MÁY 01</span>
+              <span class="wlt-arrow">➔</span>
+              <span class="wlt-student" id="wlt-student-text">Sẵn sàng quay 18 máy...</span>
             </div>
-            <!-- Hộp lật tên học sinh tầng 2 của Chiếc nón -->
-            <div class="wheel-student-subbox" id="wheel-student-subbox" style="display:none;">
-              <div class="wss-badge">TẦNG 2: CHỌN HỌC SINH TẠI MÁY</div>
-              <div class="wss-flipper" id="wheel-student-flipper">Đang chọn...</div>
+
+            <div class="wheel-outer-box">
+              <div class="wheel-pointer-arrow" id="wheel-pointer-arrow">
+                <div class="wpa-needle"></div>
+              </div>
+              <canvas id="wheel-canvas" width="440" height="440"></canvas>
             </div>
           </div>
         </div>
 
-        <!-- Banner Chúc mừng Kết quả bùng nổ -->
+        <!-- Banner Chúc mừng Kết quả bùng nổ (Chuẩn Wordwall / Blooket Celebration) -->
         <div class="ld-result-banner" id="ld-result-banner" style="display:none;">
-          <div class="lrb-badge"><i class="fas fa-trophy"></i> ĐÃ CHỌN ĐƯỢC HỌC SINH LÊN SÓNG!</div>
-          <div class="lrb-machine" id="lrb-machine-text">MÁY 03</div>
-          <div class="lrb-student" id="lrb-student-text">Em: Hoàng Kim Ngân</div>
+          <div class="lrb-podium-card">
+            <div class="lrb-badge"><i class="fas fa-crown"></i> HỌC SINH ĐÃ ĐƯỢC CHỌN LÊN BẢNG!</div>
+            <div class="lrb-machine" id="lrb-machine-text">MÁY 03</div>
+            <div class="lrb-student" id="lrb-student-text">Em: Hoàng Kim Ngân</div>
+            <div class="lrb-sub-hint"><i class="fas fa-chalkboard-teacher"></i> Chuẩn bị tinh thần trả lời câu hỏi của Thầy</div>
+          </div>
         </div>
       </div>
 

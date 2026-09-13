@@ -534,6 +534,24 @@
         osc.start();
         osc.stop(this.ctx.currentTime + 0.08);
       } catch {}
+    },
+    playClank() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+      } catch {}
     }
   };
   const AUDIO = SOUNDS;
@@ -3000,20 +3018,8 @@
 
       // Nếu ở Bước 1: Kiểm tra bài cũ phía Giáo viên
       if (state.currentPhase === 'old_lesson') {
-        const btnQuestion = document.getElementById('btn-ol-step-2-question') || document.getElementById('btn-teacher-start-old-lesson');
-        const btnAnswer = document.getElementById('btn-ol-step-3-answer') || document.getElementById('btn-teacher-reveal-old-lesson');
-
-        const hasDrawn = !!(state.oldLesson && state.oldLesson.selectedStudent);
+        this.updateOldLessonStepButtons();
         const hasQuestion = !!(state.oldLesson && state.oldLesson.questionRevealed);
-
-        if (btnQuestion) {
-          btnQuestion.disabled = !hasDrawn;
-          btnQuestion.classList.toggle('disabled', !hasDrawn);
-        }
-        if (btnAnswer) {
-          btnAnswer.disabled = !hasQuestion;
-          btnAnswer.classList.toggle('disabled', !hasQuestion);
-        }
 
         const studentSpotlight = document.getElementById('ots-student-name');
         if (studentSpotlight) {
@@ -3746,6 +3752,7 @@
 
       // BẮT ĐẦU TÍNH GIỜ CHO HOẠT ĐỘNG BÀI CŨ
       this.startMasterCountdown(sec, 'old_lesson');
+      this.updateOldLessonStepButtons();
     },
 
     teacherLockOldLesson() {
@@ -3767,6 +3774,7 @@
 
       const oldL = Object.assign({}, state.oldLesson, { isRevealed: true });
       STORE.setState({ oldLesson: oldL });
+      this.updateOldLessonStepButtons();
       SYNC_BUS.broadcast('OLD_LESSON_REVEAL', {});
       if (db) {
         db.ref('activeSession/oldLesson/isRevealed').set(true).catch(()=>{});
@@ -4227,35 +4235,128 @@
       }
     },
 
+    updateOldLessonStepButtons() {
+      const state = STORE.getState();
+      const btn1 = document.getElementById('btn-ol-step-1-draw');
+      const btn2 = document.getElementById('btn-ol-step-2-question');
+      const btn3 = document.getElementById('btn-ol-step-3-answer');
+      const btn4 = document.getElementById('btn-ol-step-4-waiting');
+      if (!btn1 || !btn2 || !btn3 || !btn4) return;
+
+      const ol = state.oldLesson || {};
+      const hasDrawn = !!(ol.selectedMachine && ol.selectedStudent);
+      const hasQuestion = !!ol.questionRevealed;
+      const hasAnswer = !!ol.isRevealed;
+
+      // Xóa tất cả class trạng thái cũ
+      [btn1, btn2, btn3, btn4].forEach(b => {
+        b.classList.remove('step-completed', 'step-active-pulse', 'disabled');
+      });
+
+      // BƯỚC 1: BỐC THĂM
+      if (hasDrawn) {
+        btn1.disabled = true;
+        btn1.classList.add('step-completed');
+        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ BỐC THĂM ]';
+      } else {
+        btn1.disabled = false;
+        btn1.classList.add('step-active-pulse');
+        btn1.innerHTML = '<i class="fas fa-dice"></i> 1. BỐC THĂM';
+      }
+
+      // BƯỚC 2: CÂU HỎI
+      if (hasQuestion) {
+        btn2.disabled = true;
+        btn2.classList.add('step-completed');
+        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ ]';
+      } else if (hasDrawn) {
+        btn2.disabled = false;
+        btn2.classList.add('step-active-pulse');
+        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
+      } else {
+        btn2.disabled = true;
+        btn2.classList.add('disabled');
+        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
+      }
+
+      // BƯỚC 3: ĐÁP ÁN
+      if (hasAnswer) {
+        btn3.disabled = true;
+        btn3.classList.add('step-completed');
+        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CÔNG BỐ ]';
+      } else if (hasQuestion) {
+        btn3.disabled = false;
+        btn3.classList.add('step-active-pulse');
+        btn3.innerHTML = '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
+      } else {
+        btn3.disabled = true;
+        btn3.classList.add('disabled');
+        btn3.innerHTML = '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
+      }
+
+      // BƯỚC 4: PHÒNG CHỜ (Luôn khả dụng)
+      btn4.disabled = false;
+      if (hasAnswer) {
+        btn4.classList.add('step-active-pulse');
+      }
+      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+    },
+
     initLuckyDrawViews() {
       const state = STORE.getState();
       const strat = (state.luckyDraw && state.luckyDraw.strategy) ? state.luckyDraw.strategy : 'slot_machine';
+      const classData = this.classes[state.classId] || this.classes['10A1'];
 
       if (strat === 'slot_machine') {
         const reelM = document.getElementById('slot-reel-machine');
         const reelS = document.getElementById('slot-reel-student');
+        const colM = document.querySelector('.slot-col-machine');
+        if (colM) colM.classList.remove('slot-locked-gold');
+
         if (reelM) {
           reelM.style.transform = 'translateY(0px)';
           reelM.style.transition = 'none';
+          reelM.classList.remove('reel-spinning');
           let html = '';
-          for (let r = 0; r < 4; r++) {
+          for (let r = 0; r < 5; r++) {
             for (let i = 1; i <= 18; i++) {
-              html += `<div class="slot-item">MÁY ${String(i).padStart(2,'0')}</div>`;
+              html += `
+                <div class="slot-item">
+                  <span class="sim-badge"><i class="fas fa-desktop"></i> MÁY ${String(i).padStart(2,'0')}</span>
+                </div>`;
             }
           }
           reelM.innerHTML = html;
         }
+
         if (reelS) {
           reelS.style.transform = 'translateY(0px)';
           reelS.style.transition = 'none';
-          reelS.innerHTML = '<div class="slot-item">Đang chờ...</div>';
+          reelS.classList.remove('reel-spinning');
+          let sHtml = '';
+          for (let r = 0; r < 5; r++) {
+            for (let i = 1; i <= 18; i++) {
+              const pair = classData.seatingPlan[i] || [`Học sinh ${i}`];
+              pair.forEach(stuName => {
+                sHtml += `
+                  <div class="slot-item">
+                    <span class="sis-badge"><i class="fas fa-user-graduate"></i> ${stuName}</span>
+                    <span class="sis-desk"><i class="fas fa-desktop"></i> MÁY ${String(i).padStart(2,'0')}</span>
+                  </div>`;
+              });
+            }
+          }
+          reelS.innerHTML = sHtml;
         }
       } else if (strat === 'wheel_fortune') {
         this.drawWheelCanvas();
-        const flipper = document.getElementById('wheel-student-flipper');
-        const subbox = document.getElementById('wheel-student-subbox');
-        if (flipper) flipper.textContent = 'Đang chờ máy...';
-        if (subbox) subbox.style.display = 'none';
+        const deskText = document.getElementById('wlt-desk-text');
+        const stuText = document.getElementById('wlt-student-text');
+        if (deskText) deskText.textContent = 'MÁY 01';
+        if (stuText) {
+          const p1 = (classData.seatingPlan[1] || []).join(' & ');
+          stuText.textContent = p1 || 'Sẵn sàng quay 18 máy...';
+        }
       }
     },
 
@@ -4263,51 +4364,109 @@
       const canvas = document.getElementById('wheel-canvas');
       if (!canvas || !canvas.getContext) return;
       const ctx = canvas.getContext('2d');
+      const state = STORE.getState();
+      const classData = this.classes[state.classId] || this.classes['10A1'];
+
       const totalSlices = 18;
       const sliceAngle = (2 * Math.PI) / totalSlices;
       const cx = canvas.width / 2;
       const cy = canvas.height / 2;
-      const radius = cx - 8;
+      const radius = cx - 14;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const colors = ['#059669', '#0284c7', '#7c3aed', '#db2777', '#d97706', '#0d9488'];
+
+      // 6 dải màu game-show tương phản cao, chuyển sắc rực rỡ
+      const colors = [
+        '#0284c7', // Sapphire
+        '#059669', // Emerald
+        '#7c3aed', // Purple
+        '#d97706', // Amber
+        '#e11d48', // Ruby
+        '#0d9488'  // Teal
+      ];
 
       for (let i = 0; i < totalSlices; i++) {
         const angle = i * sliceAngle;
+        const deskNum = i + 1;
+        const pair = classData.seatingPlan[deskNum] || [`HS ${deskNum}`];
+
+        // 1. Vẽ Nan quạt (Slice)
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, radius, angle, angle + sliceAngle);
         ctx.closePath();
         ctx.fillStyle = colors[i % colors.length];
         ctx.fill();
-        ctx.lineWidth = 2;
+
+        // Viền nan quạt
+        ctx.lineWidth = 1.5;
         ctx.strokeStyle = '#0f172a';
         ctx.stroke();
 
-        // Vẽ nhãn M01..M18
+        // 2. Tự động bù góc chữ Typography (Auto-orient Text Flipping - chống ngược chữ 100%)
+        const midAngle = angle + sliceAngle / 2;
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(angle + sliceAngle / 2);
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 13px Inter, sans-serif';
-        ctx.fillText(`M${String(i + 1).padStart(2,'0')}`, radius - 18, 5);
+        ctx.rotate(midAngle);
+
+        const isBottom = (midAngle > Math.PI / 2 && midAngle < (3 * Math.PI) / 2);
+        if (isBottom) {
+          ctx.rotate(Math.PI);
+          ctx.textAlign = 'left';
+
+          // Số máy (Vành ngoài)
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 13px "Fira Code", monospace';
+          ctx.fillText(`M${String(deskNum).padStart(2,'0')}`, -(radius - 12), 4);
+
+          // Tên viết gọn của học sinh
+          const shortNames = pair.map(n => n.split(' ').pop()).join(' • ');
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = '700 10.5px Inter, sans-serif';
+          ctx.fillText(shortNames, -(radius - 48), 4);
+        } else {
+          ctx.textAlign = 'right';
+
+          // Số máy (Vành ngoài)
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '900 13px "Fira Code", monospace';
+          ctx.fillText(`M${String(deskNum).padStart(2,'0')}`, radius - 12, 4);
+
+          // Tên viết gọn của học sinh
+          const shortNames = pair.map(n => n.split(' ').pop()).join(' • ');
+          ctx.fillStyle = '#fbbf24';
+          ctx.font = '700 10.5px Inter, sans-serif';
+          ctx.fillText(shortNames, radius - 48, 4);
+        }
         ctx.restore();
+
+        // 3. Vẽ 18 Chốt kim loại mạ vàng (Brass Pegs) quanh vành
+        const pegAngle = angle;
+        const pegX = cx + (radius + 2) * Math.cos(pegAngle);
+        const pegY = cy + (radius + 2) * Math.sin(pegAngle);
+
+        ctx.beginPath();
+        ctx.arc(pegX, pegY, 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#78350f';
+        ctx.stroke();
       }
 
-      // Vòng tròn tâm
+      // 4. Vòng tròn tâm kim loại mạ vàng (Gold Center Hub)
       ctx.beginPath();
-      ctx.arc(cx, cy, 32, 0, 2 * Math.PI);
+      ctx.arc(cx, cy, 34, 0, 2 * Math.PI);
       ctx.fillStyle = '#0f172a';
       ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#fbbf24';
       ctx.stroke();
 
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = 'bold 11px sans-serif';
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = '900 13px "Fira Code", monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('LMS', cx, cy + 4);
+      ctx.fillText('18 MÁY', cx, cy + 4);
     },
 
     startLuckyDrawSpin() {
@@ -4361,49 +4520,81 @@
       if (banner) banner.style.display = 'none';
 
       SOUNDS.init();
-      let tickCount = 0;
-      const tickInterval = setInterval(() => {
-        SOUNDS.playTick(500 + (tickCount % 6) * 50);
-        tickCount++;
-        if (tickCount > 25) clearInterval(tickInterval);
-      }, 130);
+      const state = STORE.getState();
+      const classData = this.classes[state.classId] || this.classes['10A1'];
 
       if (strategy === 'slot_machine') {
         const reelM = document.getElementById('slot-reel-machine');
         const reelS = document.getElementById('slot-reel-student');
+        const colM = document.querySelector('.slot-col-machine');
+
+        if (colM) colM.classList.remove('slot-locked-gold');
 
         if (reelM) {
+          reelM.classList.add('reel-spinning');
           const targetItemIdx = 18 * 2 + (targetMachine - 1);
-          reelM.style.transition = `transform ${duration}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-          reelM.style.transform = `translateY(-${targetItemIdx * 110}px)`;
+          reelM.style.transition = `transform 2200ms cubic-bezier(0.16, 0.85, 0.3, 1.05)`;
+          reelM.style.transform = `translateY(-${targetItemIdx * 120}px)`;
+
+          setTimeout(() => {
+            reelM.classList.remove('reel-spinning');
+            SOUNDS.playClank();
+            if (colM) colM.classList.add('slot-locked-gold');
+          }, 2200);
         }
 
         if (reelS) {
-          let sHtml = '';
-          const sList = studentsList || [targetStudent];
-          for (let r = 0; r < 8; r++) {
-            sList.forEach(name => {
-              sHtml += `<div class="slot-item">${name}</div>`;
-            });
+          reelS.classList.add('reel-spinning');
+          // Xây dựng danh sách phẳng 18 máy x học sinh
+          let flatItems = [];
+          for (let r = 0; r < 5; r++) {
+            for (let i = 1; i <= 18; i++) {
+              const pair = classData.seatingPlan[i] || [`Học sinh ${i}`];
+              pair.forEach(stuName => {
+                flatItems.push({ machine: i, name: stuName });
+              });
+            }
           }
-          reelS.innerHTML = sHtml;
-          const sTargetIdx = sList.length * 6 + sList.indexOf(targetStudent);
+          // Tìm index của targetStudent tại targetMachine ở chu kỳ 2
+          let sTargetIdx = -1;
+          for (let idx = 18 * 2; idx < flatItems.length; idx++) {
+            if (flatItems[idx].machine === targetMachine && flatItems[idx].name === targetStudent) {
+              sTargetIdx = idx;
+              break;
+            }
+          }
+          if (sTargetIdx === -1) sTargetIdx = 36;
+
+          // Reel 2 tiếp tục quay thêm 1.4s tạo kịch tính
           setTimeout(() => {
-            reelS.style.transition = `transform ${duration - 1000}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-            reelS.style.transform = `translateY(-${sTargetIdx * 110}px)`;
-          }, 1000);
+            reelS.style.transition = `transform 2400ms cubic-bezier(0.12, 0.89, 0.32, 1.15)`;
+            reelS.style.transform = `translateY(-${sTargetIdx * 120}px)`;
+            setTimeout(() => {
+              reelS.classList.remove('reel-spinning');
+              SOUNDS.playClank();
+            }, 2400);
+          }, 1200);
         }
+
+        // Tích tắc âm thanh cơ học
+        let tickCount = 0;
+        const tickInterval = setInterval(() => {
+          SOUNDS.playTick(500 + (tickCount % 6) * 50);
+          tickCount++;
+          if (tickCount > 28) clearInterval(tickInterval);
+        }, 120);
+
       } else if (strategy === 'wheel_fortune') {
         const canvas = document.getElementById('wheel-canvas');
+        const pointer = document.getElementById('wheel-pointer-arrow');
+        const deskText = document.getElementById('wlt-desk-text');
+        const stuText = document.getElementById('wlt-student-text');
+
         if (canvas) {
           const totalSlices = 18;
           const sliceAngle = 360 / totalSlices;
-          // Tâm của lát cắt targetMachine (1..18):
-          // Máy 1 (i=0): 10 deg; Máy 13 (i=12): 250 deg; Máy 14 (i=13): 270 deg
           const targetSliceMid = (targetMachine - 1) * sliceAngle + sliceAngle / 2;
           
-          // Kim chỉ cố định ở 12 giờ (270 deg)
-          // Đích đến: góc lát cắt sau khi xoay phải nằm đúng tại 270 deg
           let targetDeg = (270 - targetSliceMid) % 360;
           if (targetDeg < 0) targetDeg += 360;
 
@@ -4411,44 +4602,72 @@
           let delta = targetDeg - currentRotMod;
           if (delta <= 0) delta += 360;
 
-          // Xoay thêm 5 vòng trọn vẹn (1800 deg) để tạo kịch tính
           const extraRounds = 360 * 5;
-          this.wheelCurrentRotation = (this.wheelCurrentRotation || 0) + extraRounds + delta;
+          const startRot = this.wheelCurrentRotation || 0;
+          const endRot = startRot + extraRounds + delta;
+          this.wheelCurrentRotation = endRot;
 
-          canvas.style.transition = `transform ${duration}ms cubic-bezier(0.15, 0.9, 0.2, 1.0)`;
-          canvas.style.transform = `rotate(${this.wheelCurrentRotation}deg)`;
+          // Animation thời gian thực bằng requestAnimationFrame để cập nhật HUD & Gảy kim
+          const startTime = performance.now();
+          const animDuration = duration || 3800;
+          let lastSlice = -1;
+
+          const step = (now) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(1, elapsed / animDuration);
+            // Ease out quartic: 1 - (1 - t)^4
+            const ease = 1 - Math.pow(1 - progress, 4);
+            const currentDeg = startRot + (endRot - startRot) * ease;
+
+            canvas.style.transform = `rotate(${currentDeg}deg)`;
+
+            // Tính toán lát cắt đang nằm dưới kim chỉ 12 giờ (270 deg)
+            const degMod = ((270 - (currentDeg % 360)) % 360 + 360) % 360;
+            const sliceIdx = Math.floor(degMod / sliceAngle);
+            const curDesk = sliceIdx + 1;
+
+            if (curDesk !== lastSlice && curDesk >= 1 && curDesk <= 18) {
+              lastSlice = curDesk;
+              // Gảy kim chỉ sang trái rồi nảy về
+              if (pointer) {
+                pointer.style.transform = 'translateX(-50%) rotate(-24deg)';
+                setTimeout(() => {
+                  if (pointer) pointer.style.transform = 'translateX(-50%) rotate(0deg)';
+                }, 45);
+              }
+              SOUNDS.playTick(450 + (curDesk * 20));
+
+              // Cập nhật HUD quét 18 máy theo thời gian thực
+              if (deskText) deskText.textContent = `MÁY ${String(curDesk).padStart(2,'0')}`;
+              if (stuText) {
+                const pair = classData.seatingPlan[curDesk] || [`Học sinh ${curDesk}`];
+                stuText.textContent = pair.join(' & ');
+              }
+            }
+
+            if (progress < 1) {
+              requestAnimationFrame(step);
+            } else {
+              // Chốt đúng máy đích
+              if (deskText) deskText.textContent = `MÁY ${String(targetMachine).padStart(2,'0')}`;
+              if (stuText) stuText.textContent = targetStudent;
+              SOUNDS.playClank();
+            }
+          };
+
+          requestAnimationFrame(step);
         }
-
-        const subbox = document.getElementById('wheel-student-subbox');
-        const flipper = document.getElementById('wheel-student-flipper');
-        setTimeout(() => {
-          if (subbox) subbox.style.display = 'block';
-          if (flipper) {
-            let flipIdx = 0;
-            const sList = studentsList || [targetStudent];
-            const flipTimer = setInterval(() => {
-              flipper.textContent = sList[flipIdx % sList.length];
-              flipIdx++;
-            }, 80);
-            setTimeout(() => {
-              clearInterval(flipTimer);
-              flipper.textContent = targetStudent;
-              flipper.style.color = '#38bdf8';
-            }, 1200);
-          }
-        }, duration - 1200);
       }
 
       // Kết thúc bốc thăm
       setTimeout(() => {
-        clearInterval(tickInterval);
         SOUNDS.playFanfare();
 
         if (typeof confetti === 'function') {
           confetti({
-            particleCount: 100,
-            spread: 80,
-            origin: { y: 0.6 }
+            particleCount: 120,
+            spread: 90,
+            origin: { y: 0.55 }
           });
         }
 
@@ -4474,15 +4693,15 @@
         });
         STORE.setState({ oldLesson: oldL });
 
+        // Cập nhật trạng thái 4 nút tuần tự ngay sau khi bốc thăm
+        APP.updateOldLessonStepButtons();
+
         if (isInitiator) {
           SYNC_BUS.broadcast('OLD_LESSON_SPOTLIGHT', {
             selectedMachine: targetMachine,
             selectedStudent: targetStudent,
             questionText: curQ
           });
-        }
-
-        if (isInitiator) {
           const updateData = { isActive: true };
           if (targetMachine !== undefined && targetMachine !== null) updateData.selectedMachine = targetMachine;
           if (targetStudent !== undefined && targetStudent !== null) updateData.selectedStudent = targetStudent;
@@ -4506,7 +4725,6 @@
           // Hiển thị hộp thoại Neon vinh danh duy nhất 1 em học sinh và số máy bàn (chuẩn ảnh mẫu Thầy giao)
           APP.renderNeonLuckyCard(targetMachine, targetStudent, false);
 
-          // LƯU Ý SƯ PHẠM: CÂU HỎI VẪN BỊ KHÓA RỖNG, CHỜ THẦY BẤM [ 🚀 PHÁT ĐỀ & BẮT ĐẦU TÍNH GIỜ ]
           const curState = STORE.getState();
           STORE.setState({
             oldLesson: Object.assign({}, curState.oldLesson, {
@@ -4515,8 +4733,9 @@
               questionRevealed: false
             })
           });
+          APP.updateOldLessonStepButtons();
         }, 2500);
-      }, duration + 200);
+      }, duration + 300);
     }
   };
 
