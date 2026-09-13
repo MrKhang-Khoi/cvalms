@@ -17,8 +17,11 @@
   <!-- Canvas Confetti cho hiệu ứng thi đua Live Quiz -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
+  <!-- SheetJS cho tính năng Đọc & Nhập file Excel (.xlsx, .xls) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.9.5">
+  <link rel="stylesheet" href="style.css?v=3.0.0">
 
   <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
@@ -648,6 +651,20 @@ print(s[4:])</code></pre>
             <div class="quiz-feedback" id="quiz-feedback-box" style="display:none;">
               <!-- Phản hồi sau khi chọn -->
             </div>
+
+            <!-- Thanh điều hướng bước làm bài đa câu hỏi (Student Stepper) -->
+            <div class="quiz-bottom-nav" id="quiz-bottom-nav" style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;">
+              <button type="button" class="btn-quiz-nav" id="btn-quiz-prev" onclick="window.studentQuizPrev()" style="display:none;">
+                <i class="fas fa-chevron-left"></i> Câu trước
+              </button>
+              <div style="flex:1;"></div>
+              <button type="button" class="btn-quiz-nav btn-quiz-next" id="btn-quiz-next" onclick="window.studentQuizNext()" style="display:none;">
+                Câu tiếp theo <i class="fas fa-chevron-right"></i>
+              </button>
+              <button type="button" class="btn-submit-short" id="btn-quiz-packet-submit" onclick="window.studentQuizSubmitPacket()" style="display:none;background:linear-gradient(135deg,#059669,#10b981);">
+                <i class="fas fa-paper-plane"></i> NỘP BÀI HOÀN THÀNH
+              </button>
+            </div>
           </div>
         </div>
       </section>
@@ -823,6 +840,13 @@ print(s[4:])</code></pre>
                   <input type="text" id="studio-lesson-title-input" class="studio-title-input" value="Bài 12: Kiểu dữ liệu xâu trong Python" placeholder="Nhập tên bài dạy tại đây..." title="Bấm vào để đổi tên bài dạy">
                 </div>
                 <div class="sta-actions">
+                  <button type="button" class="btn-tool-sm" id="btn-download-excel-template" onclick="window.studioDownloadExcelTemplate()" title="Tải file Excel mẫu để soạn bài nhanh">
+                    <i class="fas fa-file-excel" style="color:#10b981;"></i> Mẫu Excel
+                  </button>
+                  <button type="button" class="btn-tool-sm" id="btn-import-excel" onclick="document.getElementById('excel-file-input').click()" title="Nạp nội dung từ file Excel / CSV">
+                    <i class="fas fa-file-import" style="color:#38bdf8;"></i> Nhập Excel
+                  </button>
+                  <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" style="display:none;" onchange="window.studioHandleExcelImport(event)">
                   <button type="button" class="btn-tool-sm" onclick="window.studioPreviewLesson()">
                     <i class="fas fa-eye"></i> Xem trước
                   </button>
@@ -935,7 +959,8 @@ print(s[4:])</code></pre>
                       <div class="sub-activity-card" id="sub-act-1-2">
                         <div class="sub-activity-header">
                           <div class="sub-act-title">
-                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 1.2: Trắc nghiệm nhanh củng cố Mục 1
+                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 1.2: Trắc nghiệm củng cố Mục 1
+                            <span class="sq-badge-pill" id="sec1-quiz-count-badge" style="margin-left:8px;font-size:11.5px;padding:2px 8px;border-radius:12px;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);"><i class="fas fa-layer-group"></i> Gói trắc nghiệm</span>
                           </div>
                           <div class="seq-badge-flow">
                             <span class="seq-chip">1. Chuẩn bị</span> <i class="fas fa-arrow-right seq-arrow"></i>
@@ -944,28 +969,52 @@ print(s[4:])</code></pre>
                             <span class="seq-chip">4. Sảnh chờ</span>
                           </div>
                         </div>
-                        <div class="studio-form-row">
-                          <div class="studio-form-col" style="flex:2;">
-                            <label class="studio-field-label"><i class="fas fa-question"></i> Câu hỏi trắc nghiệm nhanh:</label>
-                            <input type="text" class="studio-input" id="studio-sec1-quiz-q" value="Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?" placeholder="Câu hỏi nhanh...">
+
+                        <!-- Vùng chứa danh sách câu hỏi động của Mục 1 -->
+                        <div class="studio-quizzes-wrapper" id="sec1-quizzes-container">
+                          <!-- Câu 1 (mặc định) -->
+                          <div class="studio-quiz-item-card" data-q-idx="0" style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-bottom:10px;">
+                            <div class="sqic-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                              <span style="color:#38bdf8;font-weight:700;font-size:12.5px;"><i class="fas fa-question-circle"></i> CÂU HỎI 1:</span>
+                              <div style="display:flex;gap:8px;align-items:center;">
+                                <select class="studio-select sqic-type-select" onchange="window.studioChangeQuestionType(this)" style="padding:3px 8px;font-size:12px;width:auto;">
+                                  <option value="single_choice" selected>4 Lựa chọn (A, B, C, D)</option>
+                                  <option value="true_false">Đúng / Sai 4 mệnh đề</option>
+                                  <option value="short_answer">Điền kết quả ngắn</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="studio-form-row">
+                              <div class="studio-form-col" style="flex:2;">
+                                <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi:</label>
+                                <input type="text" class="studio-input" id="studio-sec1-quiz-q" value="Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?" placeholder="Câu hỏi nhanh...">
+                              </div>
+                              <div class="studio-form-col">
+                                <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                                <select class="studio-select" id="studio-sec1-quiz-correct">
+                                  <option value="A" selected>A (Chỉ số 0)</option>
+                                  <option value="B">B (Chỉ số 1)</option>
+                                  <option value="C">C (Chỉ số -1)</option>
+                                  <option value="D">D (Tùy chọn)</option>
+                                </select>
+                              </div>
+                              <div class="studio-form-col">
+                                <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                                <select class="studio-select" id="studio-sec1-quiz-time">
+                                  <option value="30">30 giây</option>
+                                  <option value="60" selected>1 phút</option>
+                                  <option value="90">1.5 phút</option>
+                                </select>
+                              </div>
+                            </div>
                           </div>
-                          <div class="studio-form-col">
-                            <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
-                            <select class="studio-select" id="studio-sec1-quiz-correct">
-                              <option value="A" selected>A (Chỉ số 0)</option>
-                              <option value="B">B (Chỉ số 1)</option>
-                              <option value="C">C (Chỉ số -1)</option>
-                              <option value="D">D (Tùy chọn)</option>
-                            </select>
-                          </div>
-                          <div class="studio-form-col">
-                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
-                            <select class="studio-select" id="studio-sec1-quiz-time">
-                              <option value="30">30 giây</option>
-                              <option value="60" selected>1 phút</option>
-                              <option value="90">1.5 phút</option>
-                            </select>
-                          </div>
+                        </div>
+
+                        <!-- Nút thêm câu hỏi vào Mục 1 -->
+                        <div style="margin-top:6px;display:flex;gap:8px;">
+                          <button type="button" class="btn-tool-sm" onclick="window.studioAddQuizQuestion(1)" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:6px 14px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;">
+                            <i class="fas fa-plus"></i> + Thêm câu hỏi trắc nghiệm vào Mục 1
+                          </button>
                         </div>
                       </div>
 
@@ -1061,7 +1110,8 @@ print("2. Cắt xâu:", s[10:17])</textarea>
                       <div class="sub-activity-card" id="sub-act-2-2">
                         <div class="sub-activity-header">
                           <div class="sub-act-title">
-                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 2.2: Trắc nghiệm code cắt xâu
+                            <i class="fas fa-check-double" style="color:#10b981;"></i> HĐ 2.2: Trắc nghiệm củng cố Mục 2
+                            <span class="sq-badge-pill" id="sec2-quiz-count-badge" style="margin-left:8px;font-size:11.5px;padding:2px 8px;border-radius:12px;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);"><i class="fas fa-layer-group"></i> Gói trắc nghiệm</span>
                           </div>
                           <div class="seq-badge-flow">
                             <span class="seq-chip">1. Chuẩn bị</span> <i class="fas fa-arrow-right seq-arrow"></i>
@@ -1070,27 +1120,51 @@ print("2. Cắt xâu:", s[10:17])</textarea>
                             <span class="seq-chip">4. Sảnh chờ</span>
                           </div>
                         </div>
-                        <div class="studio-form-row">
-                          <div class="studio-form-col" style="flex:2;">
-                            <label class="studio-field-label"><i class="fas fa-question"></i> Câu hỏi trắc nghiệm code:</label>
-                            <input type="text" class="studio-input" id="studio-sec2-quiz-q" value="Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?" placeholder="Câu hỏi trắc nghiệm...">
+
+                        <!-- Vùng chứa danh sách câu hỏi động của Mục 2 -->
+                        <div class="studio-quizzes-wrapper" id="sec2-quizzes-container">
+                          <!-- Câu 1 (mặc định) -->
+                          <div class="studio-quiz-item-card" data-q-idx="0" style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-bottom:10px;">
+                            <div class="sqic-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                              <span style="color:#38bdf8;font-weight:700;font-size:12.5px;"><i class="fas fa-question-circle"></i> CÂU HỎI 1:</span>
+                              <div style="display:flex;gap:8px;align-items:center;">
+                                <select class="studio-select sqic-type-select" onchange="window.studioChangeQuestionType(this)" style="padding:3px 8px;font-size:12px;width:auto;">
+                                  <option value="single_choice" selected>4 Lựa chọn (A, B, C, D)</option>
+                                  <option value="true_false">Đúng / Sai 4 mệnh đề</option>
+                                  <option value="short_answer">Điền kết quả ngắn</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div class="studio-form-row">
+                              <div class="studio-form-col" style="flex:2;">
+                                <label class="studio-field-label"><i class="fas fa-question"></i> Câu hỏi trắc nghiệm code:</label>
+                                <input type="text" class="studio-input" id="studio-sec2-quiz-q" value="Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?" placeholder="Câu hỏi trắc nghiệm...">
+                              </div>
+                              <div class="studio-form-col">
+                                <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                                <select class="studio-select" id="studio-sec2-quiz-correct">
+                                  <option value="A" selected>A ('VIET')</option>
+                                  <option value="B">B ('VIETN')</option>
+                                  <option value="C">C ('VIE')</option>
+                                  <option value="D">D ('ETNA')</option>
+                                </select>
+                              </div>
+                              <div class="studio-form-col">
+                                <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                                <select class="studio-select" id="studio-sec2-quiz-time">
+                                  <option value="30">30 giây</option>
+                                  <option value="60" selected>1 phút</option>
+                                </select>
+                              </div>
+                            </div>
                           </div>
-                          <div class="studio-form-col">
-                            <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
-                            <select class="studio-select" id="studio-sec2-quiz-correct">
-                              <option value="A" selected>A ('VIET')</option>
-                              <option value="B">B ('VIETN')</option>
-                              <option value="C">C ('VIE')</option>
-                              <option value="D">D ('ETNA')</option>
-                            </select>
-                          </div>
-                          <div class="studio-form-col">
-                            <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
-                            <select class="studio-select" id="studio-sec2-quiz-time">
-                              <option value="30">30 giây</option>
-                              <option value="60" selected>1 phút</option>
-                            </select>
-                          </div>
+                        </div>
+
+                        <!-- Nút thêm câu hỏi vào Mục 2 -->
+                        <div style="margin-top:6px;display:flex;gap:8px;">
+                          <button type="button" class="btn-tool-sm" onclick="window.studioAddQuizQuestion(2)" style="background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);color:#10b981;padding:6px 14px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;">
+                            <i class="fas fa-plus"></i> + Thêm câu hỏi trắc nghiệm vào Mục 2
+                          </button>
                         </div>
                       </div>
 
@@ -1344,6 +1418,11 @@ print("2. Cắt xâu:", s[10:17])</textarea>
               <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
             </button>
           </div>
+        </div>
+
+        <!-- THANH ĐIỀU HƯỚNG TIẾN TRÌNH THEO MỤC BÀI HỌC (SECTION NAVIGATOR) -->
+        <div class="stage-section-navigator" id="stage-section-navigator" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0b1120;border-bottom:1px solid rgba(255,255,255,0.08);overflow-x:auto;">
+          <!-- Render động danh sách các mục: Khởi động, Mục 1, Mục 2, Tổng kết -->
         </div>
 
         <!-- THANH DANH SÁCH HOẠT ĐỘNG KỊCH BẢN ĐỘNG (DYNAMIC ACTIVITY PIPELINE DỰA VÀO XƯỞNG SOẠN) -->
@@ -1923,7 +2002,7 @@ print("2. Cắt xâu:", s[10:17])</textarea>
           <i class="fas fa-info-circle" style="color:#38bdf8;"></i> Mọi hoạt động đều tuân thủ <strong>Chu trình 4 nút tuần tự</strong> trên bàn điều khiển Sân khấu.
         </div>
         <div style="display:flex;gap:12px;">
-          <button type="button" class="btn-cancel" onclick="window.closeStudioPreviewModal()" style="padding:9px 18px;font-size:13.5px;font-weight:700;">
+          <button type="button" class="btn-cancel" id="btn-close-blueprint-preview" onclick="window.closeStudioPreviewModal()" style="padding:9px 18px;font-size:13.5px;font-weight:700;">
             <i class="fas fa-times"></i> Đóng lại
           </button>
           <button type="button" class="btn-primary" id="btn-bp-apply-save" onclick="window.studioSaveFromPreview()" style="background:linear-gradient(135deg,#059669,#10b981);padding:9px 20px;font-size:13.5px;font-weight:700;border:none;border-radius:8px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;box-shadow:0 0 15px rgba(16,185,129,0.35);">
@@ -1953,8 +2032,8 @@ print("2. Cắt xâu:", s[10:17])</textarea>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.5 Cache-Busted) -->
-  <script src="js/bundle.js?v=2.9.5"></script>
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v3.0.0 Cache-Busted) -->
+  <script src="js/bundle.js?v=3.0.0"></script>
 </body>
 </html>
 

@@ -6289,3 +6289,133 @@ input:checked + .slider:before {
 .bp-seq-chip.c2 { color: #38bdf8; }
 .bp-seq-chip.c3 { color: #10b981; }
 .bp-seq-chip.c4 { color: #f97316; }
+
+/* =====================================================
+   STAGE SECTION NAVIGATOR (PHÂN TẦNG ĐA MỤC TRÊN SÂN KHẤU)
+===================================================== */
+.stage-section-navigator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #090e1a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.stage-sec-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.7);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.stage-sec-tab:hover {
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.stage-sec-tab.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(56, 189, 248, 0.2));
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+}
+
+.stage-sec-tab.completed {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+/* =====================================================
+   STUDENT PACKET QUIZ STEPPER (ĐIỀU HƯỚNG GÓI ĐỀ HỌC SINH)
+===================================================== */
+.quiz-stepper-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.qsb-pill {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.qsb-pill.active {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.qsb-pill.answered {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.5);
+}
+
+.btn-quiz-nav {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 41, 59, 0.8);
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-quiz-nav:hover {
+  background: rgba(51, 65, 85, 1);
+  color: #fff;
+}
+
+.btn-quiz-next {
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.btn-quiz-next:hover {
+  filter: brightness(1.1);
+}
+
+/* =====================================================
+   STUDIO DYNAMIC QUESTION CARDS
+===================================================== */
+.studio-quiz-item-card {
+  transition: border-color 0.2s;
+}
+
+.studio-quiz-item-card:hover {
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+

@@ -838,6 +838,15 @@
                 updates.lessonData = val.lessonData;
                 EMBEDDED_LESSONS[val.lessonData.id] = val.lessonData;
               }
+              if (val.currentSection !== undefined && val.currentSection !== state.currentSection) {
+                updates.currentSection = val.currentSection;
+                if (window.APP && window.APP.renderStageSectionNav) {
+                  window.APP.renderStageSectionNav(Object.assign({}, state, updates));
+                }
+              }
+              if (val.packetQuizzes !== undefined) {
+                updates.packetQuizzes = val.packetQuizzes;
+              }
 
               // 3. Đồng bộ tiến trình sư phạm & Phòng chờ (Nếu đã có máy -> Sảnh chờ Đấu trường cá nhân st-view-waiting như hình)
               if (state.role === 'student' && val.currentPhase !== undefined) {
@@ -1338,6 +1347,16 @@
         if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
           window.APP.renderStudentWorkspace(STORE.getState());
         }
+      } else if (data.type === 'SECTION_CHANGE') {
+        if (data.payload && data.payload.currentSection !== undefined) {
+          STORE.setState({ currentSection: data.payload.currentSection });
+          if (window.APP && window.APP.renderStageSectionNav) {
+            window.APP.renderStageSectionNav(STORE.getState());
+          }
+          if (window.APP && window.APP.renderDynamicStagePipeline) {
+            window.APP.renderDynamicStagePipeline(STORE.getState());
+          }
+        }
       } else if (data.type === 'H4_ARENA_START') {
         const p = data.payload || {};
         const h4 = Object.assign({}, STORE.getState().h4State, {
@@ -1345,7 +1364,14 @@
           questionText: p.questionText,
           questionType: p.questionType
         });
-        STORE.setState({ h4State: h4 });
+        const storeUpdates = { h4State: h4 };
+        if (p.packetQuizzes) {
+          storeUpdates.packetQuizzes = p.packetQuizzes;
+          storeUpdates.studentQuizIndex = 0;
+          storeUpdates.studentPacketAnswers = {};
+          storeUpdates.quizPacketSubmitted = false;
+        }
+        STORE.setState(storeUpdates);
         if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
           window.APP.renderStudentWorkspace(STORE.getState());
         }
@@ -2628,6 +2654,7 @@
         if (s1QuizQEl && s1.quiz && s1.quiz.question) s1QuizQEl.value = s1.quiz.question;
         const s1QuizAnsEl = document.getElementById('studio-sec1-quiz-correct');
         if (s1QuizAnsEl && s1.quiz && s1.quiz.correct) s1QuizAnsEl.value = s1.quiz.correct;
+        this.renderStudioSectionQuizzes(1, s1.quizzes || (s1.quiz ? [s1.quiz] : []));
       }
       if (lesson.sections && lesson.sections[1]) {
         const s2 = lesson.sections[1];
@@ -2643,11 +2670,299 @@
         if (s2QuizAnsEl && s2.quiz && s2.quiz.correct) s2QuizAnsEl.value = s2.quiz.correct;
         const s2PracTaskEl = document.getElementById('studio-sec2-prac-task');
         if (s2PracTaskEl && s2.practice && s2.practice.task) s2PracTaskEl.value = s2.practice.task;
+        this.renderStudioSectionQuizzes(2, s2.quizzes || (s2.quiz ? [s2.quiz] : []));
       }
 
       // Bước 5: Vinh danh
       const tog5 = document.getElementById('step-toggle-5');
       if (tog5) tog5.checked = (lesson.stepsEnabled ? lesson.stepsEnabled[5] !== false : true);
+    },
+
+    renderStudioSectionQuizzes(secId, quizzes) {
+      const container = document.getElementById(`sec${secId}-quizzes-container`);
+      if (!container) return;
+      if (!quizzes || quizzes.length === 0) {
+        quizzes = [{
+          id: `q${secId}_1`,
+          type: 'single_choice',
+          question: '',
+          options: { A: 'A', B: 'B', C: 'C', D: 'D' },
+          correct: 'A',
+          timeLimit: 60
+        }];
+      }
+
+      const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+      if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${quizzes.length} câu trắc nghiệm`;
+
+      let html = '';
+      quizzes.forEach((q, idx) => {
+        const isFirst = (idx === 0);
+        const qIdAttr = isFirst ? `id="studio-sec${secId}-quiz-q"` : '';
+        const corIdAttr = isFirst ? `id="studio-sec${secId}-quiz-correct"` : '';
+        const timeIdAttr = isFirst ? `id="studio-sec${secId}-quiz-time"` : '';
+        const qType = q.type || 'single_choice';
+        const qTime = q.timeLimit || 60;
+        const qText = q.question || '';
+        const qCor = q.correct || 'A';
+
+        html += `
+          <div class="studio-quiz-item-card" data-q-idx="${idx}" style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-bottom:10px;">
+            <div class="sqic-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="color:#38bdf8;font-weight:700;font-size:12.5px;"><i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:</span>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <select class="studio-select sqic-type-select" onchange="window.studioChangeQuestionType(this)" style="padding:3px 8px;font-size:12px;width:auto;">
+                  <option value="single_choice" ${qType === 'single_choice' ? 'selected' : ''}>4 Lựa chọn (A, B, C, D)</option>
+                  <option value="true_false" ${qType === 'true_false' ? 'selected' : ''}>Đúng / Sai 4 mệnh đề</option>
+                  <option value="short_answer" ${qType === 'short_answer' ? 'selected' : ''}>Điền kết quả ngắn</option>
+                </select>
+                ${!isFirst ? `<button type="button" class="btn-tool-sm btn-tool-danger" onclick="window.studioRemoveQuizQuestion(this)" style="padding:3px 8px;font-size:11px;border-radius:4px;"><i class="fas fa-trash"></i> Xóa</button>` : ''}
+              </div>
+            </div>
+            <div class="studio-form-row">
+              <div class="studio-form-col" style="flex:2;">
+                <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:</label>
+                <input type="text" class="studio-input sqic-q-input" ${qIdAttr} value="${qText.replace(/"/g, '&quot;')}" placeholder="Nhập nội dung câu hỏi...">
+              </div>
+              <div class="studio-form-col sqic-correct-col" style="${qType === 'single_choice' ? '' : 'display:none;'}">
+                <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+                <select class="studio-select sqic-correct-select" ${corIdAttr}>
+                  <option value="A" ${qCor === 'A' ? 'selected' : ''}>A</option>
+                  <option value="B" ${qCor === 'B' ? 'selected' : ''}>B</option>
+                  <option value="C" ${qCor === 'C' ? 'selected' : ''}>C</option>
+                  <option value="D" ${qCor === 'D' ? 'selected' : ''}>D</option>
+                </select>
+              </div>
+              <div class="studio-form-col">
+                <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+                <select class="studio-select sqic-time-select" ${timeIdAttr}>
+                  <option value="30" ${qTime === 30 ? 'selected' : ''}>30 giây</option>
+                  <option value="60" ${qTime === 60 ? 'selected' : ''}>1 phút</option>
+                  <option value="90" ${qTime === 90 ? 'selected' : ''}>1.5 phút</option>
+                  <option value="120" ${qTime === 120 ? 'selected' : ''}>2 phút</option>
+                </select>
+              </div>
+            </div>
+            <div class="sqic-tf-wrap" style="${qType === 'true_false' ? '' : 'display:none;'}margin-top:8px;">
+              <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;"><i class="fas fa-tasks"></i> 4 Mệnh đề Đúng/Sai:</div>
+              ${['a', 'b', 'c', 'd'].map((k, i) => {
+                const sub = (q.subItems && q.subItems[i]) || { statement: `Mệnh đề ${k}`, correct: (i % 2 === 0) };
+                return `
+                  <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+                    <span style="color:#38bdf8;font-weight:700;width:18px;">${k})</span>
+                    <input type="text" class="studio-input sqic-tf-stmt-${k}" value="${(sub.statement || '').replace(/"/g, '&quot;')}" style="flex:1;padding:4px 8px;font-size:12px;">
+                    <select class="studio-select sqic-tf-ans-${k}" style="width:85px;padding:4px 8px;font-size:12px;">
+                      <option value="true" ${sub.correct ? 'selected' : ''}>ĐÚNG</option>
+                      <option value="false" ${!sub.correct ? 'selected' : ''}>SAI</option>
+                    </select>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <div class="sqic-sa-wrap" style="${qType === 'short_answer' ? '' : 'display:none;'}margin-top:8px;">
+              <label class="studio-field-label"><i class="fas fa-keyboard"></i> Kết quả mã code mong đợi:</label>
+              <input type="text" class="studio-input sqic-sa-ans" value="${(q.shortAnswer || '').replace(/"/g, '&quot;')}" placeholder="Ví dụ: inH...">
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    },
+
+    readSectionQuizzesFromDOM(secId) {
+      const container = document.getElementById(`sec${secId}-quizzes-container`);
+      if (!container) {
+        const q = document.getElementById(`studio-sec${secId}-quiz-q`)?.value.trim() || 'Câu hỏi';
+        const cor = document.getElementById(`studio-sec${secId}-quiz-correct`)?.value || 'A';
+        const time = parseInt(document.getElementById(`studio-sec${secId}-quiz-time`)?.value || '60', 10);
+        return [{ id: `q${secId}_1`, type: 'single_choice', question: q, correct: cor, timeLimit: time, options: { A: 'A', B: 'B', C: 'C', D: 'D' } }];
+      }
+
+      const cards = container.querySelectorAll('.studio-quiz-item-card');
+      const list = [];
+      cards.forEach((c, idx) => {
+        const type = c.querySelector('.sqic-type-select')?.value || 'single_choice';
+        const qInp = c.querySelector('.sqic-q-input');
+        const q = (qInp ? qInp.value.trim() : '') || (idx === 0 ? document.getElementById(`studio-sec${secId}-quiz-q`)?.value.trim() : '') || `Câu hỏi ${idx + 1}`;
+        const timeSel = c.querySelector('.sqic-time-select');
+        const time = parseInt(timeSel?.value || '60', 10);
+
+        if (type === 'single_choice') {
+          const corSel = c.querySelector('.sqic-correct-select');
+          const cor = corSel?.value || (idx === 0 ? document.getElementById(`studio-sec${secId}-quiz-correct`)?.value : 'A') || 'A';
+          list.push({
+            id: `q${secId}_${idx + 1}`,
+            type: 'single_choice',
+            question: q,
+            options: { A: 'Phương án A', B: 'Phương án B', C: 'Phương án C', D: 'Phương án D' },
+            correct: cor,
+            timeLimit: time
+          });
+        } else if (type === 'true_false') {
+          const subItems = ['a', 'b', 'c', 'd'].map(k => {
+            return {
+              id: k,
+              statement: c.querySelector(`.sqic-tf-stmt-${k}`)?.value.trim() || `Mệnh đề ${k}`,
+              correct: c.querySelector(`.sqic-tf-ans-${k}`)?.value === 'true'
+            };
+          });
+          list.push({ id: `q${secId}_${idx + 1}`, type: 'true_false', question: q, subItems: subItems, timeLimit: time });
+        } else if (type === 'short_answer') {
+          const sa = c.querySelector('.sqic-sa-ans')?.value.trim() || '';
+          list.push({ id: `q${secId}_${idx + 1}`, type: 'short_answer', question: q, shortAnswer: sa, timeLimit: time });
+        }
+      });
+
+      if (list.length === 0) {
+        list.push({
+          id: `q${secId}_1`,
+          type: 'single_choice',
+          question: document.getElementById(`studio-sec${secId}-quiz-q`)?.value.trim() || 'Câu hỏi',
+          options: { A: 'A', B: 'B', C: 'C', D: 'D' },
+          correct: document.getElementById(`studio-sec${secId}-quiz-correct`)?.value || 'A',
+          timeLimit: 60
+        });
+      }
+      return list;
+    },
+
+    parseCSV(text) {
+      const lines = [];
+      let row = [];
+      let inQuotes = false;
+      let curVal = '';
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (inQuotes) {
+          if (char === '"' && nextChar === '"') {
+            curVal += '"';
+            i++;
+          } else if (char === '"') {
+            inQuotes = false;
+          } else {
+            curVal += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ',') {
+            row.push(curVal.trim());
+            curVal = '';
+          } else if (char === '\r' || char === '\n') {
+            row.push(curVal.trim());
+            curVal = '';
+            if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
+              lines.push(row);
+            }
+            row = [];
+            if (char === '\r' && nextChar === '\n') {
+              i++;
+            }
+          } else {
+            curVal += char;
+          }
+        }
+      }
+      if (curVal || row.length > 0) {
+        row.push(curVal.trim());
+        if (row.length > 1 || (row.length === 1 && row[0] !== '')) {
+          lines.push(row);
+        }
+      }
+      return lines;
+    },
+
+    processExcelImportedRows(rows) {
+      if (!rows || rows.length < 2) {
+        alert('File Excel/CSV không có dữ liệu hợp lệ!');
+        return;
+      }
+      const dataRows = rows.slice(1);
+      const sectionsMap = {};
+
+      dataRows.forEach(r => {
+        if (!r || r.length < 4) return;
+        const secNum = parseInt(r[0], 10) || 1;
+        const secTitle = String(r[1] || `Mục ${secNum}`).trim();
+        const actType = String(r[2] || '').trim().toLowerCase();
+        const qType = String(r[3] || 'single_choice').trim().toLowerCase();
+        const content = String(r[4] || '').trim();
+        const optA = String(r[5] || '').trim();
+        const optB = String(r[6] || '').trim();
+        const optC = String(r[7] || '').trim();
+        const optD = String(r[8] || '').trim();
+        const correct = String(r[9] || 'A').trim();
+        const timeLimit = parseInt(r[10], 10) || 60;
+
+        if (!sectionsMap[secNum]) {
+          sectionsMap[secNum] = {
+            id: secNum,
+            title: secTitle,
+            theory: { task: '', doc: '', timeLimit: 300 },
+            quizzes: [],
+            practices: []
+          };
+        }
+
+        const sec = sectionsMap[secNum];
+        if (actType.includes('ly_thuyet') || actType.includes('sgk') || actType.includes('kham_pha')) {
+          sec.theory.task = content;
+          sec.theory.timeLimit = timeLimit;
+        } else if (actType.includes('trac_nghiem') || actType.includes('quiz')) {
+          const qObj = {
+            id: `q${secNum}_${sec.quizzes.length + 1}`,
+            type: qType.includes('true') || qType.includes('tf') ? 'true_false' : (qType.includes('short') || qType.includes('dien') ? 'short_answer' : 'single_choice'),
+            question: content,
+            timeLimit: timeLimit
+          };
+
+          if (qObj.type === 'single_choice') {
+            qObj.options = { A: optA || 'Phương án A', B: optB || 'Phương án B', C: optC || 'Phương án C', D: optD || 'Phương án D' };
+            qObj.correct = correct.toUpperCase() || 'A';
+          } else if (qObj.type === 'true_false') {
+            const bools = correct.split(',').map(s => {
+              const v = s.trim().toUpperCase();
+              return v === 'T' || v === 'TRUE' || v === 'Đ' || v === 'D' || v === '1';
+            });
+            qObj.subItems = [
+              { id: 'a', statement: optA || 'Mệnh đề a', correct: bools[0] !== undefined ? bools[0] : true },
+              { id: 'b', statement: optB || 'Mệnh đề b', correct: bools[1] !== undefined ? bools[1] : true },
+              { id: 'c', statement: optC || 'Mệnh đề c', correct: bools[2] !== undefined ? bools[2] : false },
+              { id: 'd', statement: optD || 'Mệnh đề d', correct: bools[3] !== undefined ? bools[3] : true }
+            ];
+          } else if (qObj.type === 'short_answer') {
+            qObj.shortAnswer = correct;
+          }
+          sec.quizzes.push(qObj);
+        } else if (actType.includes('thuc_hanh') || actType.includes('practice')) {
+          sec.practices.push({
+            id: `p${secNum}_${sec.practices.length + 1}`,
+            title: `Thực hành Mục ${secNum}`,
+            task: content,
+            timeLimit: timeLimit
+          });
+        }
+      });
+
+      const sections = Object.values(sectionsMap);
+      if (sections.length === 0) {
+        alert('Không tìm thấy mục bài học nào trong file!');
+        return;
+      }
+
+      const lessonId = this.currentStudioLessonId || 'tin10_bai12';
+      const lesson = this.getLesson(lessonId) || {};
+      lesson.sections = sections;
+
+      this.loadLessonToStudio(lesson);
+      this.saveStudioLesson();
+
+      const totalQuizzes = sections.reduce((acc, s) => acc + (s.quizzes ? s.quizzes.length : 0), 0);
+      alert(`🎉 NHẬP DỮ LIỆU THÀNH CÔNG!\nĐã nạp ${sections.length} mục bài học và ${totalQuizzes} câu hỏi trắc nghiệm từ file vào Xưởng Soạn Kịch Bản.`);
     },
 
     saveStudioLesson() {
@@ -2698,17 +3013,19 @@
       };
 
       const sec1Title = document.getElementById('studio-sec1-title')?.value.trim() || 'Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự';
-      const sec1QuizQ = document.getElementById('studio-sec1-quiz-q')?.value.trim() || '';
-      const sec1QuizAns = document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
-      const sec1QuizTime = parseInt(document.getElementById('studio-sec1-quiz-time')?.value || '60', 10);
+      const sec1Quizzes = this.readSectionQuizzesFromDOM(1);
+      const sec1QuizQ = sec1Quizzes[0]?.question || document.getElementById('studio-sec1-quiz-q')?.value.trim() || '';
+      const sec1QuizAns = sec1Quizzes[0]?.correct || document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
+      const sec1QuizTime = sec1Quizzes[0]?.timeLimit || parseInt(document.getElementById('studio-sec1-quiz-time')?.value || '60', 10);
 
       const sec2Title = document.getElementById('studio-sec2-title')?.value.trim() || 'Mục 2: Phép Cắt Xâu Ký Tự (Slicing)';
       const sec2TheoryTask = document.getElementById('studio-sec2-theory-task')?.value.trim() || '';
       const sec2TheoryDoc = document.getElementById('studio-sec2-theory-doc')?.value.trim() || '';
       const sec2TheoryTime = parseInt(document.getElementById('studio-sec2-theory-time')?.value || '300', 10);
-      const sec2QuizQ = document.getElementById('studio-sec2-quiz-q')?.value.trim() || '';
-      const sec2QuizAns = document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
-      const sec2QuizTime = parseInt(document.getElementById('studio-sec2-quiz-time')?.value || '60', 10);
+      const sec2Quizzes = this.readSectionQuizzesFromDOM(2);
+      const sec2QuizQ = sec2Quizzes[0]?.question || document.getElementById('studio-sec2-quiz-q')?.value.trim() || '';
+      const sec2QuizAns = sec2Quizzes[0]?.correct || document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
+      const sec2QuizTime = sec2Quizzes[0]?.timeLimit || parseInt(document.getElementById('studio-sec2-quiz-time')?.value || '60', 10);
       const sec2PracTask = document.getElementById('studio-sec2-prac-task')?.value.trim() || '';
 
       const updatedLesson = {
@@ -2754,6 +3071,7 @@
             title: sec1Title,
             theory: { task: task2, doc: doc2, timeLimit: time2 },
             quiz: { question: sec1QuizQ, correct: sec1QuizAns, timeLimit: sec1QuizTime },
+            quizzes: sec1Quizzes,
             practice: { title: dTitle, task: dTask, placeholder: dStart, timeLimit: time3 }
           },
           {
@@ -2761,6 +3079,7 @@
             title: sec2Title,
             theory: { task: sec2TheoryTask, doc: sec2TheoryDoc, timeLimit: sec2TheoryTime },
             quiz: { question: sec2QuizQ, correct: sec2QuizAns, timeLimit: sec2QuizTime },
+            quizzes: sec2Quizzes,
             practice: { title: 'Thực hành Cắt và Ghép xâu', task: sec2PracTask, timeLimit: 600 }
           }
         ],
@@ -2963,10 +3282,23 @@
 
             <!-- MỤC 1: HĐ 1.2 -->
             <tr>
-              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 1.2: Trắc nghiệm nhanh</strong></td>
+              <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 1.2: Trắc nghiệm củng cố</strong></td>
               <td>
-                <div style="font-size:13px;color:#cbd5e1;">${sec1QuizQ}</div>
-                <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec1QuizAns}</strong></div>
+                ${(() => {
+                  const sec1Quizzes = this.readSectionQuizzesFromDOM(1);
+                  if (sec1Quizzes && sec1Quizzes.length > 1) {
+                    let h = `<div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:4px;"><i class="fas fa-layer-group"></i> Gói ${sec1Quizzes.length} câu trắc nghiệm:</div>`;
+                    sec1Quizzes.forEach((q, i) => {
+                      const tName = q.type === 'true_false' ? 'Đúng/Sai' : (q.type === 'short_answer' ? 'Điền code' : '4 Lựa chọn');
+                      h += `<div style="font-size:12px;color:#cbd5e1;margin-bottom:3px;"><span style="color:#10b981;font-weight:700;">${i + 1}. [${tName}]</span> ${q.question}</div>`;
+                    });
+                    return h;
+                  }
+                  return `
+                    <div style="font-size:13px;color:#cbd5e1;">${sec1QuizQ}</div>
+                    <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec1QuizAns}</strong></div>
+                  `;
+                })()}
               </td>
               <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec1QuizTime)}</span></td>
               <td>
@@ -3022,8 +3354,21 @@
             <tr>
               <td><i class="fas fa-check-double" style="color:#10b981;"></i> <strong>HĐ 2.2: Trắc nghiệm code</strong></td>
               <td>
-                <div style="font-size:13px;color:#cbd5e1;">${sec2QuizQ}</div>
-                <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec2QuizAns}</strong></div>
+                ${(() => {
+                  const sec2Quizzes = this.readSectionQuizzesFromDOM(2);
+                  if (sec2Quizzes && sec2Quizzes.length > 1) {
+                    let h = `<div style="font-size:12.5px;color:#38bdf8;font-weight:700;margin-bottom:4px;"><i class="fas fa-layer-group"></i> Gói ${sec2Quizzes.length} câu trắc nghiệm:</div>`;
+                    sec2Quizzes.forEach((q, i) => {
+                      const tName = q.type === 'true_false' ? 'Đúng/Sai' : (q.type === 'short_answer' ? 'Điền code' : '4 Lựa chọn');
+                      h += `<div style="font-size:12px;color:#cbd5e1;margin-bottom:3px;"><span style="color:#10b981;font-weight:700;">${i + 1}. [${tName}]</span> ${q.question}</div>`;
+                    });
+                    return h;
+                  }
+                  return `
+                    <div style="font-size:13px;color:#cbd5e1;">${sec2QuizQ}</div>
+                    <div style="font-size:11.5px;color:#10b981;margin-top:3px;"><i class="fas fa-check-circle"></i> Đáp án đúng: <strong>${sec2QuizAns}</strong></div>
+                  `;
+                })()}
               </td>
               <td><span class="bp-time-tag"><i class="fas fa-stopwatch"></i> ${formatTime(sec2QuizTime)}</span></td>
               <td>
@@ -3416,6 +3761,49 @@
       }
     },
 
+    renderStageSectionNav(state) {
+      state = state || STORE.getState();
+      const nav = document.getElementById('stage-section-navigator');
+      if (!nav) return;
+
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const currentSec = (state.currentSection !== undefined) ? state.currentSection : 1;
+
+      const tabs = [];
+      tabs.push({ id: 0, label: 'Khởi động & Bài cũ', icon: 'fa-dice', color: '#ef4444' });
+
+      if (lesson.sections && lesson.sections.length > 0) {
+        lesson.sections.forEach((sec, idx) => {
+          const num = idx + 1;
+          const qCount = (sec.quizzes && sec.quizzes.length > 0) ? sec.quizzes.length : (sec.quiz ? 1 : 0);
+          const qBadge = qCount > 1 ? ` (${qCount} câu)` : '';
+          tabs.push({
+            id: num,
+            label: sec.title ? `${sec.title}${qBadge}` : `Mục ${num}: Nội dung ${num}${qBadge}`,
+            icon: 'fa-layer-group',
+            color: num === 1 ? '#38bdf8' : '#10b981'
+          });
+        });
+      } else {
+        tabs.push({ id: 1, label: 'Mục 1: Khởi tạo Xâu Ký Tự', icon: 'fa-book-open', color: '#38bdf8' });
+        tabs.push({ id: 2, label: 'Mục 2: Cắt Xâu (Slicing)', icon: 'fa-code-branch', color: '#10b981' });
+      }
+
+      tabs.push({ id: 99, label: 'Tổng kết & Podium', icon: 'fa-trophy', color: '#f59e0b' });
+
+      let html = '';
+      tabs.forEach(t => {
+        const isActive = (currentSec === t.id);
+        html += `
+          <button type="button" class="stage-sec-tab ${isActive ? 'active' : ''}" onclick="window.stageSelectSection(${t.id})">
+            <i class="fas ${t.icon}" style="color:${t.color};"></i> ${t.label}
+          </button>
+        `;
+      });
+
+      nav.innerHTML = html;
+    },
+
     executeStartActivity(actKey) {
       const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId);
       const activities = this.getLessonActivities(lesson);
@@ -3498,6 +3886,9 @@
       if (sessionTitle) {
         sessionTitle.textContent = classData.className + ' • ' + (state.lessonData ? state.lessonData.title : 'Môn Tin học');
       }
+
+      // Cập nhật Thanh điều hướng phân tầng mục bài học
+      this.renderStageSectionNav(state);
 
       // Cập nhật Sân khấu hoạt động động theo Xưởng soạn
       this.renderDynamicStagePipeline(state);
@@ -4172,23 +4563,81 @@
 
       if (currentPhase === 'quiz') {
         const lesson = lessonData || EMBEDDED_LESSONS[state.lessonId] || EMBEDDED_LESSONS['tin10_bai12'];
-        const quiz = (lesson && lesson.quiz) ? lesson.quiz : {};
+        const curSec = state.currentSection || 1;
+
+        // Xác định danh sách gói câu hỏi
+        let quizzesList = state.packetQuizzes;
+        if (!quizzesList || quizzesList.length === 0) {
+          if (lesson && lesson.sections && lesson.sections[curSec - 1]) {
+            const secObj = lesson.sections[curSec - 1];
+            if (secObj.quizzes && secObj.quizzes.length > 0) quizzesList = secObj.quizzes;
+            else if (secObj.quiz) quizzesList = [secObj.quiz];
+          }
+          if (!quizzesList || quizzesList.length === 0) {
+            if (lesson && lesson.quizzes && lesson.quizzes.length > 0) quizzesList = lesson.quizzes;
+            else if (lesson && lesson.quiz) quizzesList = [lesson.quiz];
+          }
+        }
+        if (!quizzesList || quizzesList.length === 0) {
+          quizzesList = [{
+            type: 'single_choice',
+            question: 'Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?',
+            options: {
+              A: 'Không thể truy cập các ký tự qua chỉ số index',
+              B: 'Không thể gán thay đổi trực tiếp từng ký tự trong xâu đã tạo',
+              C: 'Không thể dùng hàm len() để tính độ dài xâu',
+              D: 'Xâu chỉ chứa được chữ số, không chứa được chữ cái'
+            },
+            correct: 'B'
+          }];
+        }
+
+        const isPacket = (quizzesList.length > 1);
+        const qIdx = Math.min(Math.max(0, state.studentQuizIndex || 0), quizzesList.length - 1);
+        const quiz = quizzesList[qIdx] || quizzesList[0];
         const qType = quiz.type || 'single_choice';
         const qShuffle = quiz.shuffle !== false;
         const mId = state.machineId || 1;
+
+        // Cập nhật số thứ tự câu hỏi và Stepper Pills
+        const qNumEl = document.getElementById('quiz-q-num');
+        if (qNumEl) {
+          qNumEl.textContent = isPacket ? `Câu hỏi ${qIdx + 1} / ${quizzesList.length}` : `Câu hỏi 1 / 1`;
+        }
+
+        const navPills = document.getElementById('quiz-nav-pills');
+        if (navPills) {
+          if (isPacket) {
+            let pillsHtml = '';
+            quizzesList.forEach((_, pIdx) => {
+              const hasAns = state.studentPacketAnswers && (state.studentPacketAnswers[pIdx] !== undefined);
+              const isCurrent = (pIdx === qIdx);
+              let pillCls = 'qsb-pill';
+              if (isCurrent) pillCls += ' active';
+              if (hasAns) pillCls += ' answered';
+              pillsHtml += `<button type="button" class="${pillCls}" onclick="window.studentQuizGoTo(${pIdx})">${pIdx + 1}</button>`;
+            });
+            navPills.innerHTML = pillsHtml;
+            navPills.style.display = 'flex';
+          } else {
+            navPills.innerHTML = '';
+            navPills.style.display = 'none';
+          }
+        }
 
         // Cập nhật câu hỏi
         const qText = document.getElementById('quiz-question-text');
         if (qText && quiz.question) qText.textContent = quiz.question;
 
         const dynBody = document.getElementById('quiz-dynamic-body');
-        const choice = state.quizSelection;
-        const isAnswered = !!state.quizAnswered;
+        const packetAns = state.studentPacketAnswers || {};
+        const choice = isPacket ? packetAns[qIdx] : state.quizSelection;
+        const isAnswered = isPacket ? !!state.quizPacketSubmitted : !!state.quizAnswered;
 
         if (dynBody) {
           if (qType === 'single_choice' || !qType) {
             const correct = quiz.correct || 'B';
-            const shuffledItems = this.getShuffledOptions(quiz.options, mId, 0, qShuffle);
+            const shuffledItems = this.getShuffledOptions(quiz.options, mId, qIdx, qShuffle);
 
             let optsHtml = '<div class="quiz-options-grid" id="quiz-options-grid">';
             shuffledItems.forEach((item, slotIdx) => {
@@ -4209,8 +4658,14 @@
               dynBody.querySelectorAll('.quiz-opt').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                   const opt = e.currentTarget.dataset.qopt;
-                  const isCorrect = (opt === correct);
-                  this.submitQuizAnswer(opt, isCorrect);
+                  if (isPacket) {
+                    const newPacketAns = Object.assign({}, STORE.getState().studentPacketAnswers || {}, { [qIdx]: opt });
+                    STORE.setState({ studentPacketAnswers: newPacketAns });
+                    this.renderStudentWorkspace(STORE.getState());
+                  } else {
+                    const isCorrect = (opt === correct);
+                    this.submitQuizAnswer(opt, isCorrect);
+                  }
                 });
               });
             }
@@ -4235,7 +4690,7 @@
                 </div>
               `;
             });
-            if (!isAnswered) {
+            if (!isAnswered && !isPacket) {
               tfHtml += `
                 <div style="margin-top:14px;display:flex;justify-content:flex-end;">
                   <button type="button" class="btn-submit-short" id="btn-submit-tf">
@@ -4247,44 +4702,8 @@
             tfHtml += '</div>';
             dynBody.innerHTML = tfHtml;
 
-            if (!isAnswered) {
-              const currentTfAnswers = {};
-              dynBody.querySelectorAll('.quiz-tf-row').forEach(row => {
-                const rKey = row.dataset.rowKey;
-                const btnTrue = row.querySelector('.btn-true');
-                const btnFalse = row.querySelector('.btn-false');
-                btnTrue.addEventListener('click', () => {
-                  currentTfAnswers[rKey] = true;
-                  btnTrue.classList.add('selected');
-                  btnFalse.classList.remove('selected');
-                });
-                btnFalse.addEventListener('click', () => {
-                  currentTfAnswers[rKey] = false;
-                  btnFalse.classList.add('selected');
-                  btnTrue.classList.remove('selected');
-                });
-              });
-
-              const btnSubmitTf = document.getElementById('btn-submit-tf');
-              if (btnSubmitTf) {
-                btnSubmitTf.addEventListener('click', () => {
-                  if (Object.keys(currentTfAnswers).length < subItems.length) {
-                    alert('Hai em hãy chọn ĐÚNG hoặc SAI cho tất cả các mệnh đề trước khi nộp bài!');
-                    return;
-                  }
-                  let allCorrect = true;
-                  const choiceArr = [];
-                  subItems.forEach((sub, sIdx) => {
-                    const rKey = sub.id || String.fromCharCode(97 + sIdx);
-                    const userVal = !!currentTfAnswers[rKey];
-                    const expVal = !!sub.correct;
-                    if (userVal !== expVal) allCorrect = false;
-                    choiceArr.push(`${rKey}:${userVal ? 'Đ' : 'S'}`);
-                  });
-                  this.submitQuizAnswer(choiceArr.join(', '), allCorrect);
-                });
-              }
-            } else if (choice) {
+            // Highlight previous choices if any
+            if (choice) {
               const parts = String(choice).split(', ');
               parts.forEach(p => {
                 const [rKey, valStr] = p.split(':');
@@ -4295,12 +4714,83 @@
                 }
               });
             }
+
+            if (!isAnswered) {
+              const currentTfAnswers = {};
+              if (choice) {
+                const parts = String(choice).split(', ');
+                parts.forEach(p => {
+                  const [rKey, valStr] = p.split(':');
+                  if (rKey) currentTfAnswers[rKey] = (valStr === 'Đ');
+                });
+              }
+
+              dynBody.querySelectorAll('.quiz-tf-row').forEach(row => {
+                const rKey = row.dataset.rowKey;
+                const btnTrue = row.querySelector('.btn-true');
+                const btnFalse = row.querySelector('.btn-false');
+                btnTrue.addEventListener('click', () => {
+                  currentTfAnswers[rKey] = true;
+                  btnTrue.classList.add('selected');
+                  btnFalse.classList.remove('selected');
+                  if (isPacket) {
+                    const choiceArr = [];
+                    subItems.forEach((sub, sIdx) => {
+                      const k = sub.id || String.fromCharCode(97 + sIdx);
+                      if (currentTfAnswers[k] !== undefined) {
+                        choiceArr.push(`${k}:${currentTfAnswers[k] ? 'Đ' : 'S'}`);
+                      }
+                    });
+                    const newPacketAns = Object.assign({}, STORE.getState().studentPacketAnswers || {}, { [qIdx]: choiceArr.join(', ') });
+                    STORE.setState({ studentPacketAnswers: newPacketAns });
+                  }
+                });
+                btnFalse.addEventListener('click', () => {
+                  currentTfAnswers[rKey] = false;
+                  btnFalse.classList.add('selected');
+                  btnTrue.classList.remove('selected');
+                  if (isPacket) {
+                    const choiceArr = [];
+                    subItems.forEach((sub, sIdx) => {
+                      const k = sub.id || String.fromCharCode(97 + sIdx);
+                      if (currentTfAnswers[k] !== undefined) {
+                        choiceArr.push(`${k}:${currentTfAnswers[k] ? 'Đ' : 'S'}`);
+                      }
+                    });
+                    const newPacketAns = Object.assign({}, STORE.getState().studentPacketAnswers || {}, { [qIdx]: choiceArr.join(', ') });
+                    STORE.setState({ studentPacketAnswers: newPacketAns });
+                  }
+                });
+              });
+
+              if (!isPacket) {
+                const btnSubmitTf = document.getElementById('btn-submit-tf');
+                if (btnSubmitTf) {
+                  btnSubmitTf.addEventListener('click', () => {
+                    if (Object.keys(currentTfAnswers).length < subItems.length) {
+                      alert('Hai em hãy chọn ĐÚNG hoặc SAI cho tất cả các mệnh đề trước khi nộp bài!');
+                      return;
+                    }
+                    let allCorrect = true;
+                    const choiceArr = [];
+                    subItems.forEach((sub, sIdx) => {
+                      const rKey = sub.id || String.fromCharCode(97 + sIdx);
+                      const userVal = !!currentTfAnswers[rKey];
+                      const expVal = !!sub.correct;
+                      if (userVal !== expVal) allCorrect = false;
+                      choiceArr.push(`${rKey}:${userVal ? 'Đ' : 'S'}`);
+                    });
+                    this.submitQuizAnswer(choiceArr.join(', '), allCorrect);
+                  });
+                }
+              }
+            }
           } else if (qType === 'short_answer') {
             const expAnswer = (quiz.shortAnswer || '').trim();
             const saHtml = `
               <div class="quiz-short-wrap">
                 <input type="text" id="quiz-short-input" class="quiz-short-input" placeholder="Gõ câu trả lời kết quả vào đây..." value="${choice || ''}" ${isAnswered ? 'disabled' : ''}>
-                ${!isAnswered ? `
+                ${(!isAnswered && !isPacket) ? `
                   <button type="button" class="btn-submit-short" id="btn-submit-short">
                     <i class="fas fa-paper-plane"></i> NỘP KẾT QUẢ
                   </button>
@@ -4310,25 +4800,52 @@
             dynBody.innerHTML = saHtml;
 
             if (!isAnswered) {
-              const btnSa = document.getElementById('btn-submit-short');
               const saInp = document.getElementById('quiz-short-input');
-              const doSubmitSa = () => {
-                const val = (saInp ? saInp.value : '').trim();
-                if (!val) {
-                  alert('Hai em hãy gõ kết quả câu trả lời vào ô trống trước khi bấm nộp!');
-                  return;
+              if (isPacket) {
+                if (saInp) {
+                  saInp.addEventListener('input', (e) => {
+                    const val = e.target.value;
+                    const newPacketAns = Object.assign({}, STORE.getState().studentPacketAnswers || {}, { [qIdx]: val });
+                    STORE.setState({ studentPacketAnswers: newPacketAns });
+                  });
                 }
-                const isCorrect = (val.toLowerCase() === expAnswer.toLowerCase());
-                this.submitQuizAnswer(val, isCorrect);
-              };
-              if (btnSa) btnSa.addEventListener('click', doSubmitSa);
-              if (saInp) {
-                saInp.addEventListener('keydown', (e) => {
-                  if (e.key === 'Enter') doSubmitSa();
-                });
+              } else {
+                const btnSa = document.getElementById('btn-submit-short');
+                const doSubmitSa = () => {
+                  const val = (saInp ? saInp.value : '').trim();
+                  if (!val) {
+                    alert('Hai em hãy gõ kết quả câu trả lời vào ô trống trước khi bấm nộp!');
+                    return;
+                  }
+                  const isCorrect = (val.toLowerCase() === expAnswer.toLowerCase());
+                  this.submitQuizAnswer(val, isCorrect);
+                };
+                if (btnSa) btnSa.addEventListener('click', doSubmitSa);
+                if (saInp) {
+                  saInp.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') doSubmitSa();
+                  });
+                }
               }
             }
           }
+        }
+
+        // Cập nhật các nút điều hướng phía dưới (Student Stepper Nav)
+        const btnPrev = document.getElementById('btn-quiz-prev');
+        const btnNext = document.getElementById('btn-quiz-next');
+        const btnSubmitPacket = document.getElementById('btn-quiz-packet-submit');
+
+        if (isPacket && !isAnswered) {
+          if (btnPrev) btnPrev.style.display = (qIdx > 0) ? 'inline-flex' : 'none';
+          if (btnNext) btnNext.style.display = (qIdx < quizzesList.length - 1) ? 'inline-flex' : 'none';
+          if (btnSubmitPacket) {
+            btnSubmitPacket.style.display = (qIdx === quizzesList.length - 1 || Object.keys(packetAns).length >= quizzesList.length) ? 'inline-flex' : 'none';
+          }
+        } else {
+          if (btnPrev) btnPrev.style.display = 'none';
+          if (btnNext) btnNext.style.display = 'none';
+          if (btnSubmitPacket) btnSubmitPacket.style.display = 'none';
         }
 
         // Feedback box
@@ -4336,30 +4853,46 @@
         if (feedback) {
           if (isAnswered) {
             feedback.style.display = 'block';
-            const isCorrect = (state.quizAnswers && state.quizAnswers[mId])
-              ? state.quizAnswers[mId].isCorrect
-              : (qType === 'single_choice' ? choice === (quiz.correct || 'B') : false);
-
-            if (isCorrect) {
-              feedback.className = 'quiz-feedback success';
-              feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của Đấu trường tương tác.`;
-            } else {
-              feedback.className = 'quiz-feedback';
-              feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
-              feedback.style.color = '#fca5a5';
-              feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
-              let correctInfo = '';
-              if (qType === 'single_choice') {
-                const cor = quiz.correct || 'B';
-                const correctLabel = (quiz.options && quiz.options[cor]) ? quiz.options[cor] : '';
-                correctInfo = `Đáp án đúng là <strong>${cor}</strong>: ${correctLabel}`;
-              } else if (qType === 'true_false') {
-                const subItems = quiz.subItems || [];
-                correctInfo = 'Đáp án đúng: ' + subItems.map(s => `<strong>${s.id})</strong> ${s.correct ? 'ĐÚNG' : 'SAI'}`).join(' • ');
-              } else if (qType === 'short_answer') {
-                correctInfo = `Đáp án đúng là: <strong>${quiz.shortAnswer || ''}</strong>`;
+            if (isPacket) {
+              const myAns = (state.quizAnswers && state.quizAnswers[mId]) || {};
+              const isCorrect = !!myAns.isCorrect;
+              const totCorr = myAns.totalCorrect !== undefined ? myAns.totalCorrect : (isCorrect ? quizzesList.length : 0);
+              if (isCorrect) {
+                feedback.className = 'quiz-feedback success';
+                feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>XUẤT SẮC!</strong> Nhóm bạn đã trả lời đúng trọn vẹn <strong>${totCorr}/${quizzesList.length} câu hỏi</strong> của gói trắc nghiệm.`;
+              } else {
+                feedback.className = 'quiz-feedback';
+                feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                feedback.style.color = '#fca5a5';
+                feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+                feedback.innerHTML = `<i class="fas fa-info-circle"></i> Kết quả: Đúng <strong>${totCorr}/${quizzesList.length} câu</strong>. Hãy cùng Thầy và cả lớp lắng nghe phần giải thích đáp án trên màn hình sân khấu!`;
               }
-              feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. ${correctInfo}`;
+            } else {
+              const isCorrect = (state.quizAnswers && state.quizAnswers[mId])
+                ? state.quizAnswers[mId].isCorrect
+                : (qType === 'single_choice' ? choice === (quiz.correct || 'B') : false);
+
+              if (isCorrect) {
+                feedback.className = 'quiz-feedback success';
+                feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của Đấu trường tương tác.`;
+              } else {
+                feedback.className = 'quiz-feedback';
+                feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
+                feedback.style.color = '#fca5a5';
+                feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+                let correctInfo = '';
+                if (qType === 'single_choice') {
+                  const cor = quiz.correct || 'B';
+                  const correctLabel = (quiz.options && quiz.options[cor]) ? quiz.options[cor] : '';
+                  correctInfo = `Đáp án đúng là <strong>${cor}</strong>: ${correctLabel}`;
+                } else if (qType === 'true_false') {
+                  const subItems = quiz.subItems || [];
+                  correctInfo = 'Đáp án đúng: ' + subItems.map(s => `<strong>${s.id})</strong> ${s.correct ? 'ĐÚNG' : 'SAI'}`).join(' • ');
+                } else if (qType === 'short_answer') {
+                  correctInfo = `Đáp án đúng là: <strong>${quiz.shortAnswer || ''}</strong>`;
+                }
+                feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. ${correctInfo}`;
+              }
             }
           } else {
             feedback.style.display = 'none';
@@ -4858,6 +5391,9 @@
         storeUpdates.quizSelection = null;
         storeUpdates.quizAnswered = false;
         storeUpdates.quizAnswers = {};
+        storeUpdates.studentQuizIndex = 0;
+        storeUpdates.studentPacketAnswers = {};
+        storeUpdates.quizPacketSubmitted = false;
 
         document.querySelectorAll('.quiz-opt').forEach(btn => {
           btn.classList.remove('selected', 'correct', 'wrong');
@@ -5475,27 +6011,56 @@
     },
 
     h4StartArena() {
-      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId) || {};
+      const state = STORE.getState();
+      const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
+      const curSec = state.currentSection || 1;
+      let packetQuizzes = null;
+      if (lesson && lesson.sections && lesson.sections[curSec - 1]) {
+        const secObj = lesson.sections[curSec - 1];
+        if (secObj.quizzes && secObj.quizzes.length > 0) packetQuizzes = secObj.quizzes;
+        else if (secObj.quiz) packetQuizzes = [secObj.quiz];
+      }
+      if (!packetQuizzes || packetQuizzes.length === 0) {
+        if (lesson && lesson.quizzes && lesson.quizzes.length > 0) packetQuizzes = lesson.quizzes;
+        else if (lesson && lesson.quiz) packetQuizzes = [lesson.quiz];
+      }
+
       const qInput = document.getElementById('studio-quiz-q');
       const qTypeInput = document.getElementById('studio-quiz-type');
-      const qText = (qInput && qInput.value.trim()) || (lesson.quiz && lesson.quiz.question) || 'Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?';
-      const qType = (qTypeInput && qTypeInput.value) || (lesson.quiz && lesson.quiz.type) || 'single_choice';
+      const qText = (packetQuizzes && packetQuizzes[0] && packetQuizzes[0].question) || (qInput && qInput.value.trim()) || (lesson.quiz && lesson.quiz.question) || 'Trong Python, xâu ký tự có tính chất bất biến (immutable). Điều này có nghĩa là gì?';
+      const qType = (packetQuizzes && packetQuizzes[0] && packetQuizzes[0].type) || (qTypeInput && qTypeInput.value) || (lesson.quiz && lesson.quiz.type) || 'single_choice';
 
       const qDisp = document.getElementById('h4-quiz-q-display');
-      if (qDisp) qDisp.textContent = qText;
+      if (qDisp) {
+        if (packetQuizzes && packetQuizzes.length > 1) {
+          qDisp.innerHTML = `<span style="color:#38bdf8;font-weight:700;">[GÓI ${packetQuizzes.length} CÂU HỎI TRẮC NGHIỆM]</span> ${qText}`;
+        } else {
+          qDisp.textContent = qText;
+        }
+      }
 
-      const h4State = Object.assign({}, STORE.getState().h4State, {
+      const h4State = Object.assign({}, state.h4State, {
         arenaStarted: true,
         quizDelivered: false,
         podiumRevealed: false,
         questionText: qText,
-        questionType: qType
+        questionType: qType,
+        packetQuizzes: packetQuizzes
       });
-      STORE.setState({ h4State });
+      STORE.setState({
+        h4State,
+        packetQuizzes: packetQuizzes,
+        studentQuizIndex: 0,
+        studentPacketAnswers: {},
+        quizPacketSubmitted: false
+      });
       this.updateH4StepButtons();
 
-      SYNC_BUS.broadcast('H4_ARENA_START', { questionText: qText, questionType: qType });
+      SYNC_BUS.broadcast('H4_ARENA_START', { questionText: qText, questionType: qType, packetQuizzes: packetQuizzes });
       safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+      if (packetQuizzes) {
+        safeFirebaseUpdate('activeSession/packetQuizzes', packetQuizzes).catch(()=>{});
+      }
     },
 
     h4DeliverQuiz() {
@@ -5505,7 +6070,13 @@
         return;
       }
       const lesson = state.lessonData || this.getLesson(state.lessonId) || {};
-      const sec = (lesson.quiz && lesson.quiz.timeLimit) ? lesson.quiz.timeLimit : 20;
+      const quizzesList = state.packetQuizzes;
+      let sec = 20;
+      if (quizzesList && quizzesList.length > 0) {
+        sec = quizzesList.reduce((acc, q) => acc + (q.timeLimit || 60), 0);
+      } else if (lesson.quiz && lesson.quiz.timeLimit) {
+        sec = lesson.quiz.timeLimit;
+      }
 
       const h4State = Object.assign({}, state.h4State, {
         quizDelivered: true,
@@ -6404,7 +6975,8 @@
       currentPhase: 'waiting',
       teacherPhase: 'waiting',
       lastFinishedActivity: null,
-      pollLocked: false
+      pollLocked: false,
+      occupiedMachines: {}
     });
     SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', resetByTeacher: true, returnToLobby: true });
     safeFirebaseUpdate('activeSession', {
@@ -6415,6 +6987,7 @@
       pollAnswers: null,
       discussionAnswers: null,
       quizAnswers: null,
+      machines: null,
       oldLesson: { selectedMachine: null, selectedStudent: null, isRevealed: false, isLocked: false, submissions: null },
       luckyDraw: { spinning: false, modalOpen: false, resultMachine: null, resultStudent: null },
       countdown: { active: false, startedAt: 0 },
@@ -6649,6 +7222,351 @@
         timestamp: Date.now()
       }).catch(()=>{});
     }, 1500);
+  };
+
+  // -------------------------------------------------------------
+  // XỬ LÝ NHẬP XUẤT EXCEL & SOẠN CÂU HỎI ĐỘNG (STUDIO EXCEL & DYNAMIC QUIZ)
+  // -------------------------------------------------------------
+  window.studioDownloadExcelTemplate = function() {
+    const headers = [
+      "Mục",
+      "Tên mục bài học",
+      "Loại hoạt động",
+      "Dạng trắc nghiệm",
+      "Nội dung / Câu hỏi",
+      "Phương án A / Mệnh đề a",
+      "Phương án B / Mệnh đề b",
+      "Phương án C / Mệnh đề c",
+      "Phương án D / Mệnh đề d",
+      "Đáp án đúng",
+      "Thời lượng (giây)"
+    ];
+
+    const rows = [
+      [1, "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự", "kham_pha", "", "Đọc SGK Tin 10 trang 90 tìm hiểu cách khởi tạo biến xâu và chỉ số index", "", "", "", "", "", 300],
+      [1, "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự", "trac_nghiem", "single_choice", "Trong Python, chỉ số (index) của phần tử đầu tiên trong xâu ký tự được đánh số bắt đầu từ mấy?", "Chỉ số 0", "Chỉ số 1", "Chỉ số -1", "Tùy chọn", "A", 60],
+      [1, "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự", "trac_nghiem", "true_false", "Các mệnh đề sau về xâu ký tự trong Python là Đúng hay Sai?", "Xâu có thể chứa đồng thời chữ cái, chữ số và ký tự đặc biệt", "Có thể gán thay đổi trực tiếp một ký tự trong xâu qua cú pháp s[0] = 'a'", "Hàm len(s) trả về tổng số ký tự có trong xâu s", "Chỉ số âm s[-1] dùng để truy cập phần tử cuối cùng của xâu", "a:Đ, b:S, c:Đ, d:Đ", 90],
+      [1, "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự", "trac_nghiem", "short_answer", "Cho s = 'TinHoc10'. Lệnh len(s) sẽ trả về kết quả là bao nhiêu?", "", "", "", "", "8", 60],
+      [1, "Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự", "thuc_hanh", "", "Viết chương trình nhập vào họ tên học sinh và in ra độ dài cùng ký tự đầu tiên", "", "", "", "", "", 600],
+      [2, "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)", "kham_pha", "", "Tìm hiểu cú pháp cắt xâu s[start:end] và bước nhảy step trong SGK trang 92", "", "", "", "", "", 300],
+      [2, "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)", "trac_nghiem", "single_choice", "Cho xâu s = 'VIETNAM'. Kết quả của biểu thức s[0:4] là gì?", "'VIET'", "'VIETN'", "'VIE'", "'ETNA'", "A", 60],
+      [2, "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)", "trac_nghiem", "short_answer", "Cho xâu s = 'TIN HOC 10'. Kết quả của s[4:7] là gì?", "", "", "", "", "HOC", 60],
+      [2, "Mục 2: Phép Cắt Xâu Ký Tự (Slicing)", "thuc_hanh", "", "Thực hành cắt lấy từ đầu tiên và từ cuối cùng của một chuỗi họ và tên", "", "", "", "", "", 600]
+    ];
+
+    if (typeof XLSX !== 'undefined') {
+      try {
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, "KichBanBaiHoc");
+        XLSX.writeFile(wb, "Mau_Kich_Ban_Bai_Hoc_LMS.xlsx");
+        return;
+      } catch (e) {
+        console.warn("SheetJS write failed, falling back to CSV:", e);
+      }
+    }
+
+    // Fallback CSV with UTF-8 BOM
+    let csvContent = "\uFEFF";
+    const allRows = [headers, ...rows];
+    allRows.forEach(r => {
+      const rowStr = r.map(cell => `"${String(cell !== undefined && cell !== null ? cell : '').replace(/"/g, '""')}"`).join(",");
+      csvContent += rowStr + "\r\n";
+    });
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Mau_Kich_Ban_Bai_Hoc_LMS.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  window.studioHandleExcelImport = function(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const fileName = file.name.toLowerCase();
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls');
+
+    if (isExcel && typeof XLSX !== 'undefined') {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const wb = XLSX.read(data, { type: 'array' });
+          const firstSheetName = wb.SheetNames[0];
+          const sheet = wb.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+          APP.processExcelImportedRows(rows);
+        } catch (err) {
+          console.error("Lỗi đọc file Excel:", err);
+          alert("Lỗi đọc file Excel: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      // CSV or fallback
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const text = e.target.result;
+          const rows = APP.parseCSV(text);
+          APP.processExcelImportedRows(rows);
+        } catch (err) {
+          console.error("Lỗi đọc file CSV:", err);
+          alert("Lỗi đọc file CSV: " + err.message);
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+
+    event.target.value = '';
+  };
+
+  window.studioAddQuizQuestion = function(secId) {
+    const container = document.getElementById(`sec${secId}-quizzes-container`);
+    if (!container) return;
+    const currentCards = container.querySelectorAll('.studio-quiz-item-card');
+    const nextIdx = currentCards.length;
+    const card = document.createElement('div');
+    card.className = 'studio-quiz-item-card';
+    card.setAttribute('data-q-idx', String(nextIdx));
+    card.style.cssText = 'background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-bottom:10px;';
+    
+    card.innerHTML = `
+      <div class="sqic-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="color:#38bdf8;font-weight:700;font-size:12.5px;"><i class="fas fa-question-circle"></i> CÂU HỎI ${nextIdx + 1}:</span>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="studio-select sqic-type-select" onchange="window.studioChangeQuestionType(this)" style="padding:3px 8px;font-size:12px;width:auto;">
+            <option value="single_choice" selected>4 Lựa chọn (A, B, C, D)</option>
+            <option value="true_false">Đúng / Sai 4 mệnh đề</option>
+            <option value="short_answer">Điền kết quả ngắn</option>
+          </select>
+          <button type="button" class="btn-tool-sm btn-tool-danger" onclick="window.studioRemoveQuizQuestion(this)" style="padding:3px 8px;font-size:11px;border-radius:4px;"><i class="fas fa-trash"></i> Xóa</button>
+        </div>
+      </div>
+      <div class="studio-form-row">
+        <div class="studio-form-col" style="flex:2;">
+          <label class="studio-field-label"><i class="fas fa-question"></i> Nội dung câu hỏi ${nextIdx + 1}:</label>
+          <input type="text" class="studio-input sqic-q-input" placeholder="Nhập nội dung câu hỏi...">
+        </div>
+        <div class="studio-form-col sqic-correct-col">
+          <label class="studio-field-label"><i class="fas fa-check-circle" style="color:#10b981;"></i> Đáp án đúng:</label>
+          <select class="studio-select sqic-correct-select">
+            <option value="A" selected>A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+          </select>
+        </div>
+        <div class="studio-form-col">
+          <label class="studio-field-label"><i class="fas fa-stopwatch"></i> Thời lượng:</label>
+          <select class="studio-select sqic-time-select">
+            <option value="30">30 giây</option>
+            <option value="60" selected>1 phút</option>
+            <option value="90">1.5 phút</option>
+            <option value="120">2 phút</option>
+          </select>
+        </div>
+      </div>
+      <div class="sqic-tf-wrap" style="display:none;margin-top:8px;">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px;"><i class="fas fa-tasks"></i> 4 Mệnh đề Đúng/Sai:</div>
+        ${['a', 'b', 'c', 'd'].map((k, i) => `
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;">
+            <span style="color:#38bdf8;font-weight:700;width:18px;">${k})</span>
+            <input type="text" class="studio-input sqic-tf-stmt-${k}" value="Mệnh đề ${k}" style="flex:1;padding:4px 8px;font-size:12px;">
+            <select class="studio-select sqic-tf-ans-${k}" style="width:85px;padding:4px 8px;font-size:12px;">
+              <option value="true" ${i % 2 === 0 ? 'selected' : ''}>ĐÚNG</option>
+              <option value="false" ${i % 2 !== 0 ? 'selected' : ''}>SAI</option>
+            </select>
+          </div>
+        `).join('')}
+      </div>
+      <div class="sqic-sa-wrap" style="display:none;margin-top:8px;">
+        <label class="studio-field-label"><i class="fas fa-keyboard"></i> Kết quả mã code mong đợi:</label>
+        <input type="text" class="studio-input sqic-sa-ans" placeholder="Ví dụ: inH...">
+      </div>
+    `;
+    container.appendChild(card);
+
+    const total = container.querySelectorAll('.studio-quiz-item-card').length;
+    const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+    if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${total} câu trắc nghiệm`;
+  };
+
+  window.studioRemoveQuizQuestion = function(btn) {
+    const card = btn.closest('.studio-quiz-item-card');
+    if (!card) return;
+    const container = card.closest('.studio-quizzes-wrapper');
+    card.remove();
+
+    if (container) {
+      const secId = container.id.includes('sec1') ? 1 : 2;
+      const cards = container.querySelectorAll('.studio-quiz-item-card');
+      cards.forEach((c, idx) => {
+        c.setAttribute('data-q-idx', String(idx));
+        const titleSpan = c.querySelector('.sqic-header span');
+        if (titleSpan) titleSpan.innerHTML = `<i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:`;
+        const qLabel = c.querySelector('.studio-form-col:first-child .studio-field-label');
+        if (qLabel) qLabel.innerHTML = `<i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:`;
+      });
+      const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
+      if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${cards.length} câu trắc nghiệm`;
+    }
+  };
+
+  window.studioChangeQuestionType = function(selectEl) {
+    const card = selectEl.closest('.studio-quiz-item-card');
+    if (!card) return;
+    const type = selectEl.value;
+    const corCol = card.querySelector('.sqic-correct-col');
+    const tfWrap = card.querySelector('.sqic-tf-wrap');
+    const saWrap = card.querySelector('.sqic-sa-wrap');
+
+    if (corCol) corCol.style.display = (type === 'single_choice') ? '' : 'none';
+    if (tfWrap) tfWrap.style.display = (type === 'true_false') ? 'block' : 'none';
+    if (saWrap) saWrap.style.display = (type === 'short_answer') ? 'block' : 'none';
+  };
+
+  // -------------------------------------------------------------
+  // ĐIỀU HƯỚNG MỤC SÂN KHẤU & GÓI ĐỀ HỌC SINH (STAGE SECTION & STUDENT STEPPER)
+  // -------------------------------------------------------------
+  window.stageSelectSection = function(secNum) {
+    STORE.setState({ currentSection: secNum });
+    if (APP.renderStageSectionNav) APP.renderStageSectionNav();
+    if (APP.renderDynamicStagePipeline) APP.renderDynamicStagePipeline();
+    SYNC_BUS.broadcast('SECTION_CHANGE', { currentSection: secNum });
+    safeFirebaseUpdate('activeSession', { currentSection: secNum }).catch(()=>{});
+  };
+
+  window.studentQuizGoTo = function(idx) {
+    STORE.setState({ studentQuizIndex: idx });
+    APP.renderStudentWorkspace(STORE.getState());
+  };
+
+  window.studentQuizNext = function() {
+    const s = STORE.getState();
+    const curIdx = s.studentQuizIndex || 0;
+    window.studentQuizGoTo(curIdx + 1);
+  };
+
+  window.studentQuizPrev = function() {
+    const s = STORE.getState();
+    const curIdx = s.studentQuizIndex || 0;
+    window.studentQuizGoTo(Math.max(0, curIdx - 1));
+  };
+
+  window.studentQuizSubmitPacket = function() {
+    const s = STORE.getState();
+    if (s.quizPacketSubmitted) return;
+
+    const lesson = s.lessonData || APP.getLesson(s.lessonId) || {};
+    const curSec = s.currentSection || 1;
+    let quizzesList = s.packetQuizzes;
+    if (!quizzesList || quizzesList.length === 0) {
+      if (lesson && lesson.sections && lesson.sections[curSec - 1]) {
+        const secObj = lesson.sections[curSec - 1];
+        if (secObj.quizzes && secObj.quizzes.length > 0) quizzesList = secObj.quizzes;
+        else if (secObj.quiz) quizzesList = [secObj.quiz];
+      }
+      if (!quizzesList || quizzesList.length === 0) {
+        if (lesson && lesson.quizzes) quizzesList = lesson.quizzes;
+        else if (lesson && lesson.quiz) quizzesList = [lesson.quiz];
+      }
+    }
+    if (!quizzesList || quizzesList.length === 0) return;
+
+    const packetAns = s.studentPacketAnswers || {};
+    const answeredCount = Object.keys(packetAns).length;
+    const total = quizzesList.length;
+
+    if (answeredCount < total) {
+      const cfm = confirm(`Hai em mới trả lời ${answeredCount}/${total} câu hỏi. Có chắc chắn muốn nộp bài gói trắc nghiệm ngay bây giờ không?`);
+      if (!cfm) return;
+    }
+
+    // Chấm điểm từng câu
+    let correctCount = 0;
+    quizzesList.forEach((q, idx) => {
+      const userAns = packetAns[idx];
+      const qType = q.type || 'single_choice';
+      if (qType === 'single_choice') {
+        if (userAns === (q.correct || 'B')) correctCount++;
+      } else if (qType === 'short_answer') {
+        if (userAns && String(userAns).trim().toLowerCase() === String(q.shortAnswer || '').trim().toLowerCase()) correctCount++;
+      } else if (qType === 'true_false') {
+        if (userAns && q.subItems) {
+          let allOk = true;
+          const parts = String(userAns).split(', ');
+          parts.forEach(p => {
+            const [rKey, valStr] = p.split(':');
+            const sub = q.subItems.find(it => it.id === rKey);
+            if (sub) {
+              const exp = sub.correct ? 'Đ' : 'S';
+              if (valStr !== exp) allOk = false;
+            }
+          });
+          if (allOk && parts.length === q.subItems.length) correctCount++;
+        }
+      }
+    });
+
+    const isAllCorrect = (correctCount === total);
+    const mId = s.machineId || 1;
+    const stuList = (s.students && s.students.length > 0) ? s.students : [`Máy ${mId}`];
+    const nowTs = Date.now();
+    const summaryStr = `Đúng ${correctCount}/${total} câu`;
+
+    const newAnswers = Object.assign({}, s.quizAnswers || {});
+    newAnswers[mId] = {
+      machineId: mId,
+      students: stuList,
+      choice: summaryStr,
+      isCorrect: isAllCorrect,
+      totalCorrect: correctCount,
+      totalQuestions: total,
+      packetAnswers: packetAns,
+      timestamp: nowTs
+    };
+
+    STORE.setState({
+      quizPacketSubmitted: true,
+      quizAnswered: true,
+      quizSelection: summaryStr,
+      quizAnswers: newAnswers
+    });
+
+    if (db && mId) {
+      db.ref(`activeSession/quizAnswers/${mId}`).set({
+        machineId: mId,
+        students: stuList,
+        choice: summaryStr,
+        isCorrect: isAllCorrect,
+        totalCorrect: correctCount,
+        totalQuestions: total,
+        timestamp: nowTs
+      }).catch(()=>{});
+    }
+
+    SYNC_BUS.broadcast('QUIZ_ANSWER', {
+      machineId: mId,
+      students: stuList,
+      choice: summaryStr,
+      isCorrect: isAllCorrect,
+      totalCorrect: correctCount,
+      totalQuestions: total,
+      timestamp: nowTs
+    });
+
+    if (isAllCorrect && typeof confetti === 'function') {
+      try { confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } }); } catch {}
+    }
+
+    APP.renderStudentWorkspace(STORE.getState());
   };
 
   window.onSelectDesk = window.onSelectMachine = function(num) {
