@@ -3,7 +3,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3012;
+const PORT = 3025;
 const ROOT_DIR = path.resolve(__dirname, '..');
 const SCREENSHOTS_DIR = path.resolve(__dirname, 'control_flow_screenshots');
 
@@ -60,6 +60,9 @@ async function runTest() {
     const teacherPage = await teacherContext.newPage();
     const studentPage = await studentContext.newPage();
 
+    teacherPage.on('dialog', async dialog => await dialog.accept());
+    studentPage.on('dialog', async dialog => await dialog.accept());
+
     console.log('\n======================================================================');
     console.log('🚀 BẮT ĐẦU KIỂM THỬ 5 BƯỚC QUY TRÌNH ĐIỀU KHIỂN & BỐC THĂM ĐỒNG BỘ');
     console.log('======================================================================');
@@ -72,11 +75,6 @@ async function runTest() {
     await teacherPage.evaluate(() => window.submitTeacherLogin());
     await teacherPage.waitForTimeout(400);
 
-    teacherPage.on('dialog', async dialog => await dialog.accept());
-    await teacherPage.evaluate(() => {
-      window.confirm = () => true;
-      window.alert = () => {};
-    });
     await teacherPage.click('#btn-start-class-session');
     await teacherPage.waitForTimeout(500);
 
@@ -249,12 +247,16 @@ async function runTest() {
       const desk = document.getElementById('waiting-desk-info');
       const sub = document.getElementById('waiting-lesson-sub');
       const badge = document.getElementById('sh-machine-badge');
+      const luckyModal = document.getElementById('modal-lucky-draw');
+      const state = window.STORE.getState();
       return {
         isStudentScreen: s && s.classList.contains('active'),
         isWaitingActive: viewWaiting && viewWaiting.classList.contains('active'),
         deskText: desk ? desk.textContent.trim() : '',
         subText: sub ? sub.textContent.trim() : '',
-        badgeText: badge ? badge.textContent.trim() : ''
+        badgeText: badge ? badge.textContent.trim() : '',
+        isLuckyModalClosed: !luckyModal || luckyModal.style.display === 'none',
+        isOldLessonClean: state.oldLesson.selectedMachine === null && state.pollSelection === null
       };
     });
 
@@ -262,13 +264,17 @@ async function runTest() {
     console.log(`  - View Sảnh chờ (st-view-waiting) active: ${studentBackInLobby.isWaitingActive}`);
     console.log(`  - Thông tin máy: "${studentBackInLobby.badgeText}" - "${studentBackInLobby.deskText}"`);
     console.log(`  - Trạng thái sảnh chờ: "${studentBackInLobby.subText}"`);
+    console.log(`  - Modal bốc thăm đã đóng hoàn toàn: ${studentBackInLobby.isLuckyModalClosed}`);
+    console.log(`  - Dữ liệu hoạt động cũ đã được làm sạch: ${studentBackInLobby.isOldLessonClean}`);
     await studentPage.screenshot({ path: path.join(SCREENSHOTS_DIR, '06_student_back_in_lobby.png') });
 
     const step4Pass = studentBackInLobby.isStudentScreen && 
                       studentBackInLobby.isWaitingActive && 
                       studentBackInLobby.deskText.includes('02') &&
-                      studentBackInLobby.subText.includes('Đã hoàn thành');
-    results.push({ step: 4, name: 'Giáo viên bấm chốt bài cũ: Học sinh về Sảnh chờ Đấu trường như hình', pass: step4Pass });
+                      studentBackInLobby.subText.includes('Đã hoàn thành') &&
+                      studentBackInLobby.isLuckyModalClosed &&
+                      studentBackInLobby.isOldLessonClean;
+    results.push({ step: 4, name: 'Giáo viên bấm chốt bài cũ: Học sinh về Sảnh chờ Đấu trường như hình & làm sạch thông tin', pass: step4Pass });
 
     // BƯỚC 5: Giáo viên kích hoạt hoạt động tiếp theo (Khởi động) -> Học sinh vào Workspace Khởi động & Đồng bộ đồng hồ
     console.log('\n[BƯỚC 5] Giáo viên kích hoạt hoạt động Khởi động (Bước 2) -> Học sinh từ sảnh vào Workspace Khởi động:');
