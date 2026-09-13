@@ -956,10 +956,6 @@
         if (state.role === 'student') {
           window.location.reload();
         }
-      } else if (data.type === 'SESSION_ENDED') {
-        if (state.role === 'student') {
-          STORE.setState({ currentPhase: 'waiting' });
-        }
       } else if (data.type === 'CLASSES_UPDATED') {
         if (data.payload && data.payload.classes) {
           APP.classes = Object.assign({}, EMBEDDED_CLASSES, data.payload.classes);
@@ -1016,6 +1012,10 @@
       } else if (data.type === 'OLD_LESSON_REVEAL') {
         const oldL = Object.assign({}, STORE.getState().oldLesson, { isRevealed: true });
         STORE.setState({ oldLesson: oldL });
+      } else if (data.type === 'OLD_LESSON_QUESTION_REVEAL') {
+        const curState = STORE.getState();
+        const oldL = Object.assign({}, curState.oldLesson, { questionRevealed: true });
+        STORE.setState({ oldLesson: oldL });
       } else if (data.type === 'LUCKY_DRAW_SPIN') {
         APP.handleRemoteLuckyDrawSpin(data.payload);
       } else if (data.type === 'POLL_ANSWER') {
@@ -1055,6 +1055,26 @@
           EMBEDDED_LESSONS[p.lessonData.id] = p.lessonData;
         }
         STORE.setState(updates);
+      } else if (data.type === 'SESSION_ENDED') {
+        try {
+          localStorage.removeItem('lms_fixed_machine_id');
+        } catch {}
+        if (APP && APP.resetAndCleanActivity) {
+          APP.resetAndCleanActivity('waiting', { cleanAll: true });
+        }
+        STORE.setState({
+          screen: 'lobby',
+          machineId: null,
+          fixedMachineId: null,
+          students: [],
+          unlocked: false,
+          sessionStarted: false,
+          currentPhase: 'waiting',
+          teacherPhase: 'waiting',
+          occupiedMachines: {},
+          finishedActivities: {},
+          lastFinishedActivity: null
+        });
       }
     }
   };
@@ -1529,12 +1549,20 @@
       if (btnEndSession) {
         btnEndSession.addEventListener('click', () => {
           if (confirm('Thầy có chắc chắn muốn KẾT THÚC TIẾT HỌC của lớp này? Hệ thống sẽ làm sạch dữ liệu 18 máy con để chuẩn bị cho lớp tiếp theo.')) {
+            APP.stopMasterTimer();
+            APP.updateMasterTimerDisplay(0);
+            if (APP.resetAndCleanActivity) {
+              APP.resetAndCleanActivity('waiting', { cleanAll: true });
+            }
             STORE.setState({
               sessionStarted: false,
               unlocked: false,
               teacherStage: 'hardware',
               currentPhase: 'waiting',
-              occupiedMachines: {}
+              teacherPhase: 'waiting',
+              occupiedMachines: {},
+              finishedActivities: {},
+              lastFinishedActivity: null
             });
 
             SYNC_BUS.broadcast('SESSION_ENDED', {});
@@ -1544,9 +1572,15 @@
                 sessionStarted: false,
                 currentPhase: 'waiting',
                 resetAt: Date.now(),
-                machines: null
+                machines: null,
+                finishedActivities: null,
+                oldLesson: null,
+                pollAnswers: null,
+                discussionAnswers: null,
+                quizAnswers: null
               }).catch(()=>{});
             }
+            AUDIO.playChime();
           }
         });
       }
@@ -2389,6 +2423,12 @@
         return;
       }
 
+      // 0.1. Chống vào đột ngột: Nếu tiết học đang diễn ra hoạt động thì cấm học sinh vào ngang
+      if (state.sessionStarted && state.currentPhase !== 'waiting') {
+        alert('⚠️ Hoạt động lớp học đang diễn ra. Em vui lòng giữ trật tự và chờ Thầy/Cô chuyển hoạt động tiếp theo!');
+        return;
+      }
+
       // 1. Kiểm tra Token Guard chống bấm nhầm
       if (fixedId && fixedId !== num) {
         const warningModal = document.getElementById('modal-token-warning');
@@ -2514,6 +2554,179 @@
       }
     },
 
+    getLessonActivities(lesson) {
+      if (!lesson) lesson = this.getLesson(STORE.getState().lessonId) || {};
+      const se = lesson.stepsEnabled || {};
+      const list = [];
+      let idx = 1;
+
+      // 1. Kiểm tra bài cũ
+      if (se['1'] !== false && (lesson.oldLesson || lesson.warmup)) {
+        list.push({
+          key: 'old_lesson',
+          index: idx++,
+          title: 'Kiểm tra bài cũ',
+          duration: (lesson.oldLesson && lesson.oldLesson.timeLimit) ? lesson.oldLesson.timeLimit : 120,
+          icon: 'fa-gift',
+          panelId: 'tw-panel-old-lesson'
+        });
+      }
+
+      // 2. Khởi động / Khám phá SGK
+      if (se['2'] !== false && (lesson.theory || lesson.theoryTask || lesson.warmup)) {
+        list.push({
+          key: 'warmup',
+          index: idx++,
+          title: 'Khởi động & Khám phá',
+          duration: 180,
+          icon: 'fa-bolt',
+          panelId: 'tw-panel-warmup'
+        });
+      }
+
+      // 3. Thảo luận - Thực hành
+      if (se['4'] !== false && lesson.discussion) {
+        list.push({
+          key: 'discussion',
+          index: idx++,
+          title: 'Thực hành - Thảo luận',
+          duration: (lesson.discussion && lesson.discussion.timeLimit) ? lesson.discussion.timeLimit : 600,
+          icon: 'fa-laptop-code',
+          panelId: 'tw-panel-discussion'
+        });
+      }
+
+      // 4. Đấu trường Kahoot / Live Quiz
+      if (se['3'] !== false && lesson.quiz) {
+        list.push({
+          key: 'quiz',
+          index: idx++,
+          title: 'Đấu trường Kahoot / Quiz',
+          duration: (lesson.quiz && lesson.quiz.timeLimit) ? lesson.quiz.timeLimit : 20,
+          icon: 'fa-trophy',
+          panelId: 'tw-panel-quiz'
+        });
+      }
+
+      // Mặc định ít nhất có 1 hoạt động nếu chưa bật gì
+      if (list.length === 0) {
+        list.push({
+          key: 'old_lesson',
+          index: 1,
+          title: 'Kiểm tra bài cũ',
+          duration: 120,
+          icon: 'fa-gift',
+          panelId: 'tw-panel-old-lesson'
+        });
+      }
+
+      return list;
+    },
+
+    checkWaitingRoomReadiness() {
+      const state = STORE.getState();
+      const occ = state.occupiedMachines || {};
+      const occupiedCount = Object.keys(occ).length;
+      const missingDesks = [];
+      for (let i = 1; i <= 18; i++) {
+        if (!occ[i]) missingDesks.push(i);
+      }
+      return {
+        isReady: missingDesks.length === 0,
+        occupiedCount,
+        missingDesks
+      };
+    },
+
+    renderDynamicStagePipeline(state) {
+      state = state || STORE.getState();
+      const container = document.getElementById('teacher-dynamic-pipeline');
+      if (!container) return;
+
+      const lesson = state.lessonData || this.getLesson(state.lessonId);
+      const titleEl = document.getElementById('tdch-lesson-name');
+      if (titleEl && lesson) titleEl.textContent = lesson.title || 'Bài dạy Tin học';
+
+      // Sĩ số phòng chờ
+      const occCount = Object.keys(state.occupiedMachines || {}).length;
+      const waitingBadge = document.getElementById('tdch-waiting-badge');
+      const waitingCount = document.getElementById('tdch-waiting-count');
+      if (waitingCount) waitingCount.textContent = 'Phòng chờ: ' + occCount + '/18 máy';
+      if (waitingBadge) waitingBadge.classList.toggle('warning', occCount < 18);
+
+      const activities = this.getLessonActivities(lesson);
+      const finishedActs = state.finishedActivities || {};
+      const currentPhase = state.currentPhase;
+
+      let html = '';
+      activities.forEach(act => {
+        let status = 'ready';
+        let statusText = 'SẴN SÀNG KÍCH HOẠT';
+        let btnHtml = '';
+
+        if (finishedActs[act.key]) {
+          status = 'finished';
+          statusText = '✔ ĐÃ HOÀN THÀNH';
+          btnHtml = '<button type="button" class="btn-pac-action btn-pac-disabled" disabled><i class="fas fa-check"></i> ĐÃ HOÀN THÀNH</button>';
+        } else if (currentPhase === act.key) {
+          status = 'running';
+          statusText = '⚡ ĐANG DIỄN RA';
+          btnHtml = '<button type="button" class="btn-pac-action btn-pac-finish" onclick="window.handleFinishActivity(\'' + act.key + '\')"><i class="fas fa-stop-circle"></i> KẾT THÚC HOẠT ĐỘNG</button>';
+        } else {
+          status = 'ready';
+          statusText = 'CHỜ BẮT ĐẦU';
+          btnHtml = '<button type="button" class="btn-pac-action btn-pac-start" onclick="window.handleStartActivity(\'' + act.key + '\')"><i class="fas fa-play"></i> BẮT ĐẦU HOẠT ĐỘNG</button>';
+        }
+
+        html += '<div class="pipeline-activity-card ' + status + '" id="pac-' + act.key + '" data-act-key="' + act.key + '">' +
+                  '<div class="pac-header">' +
+                    '<div class="pac-index-tag">' + act.index + '</div>' +
+                    '<div class="pac-title-wrap">' +
+                      '<span class="pac-title"><i class="fas ' + (act.icon || 'fa-tasks') + '" style="margin-right:6px;opacity:0.85;"></i> ' + act.title + '</span>' +
+                      '<span class="pac-status-label">' + statusText + '</span>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="pac-actions">' +
+                    btnHtml +
+                  '</div>' +
+                '</div>';
+      });
+
+      container.innerHTML = html;
+    },
+
+    executeStartActivity(actKey) {
+      const lesson = STORE.getState().lessonData || this.getLesson(STORE.getState().lessonId);
+      const activities = this.getLessonActivities(lesson);
+      const act = activities.find(a => a.key === actKey) || { duration: 120, title: 'Hoạt động' };
+
+      // Đếm ngược 3-2-1 đồng bộ
+      const now = Date.now();
+      SYNC_BUS.broadcast('START_COUNTDOWN', { active: true, title: act.title.toUpperCase(), startedAt: now });
+      safeFirebaseUpdate('activeSession', {
+        countdown: { active: true, title: act.title.toUpperCase(), startedAt: now },
+        returnToLobby: false
+      }).catch(()=>{});
+      this.handleRemoteCountdown({ active: true, title: act.title.toUpperCase(), startedAt: now });
+
+      setTimeout(() => {
+        // Chuyển phase
+        window.teacherSetPhase(actKey);
+
+        // Chuyển panel làm việc bên dưới
+        document.querySelectorAll('.tw-panel').forEach(p => p.classList.remove('active'));
+        const targetPanel = document.getElementById('tw-panel-' + actKey.replace('_', '-'));
+        if (targetPanel) targetPanel.classList.add('active');
+
+        // Bắt đầu Master Timer
+        this.startMasterCountdown(act.duration, actKey, () => {
+          window.handleFinishActivity(actKey);
+        });
+
+        this.renderDynamicStagePipeline();
+      }, 3500);
+    },
+
     // GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC ĐIỂM DANH & 4 CHẶNG
     renderTeacherActiveSession(state) {
       const classData = this.classes[state.classId] || this.classes['10A1'];
@@ -2522,10 +2735,8 @@
         sessionTitle.textContent = classData.className + ' • ' + (state.lessonData ? state.lessonData.title : 'Môn Tin học');
       }
 
-      // Cập nhật thanh tiến trình Thầy
-      document.querySelectorAll('.tpb-step').forEach(step => {
-        step.classList.toggle('active', step.dataset.tphase === state.currentPhase);
-      });
+      // Cập nhật Sân khấu hoạt động động theo Xưởng soạn
+      this.renderDynamicStagePipeline(state);
 
       // Render 18 máy có tên học sinh theo sơ đồ lớp
       const matrixGrid = document.getElementById('active-session-grid-18');
@@ -3033,7 +3244,17 @@
         }
 
         const qText = document.getElementById('ol-question-text');
-        if (qText && ol.questionText) qText.textContent = ol.questionText;
+        const standbyBanner = document.getElementById('ol-question-standby-banner');
+        if (ol.questionRevealed) {
+          if (standbyBanner) standbyBanner.style.display = 'none';
+          if (qText) {
+            qText.style.display = 'block';
+            if (ol.questionText) qText.textContent = ol.questionText;
+          }
+        } else {
+          if (standbyBanner) standbyBanner.style.display = 'block';
+          if (qText) qText.style.display = 'none';
+        }
 
         const qTypeBadge = document.getElementById('ol-q-type-badge');
         if (qTypeBadge) qTypeBadge.innerHTML = '<i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ';
@@ -3616,12 +3837,15 @@
       
       this.resetAndCleanActivity('waiting', { cleanAll: true });
 
+      const curFinished = Object.assign({}, state.finishedActivities || {}, { [currentP]: true });
       STORE.setState({
+        finishedActivities: curFinished,
         lastFinishedActivity: finishedName,
         currentPhase: 'waiting',
         timer: { isRunning: false, paused: false, secondsLeft: 0, phase: 'waiting', endTime: 0 }
       });
       this.updateMasterTimerDisplay(0);
+      this.renderDynamicStagePipeline();
 
       SYNC_BUS.broadcast('PHASE_CHANGE', { phase: 'waiting', returnToLobby: true, lastFinished: finishedName });
       safeFirebaseUpdate('activeSession', {
@@ -4003,14 +4227,13 @@
           });
         }
 
-        if (db && isInitiator) {
-          db.ref('activeSession/oldLesson').update({
-            selectedMachine: targetMachine,
-            selectedStudent: targetStudent,
-            questionText: curQ,
-            isActive: true
-          }).catch(()=>{});
-          db.ref('activeSession/luckyDraw').update({
+        if (isInitiator) {
+          const updateData = { isActive: true };
+          if (targetMachine !== undefined && targetMachine !== null) updateData.selectedMachine = targetMachine;
+          if (targetStudent !== undefined && targetStudent !== null) updateData.selectedStudent = targetStudent;
+          if (curQ !== undefined && curQ !== null) updateData.questionText = curQ;
+          safeFirebaseUpdate('activeSession/oldLesson', updateData).catch(()=>{});
+          safeFirebaseUpdate('activeSession/luckyDraw', {
             spinning: false,
             completed: true,
             modalOpen: false
@@ -4020,10 +4243,22 @@
         const spinBtn = document.getElementById('btn-trigger-spin');
         if (spinBtn) spinBtn.disabled = false;
 
-        // Tự động đóng modal sau 2.5s trên mọi máy (cả GV và HS) để hiển thị câu hỏi và spotlight!
+        // Tự động đóng modal sau 2.5s trên mọi máy (cả GV và HS) để hiển thị spotlight học sinh!
         setTimeout(() => {
           const modal = document.getElementById('modal-lucky-draw');
           if (modal) modal.style.display = 'none';
+
+          // Spotlight tôn vinh học sinh được chọn 2.5s, sau đó mới chiếu câu hỏi!
+          setTimeout(() => {
+            const curState = STORE.getState();
+            STORE.setState({
+              oldLesson: Object.assign({}, curState.oldLesson, { questionRevealed: true })
+            });
+            if (isInitiator) {
+              SYNC_BUS.broadcast('OLD_LESSON_QUESTION_REVEAL', {});
+              if (db) db.ref('activeSession/oldLesson/questionRevealed').set(true).catch(()=>{});
+            }
+          }, 2500);
         }, 2500);
       }, duration + 200);
     }
@@ -4517,6 +4752,53 @@
     if (c) STORE.setState({ classId: c });
     APP.renderSettingsSeatingGrid();
     APP.renderClassesSeatingPreview();
+  };
+
+  // ĐIỀU KHIỂN HOẠT ĐỘNG SÂN KHẤU ĐỘNG (DYNAMIC STAGE ACTIVITY CONTROLS)
+  window.handleStartActivity = function(actKey) {
+    // 1. Kiểm tra sĩ số phòng chờ
+    const readiness = APP.checkWaitingRoomReadiness();
+    if (!readiness.isReady) {
+      window._pendingStartActivityKey = actKey;
+      const modal = document.getElementById('modal-waiting-room-alert');
+      const missingCountEl = document.getElementById('wra-missing-count');
+      const missingListEl = document.getElementById('wra-missing-list');
+      if (missingCountEl) missingCountEl.textContent = readiness.missingDesks.length;
+      if (missingListEl) {
+        missingListEl.innerHTML = readiness.missingDesks.map(d =>
+          '<span class="missing-desk-chip"><i class="fas fa-desktop"></i> Máy ' + String(d).padStart(2, '0') + '</span>'
+        ).join('');
+      }
+      if (modal) modal.style.display = 'flex';
+      return;
+    }
+
+    APP.executeStartActivity(actKey);
+  };
+
+  window.closeWaitingRoomAlert = function(proceed) {
+    const modal = document.getElementById('modal-waiting-room-alert');
+    if (modal) modal.style.display = 'none';
+    if (proceed && window._pendingStartActivityKey) {
+      const actKey = window._pendingStartActivityKey;
+      window._pendingStartActivityKey = null;
+      APP.executeStartActivity(actKey);
+    } else {
+      window._pendingStartActivityKey = null;
+    }
+  };
+
+  window.handleFinishActivity = function(actKey) {
+    const state = STORE.getState();
+    const curFinished = Object.assign({}, state.finishedActivities || {}, { [actKey]: true });
+    STORE.setState({ finishedActivities: curFinished });
+
+    // Đưa 18 máy về phòng chờ
+    window.teacherSetPhase('waiting');
+
+    // Render lại pipeline thẻ
+    APP.renderDynamicStagePipeline();
+    AUDIO.playChime();
   };
 
   window.onSelectDesk = window.onSelectMachine = function(num) {

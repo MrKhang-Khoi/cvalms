@@ -18,7 +18,7 @@
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
   <!-- Stylesheet với Cache-Busting -->
-  <link rel="stylesheet" href="style.css?v=2.8.1">
+  <link rel="stylesheet" href="style.css?v=2.9.0">
 
   <!-- Tinh chỉnh Trực quan Studio Editor, Scrolling & Kahoot Grid (Bất khả xâm phạm bởi Cache) -->
   <style id="lms-studio-direct-css">
@@ -469,8 +469,11 @@
               <span class="ol-q-badge"><i class="fas fa-question-circle"></i> CÂU HỎI KIỂM TRA BÀI CŨ</span>
               <span class="ol-q-type-badge" id="ol-q-type-badge"><i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ</span>
             </div>
-            <div class="ol-question-text" id="ol-question-text">
+            <div class="ol-question-text" id="ol-question-text" style="display:none;">
               Em hãy cho biết: Trong các bộ phận cơ bản của máy tính (CPU, RAM, ROM/Ổ đĩa cứng), thiết bị nào đóng vai trò là "bộ não" điều khiển mọi hoạt động của máy tính?
+            </div>
+            <div class="ol-question-standby-banner" id="ol-question-standby-banner" style="padding:20px;text-align:center;background:rgba(15,23,42,0.6);border:1.5px dashed rgba(56,189,248,0.4);border-radius:12px;color:#94a3b8;font-size:15px;margin-top:10px;">
+              <i class="fas fa-hourglass-half fa-spin" style="color:#38bdf8;margin-right:8px;"></i> Các em hãy quan sát Thầy bốc thăm trên màn hình lớn. Câu hỏi sẽ được chiếu tới tất cả các máy ngay khi có người được chọn!
             </div>
 
             <!-- Hướng dẫn sư phạm: Học sinh đứng dậy hoặc lên bảng trả lời miệng -->
@@ -722,9 +725,6 @@ print(s[4:])</code></pre>
         </div>
       </div>
       <div class="th-right">
-        <button type="button" class="btn-tool btn-tool-warning" id="btn-header-reset-lobby" onclick="window.teacherResetAllToLobby()" title="Đưa toàn bộ 18 máy về phòng chờ ngay lập tức">
-          <i class="fas fa-undo"></i> Reset về phòng chờ
-        </button>
         <button type="button" class="btn-tool btn-tool-danger" id="btn-teacher-logout" title="Đăng xuất khỏi tài khoản Giáo viên">
           <i class="fas fa-sign-out-alt"></i> Đăng xuất
         </button>
@@ -1055,100 +1055,43 @@ print("2. Cắt xâu:", s[10:17])
            GIAI ĐOẠN 2: TIẾT HỌC CHÍNH THỨC (ĐIỂM DANH & CÁC BƯỚC)
       ==================================================== -->
       <section id="teacher-stage-active" class="teacher-stage">
-        <!-- Master Control Bar: HỢP NHẤT TIẾN TRÌNH SƯ PHẠM + ĐỒNG HỒ MASTER TRÊN 1 DÒNG DUY NHẤT -->
-        <div class="teacher-master-control-bar">
-          <!-- Phía Trái: Thanh tiến trình sư phạm (0 -> 5) -->
-          <div class="teacher-pace-bar">
-            <div class="tpb-step active" data-tphase="waiting" onclick="window.teacherSetPhase('waiting')">
-              <span class="tpb-badge">0</span>
-              <span>Điểm danh</span>
+        <!-- THANH ĐIỀU KHIỂN SÂN KHẤU ĐỘNG (DYNAMIC STAGE HEADER) -->
+        <div class="teacher-dynamic-control-header" id="teacher-dynamic-control-header">
+          <!-- Cụm bên trái: Bài học & Sĩ số phòng chờ -->
+          <div class="tdch-left">
+            <div class="tdch-lesson-title" id="tdch-lesson-title">
+              <i class="fas fa-book-open" style="color:#38bdf8;"></i> <span id="tdch-lesson-name">Bài 12: Kiểu dữ liệu xâu</span>
             </div>
-
-            <!-- BƯỚC 1: KIỂM TRA BÀI CŨ (Có Dropdown Menu Cài Đặt) -->
-            <div class="tpb-step-dropdown-wrapper">
-              <div class="tpb-step" data-tphase="old_lesson" id="tpb-step-old-lesson" onclick="window.teacherSetPhase('old_lesson')">
-                <span class="tpb-badge">1</span>
-                <span>Kiểm tra bài cũ</span>
-                <button type="button" class="btn-tpb-dropdown" id="btn-toggle-old-lesson-menu" title="Mở menu cài đặt kiểm tra bài cũ" onclick="event.stopPropagation(); window.toggleOldLessonMenu();">
-                  <i class="fas fa-chevron-down"></i>
-                </button>
-              </div>
-              <!-- Menu Xổ Xuống Cài Đặt -->
-              <div class="tpb-dropdown-menu" id="tpb-menu-old-lesson" style="display:none;">
-                <div class="tdm-header">
-                  <i class="fas fa-sliders-h"></i> CÀI ĐẶT KIỂM TRA BÀI CŨ
-                </div>
-                <div class="tdm-section">
-                  <label><i class="fas fa-dice"></i> Bốc thăm gọi học sinh:</label>
-                  <button type="button" class="tdm-btn-action" onclick="window.openLuckyDrawModal(); window.closeAllTpbMenus();">
-                    <i class="fas fa-gift"></i> Mở bốc thăm kịch tính (Phương án A / B)
-                  </button>
-                </div>
-                <div class="tdm-section">
-                  <label><i class="fas fa-stopwatch"></i> Thời gian đếm ngược:</label>
-                  <div class="tdm-timer-options">
-                    <button type="button" class="tdm-timer-btn active" data-sec="60" onclick="window.setOldLessonTimer(60)">1 phút</button>
-                    <button type="button" class="tdm-timer-btn" data-sec="120" onclick="window.setOldLessonTimer(120)">2 phút</button>
-                    <button type="button" class="tdm-timer-btn" data-sec="180" onclick="window.setOldLessonTimer(180)">3 phút</button>
-                  </div>
-                </div>
-                <div class="tdm-section">
-                  <label><i class="fas fa-tasks"></i> Dạng câu hỏi:</label>
-                  <div class="tdm-type-options">
-                    <button type="button" class="tdm-type-btn active" data-qtype="text" onclick="window.setOldLessonQType('text')">Tự luận ngắn</button>
-                    <button type="button" class="tdm-type-btn" data-qtype="mcq" onclick="window.setOldLessonQType('mcq')">Trắc nghiệm</button>
-                  </div>
-                </div>
-                <div class="tdm-actions">
-                  <button type="button" class="tdm-btn-submit" onclick="window.broadcastOldLessonStart(); window.closeAllTpbMenus();">
-                    <i class="fas fa-paper-plane"></i> PHÁT ĐỀ BÀI CHO 18 MÁY
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="tpb-step" data-tphase="warmup" onclick="window.teacherSetPhase('warmup')">
-              <span class="tpb-badge">2</span>
-              <span>Khởi động</span>
-            </div>
-            <div class="tpb-step" data-tphase="theory" onclick="window.teacherSetPhase('theory')">
-              <span class="tpb-badge">3</span>
-              <span>Khám phá SGK</span>
-            </div>
-            <div class="tpb-step" data-tphase="discussion" onclick="window.teacherSetPhase('discussion')">
-              <span class="tpb-badge">4</span>
-              <span>Thực hành</span>
-            </div>
-            <div class="tpb-step" data-tphase="quiz" onclick="window.teacherSetPhase('quiz')">
-              <span class="tpb-badge">5</span>
-              <span>Live Quiz</span>
+            <div class="tdch-status-badge" id="tdch-waiting-badge">
+              <span class="pulse-dot"></span> <span id="tdch-waiting-count">Phòng chờ: 0/18 máy</span>
             </div>
           </div>
 
-          <!-- Ở Giữa: Đồng hồ Master NTP Sync gọn gàng -->
-          <div class="tmc-timer-wrap">
-            <span class="tmc-label"><i class="fas fa-stopwatch"></i> MASTER:</span>
-            <span class="tmc-timer-display" id="master-timer-display">02:00</span>
-            <button type="button" class="tmc-btn" id="btn-master-pause-timer" onclick="window.masterPauseTimer()" title="Tạm dừng/Tiếp tục đồng hồ">
-              <i class="fas fa-pause"></i> Tạm dừng
-            </button>
-            <button type="button" class="tmc-btn" id="btn-master-add-time" onclick="window.masterAddTime(30)" title="Cộng thêm 30 giây cho học sinh làm bài">
-              <i class="fas fa-plus"></i> +30s
-            </button>
+          <!-- Cụm ở giữa: Đồng hồ Master Pill -->
+          <div class="tdch-center">
+            <div class="tdch-timer-pill" id="tdch-timer-pill">
+              <i class="fas fa-stopwatch" style="color:#10b981;"></i>
+              <span class="tdch-timer-display" id="master-timer-display">00:00</span>
+              <button type="button" class="tdch-timer-btn" id="btn-master-pause-timer" onclick="window.masterPauseTimer()" title="Tạm dừng / Tiếp tục đồng hồ">
+                <i class="fas fa-pause"></i>
+              </button>
+              <button type="button" class="tdch-timer-btn" id="btn-master-add-time" onclick="window.masterAddTime(30)" title="Cộng thêm 30 giây">
+                +30s
+              </button>
+            </div>
           </div>
 
-          <!-- Phía Phải: Reset phòng chờ, Bỏ qua bước & Kết thúc tiết học -->
-          <div class="tmc-actions-wrap">
-            <button type="button" class="tmc-btn tmc-btn-reset" id="btn-master-reset-lobby" onclick="window.teacherResetAllToLobby()" title="Đưa toàn bộ 18 máy học sinh về phòng chờ ngay lập tức">
-              <i class="fas fa-undo"></i> RESET VỀ PHÒNG CHỜ
-            </button>
-            <button type="button" class="tmc-btn tmc-btn-skip" id="btn-master-skip-step" onclick="window.masterSkipStep()" title="Bỏ qua bước này, chuyển ngay sang bước kế tiếp">
-              <i class="fas fa-forward"></i> BƯỚC TIẾP
-            </button>
-            <button type="button" class="btn-end-session" id="btn-end-class-session" title="Lưu điểm và làm sạch 18 máy chuẩn bị cho lớp tiếp theo" onclick="window.teacherEndSession()">
+          <!-- Cụm bên phải: Nút Kết thúc tiết học an toàn -->
+          <div class="tdch-right">
+            <button type="button" class="btn-end-session-safe" id="btn-end-class-session" title="Lưu điểm, dọn sạch 18 máy và kết thúc tiết dạy" onclick="window.teacherEndSession()">
               <i class="fas fa-stop-circle"></i> KẾT THÚC TIẾT HỌC
             </button>
           </div>
+        </div>
+
+        <!-- THANH DANH SÁCH HOẠT ĐỘNG KỊCH BẢN ĐỘNG (DYNAMIC ACTIVITY PIPELINE DỰA VÀO XƯỞNG SOẠN) -->
+        <div class="teacher-dynamic-pipeline" id="teacher-dynamic-pipeline">
+          <!-- Render động các thẻ hoạt động -->
         </div>
 
         <!-- Bố cục tác nghiệp Giáo viên: Tách biệt hoàn toàn từng Tab (100% Width Full View) -->
@@ -1527,6 +1470,35 @@ print("2. Cắt xâu:", s[10:17])
     </div>
   </div>
 
+  <!-- MODAL: CẢNH BÁO SĨ SỐ PHÒNG CHỜ (KHI CÒN MÁY CHƯA VÀO) -->
+  <div class="modal-overlay" id="modal-waiting-room-alert" style="display:none;z-index:99999;">
+    <div class="modal-card" style="max-width:560px;text-align:center;border:2px solid #f59e0b;box-shadow:0 0 40px rgba(245,158,11,0.35);">
+      <div style="font-size:44px;color:#f59e0b;margin-bottom:12px;">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h3 style="font-size:20px;color:#f8fafc;margin-bottom:8px;font-weight:800;" id="wra-title">
+        CẢNH BÁO: CHƯA ĐỦ 18 MÁY VÀO PHÒNG CHỜ!
+      </h3>
+      <p style="color:#94a3b8;font-size:14px;line-height:1.6;margin-bottom:16px;" id="wra-desc">
+        Hiện có <strong style="color:#f59e0b;" id="wra-missing-count">0</strong> máy chưa vào phòng chờ. Thầy có muốn nhắc nhở các em chọn máy trước khi bắt đầu hoạt động?
+      </p>
+      <div style="background:rgba(15,23,42,0.7);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;margin-bottom:20px;">
+        <div style="font-size:12px;color:#cbd5e1;font-weight:700;margin-bottom:8px;">CÁC MÁY CHƯA VÀO PHÒNG CHỜ:</div>
+        <div id="wra-missing-list" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;">
+          <!-- Render danh sách chip máy còn thiếu -->
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button type="button" class="btn-cancel" id="btn-wra-wait" onclick="window.closeWaitingRoomAlert(false)" style="padding:10px 20px;font-size:14px;font-weight:700;">
+          <i class="fas fa-hourglass-half"></i> Để Thầy nhắc nhở (Đợi)
+        </button>
+        <button type="button" class="btn-confirm" id="btn-wra-proceed" onclick="window.closeWaitingRoomAlert(true)" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:10px 20px;font-size:14px;font-weight:700;">
+          <i class="fas fa-play"></i> Vẫn bắt đầu hoạt động
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- SheetJS để xuất nhập file Excel chuyên nghiệp -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.mini.min.js"></script>
 
@@ -1535,8 +1507,8 @@ print("2. Cắt xâu:", s[10:17])
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.8.1 Cache-Busted) -->
-  <script src="js/bundle.js?v=2.8.1"></script>
+  <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v2.9.0 Cache-Busted) -->
+  <script src="js/bundle.js?v=2.9.0"></script>
 </body>
 </html>
 
