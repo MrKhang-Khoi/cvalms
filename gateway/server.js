@@ -45,6 +45,7 @@ for (let i = 1; i <= 18; i++) {
 }
 
 let activeSpotlightMachine = null;
+let isTeacherBroadcasting = false;
 const webSockets = new Set();
 
 // 4. Máy chủ mTLS cho C# Agent (Port 49152)
@@ -395,6 +396,32 @@ const webServer = http.createServer((req, res) => {
     return;
   }
 
+  if (url.pathname === '/api/broadcast/start' && req.method === 'POST') {
+    readBody((err, data) => {
+      const title = (data && data.title) || 'Thầy đang trình chiếu bài giảng';
+      isTeacherBroadcasting = true;
+      sendCommandToAgents('ALL', 'START_TEACHER_BROADCAST', { title });
+      broadcastWebLms({ type: 'TEACHER_BROADCAST_STATUS', active: true });
+      console.log('📡 [HTTP API] Bắt đầu trình chiếu màn hình giáo viên xuống 18 máy học sinh!');
+      sendJson(res, 200, { success: true, active: true, message: 'Đã kích hoạt chế độ chiếu bài giảng giáo viên' });
+    });
+    return;
+  }
+
+  if (url.pathname === '/api/broadcast/stop' && req.method === 'POST') {
+    isTeacherBroadcasting = false;
+    sendCommandToAgents('ALL', 'STOP_TEACHER_BROADCAST', {});
+    broadcastWebLms({ type: 'TEACHER_BROADCAST_STATUS', active: false });
+    console.log('🛑 [HTTP API] Đã dừng trình chiếu màn hình giáo viên.');
+    sendJson(res, 200, { success: true, active: false, message: 'Đã dừng chiếu bài giảng và mở khóa máy học sinh' });
+    return;
+  }
+
+  if (url.pathname === '/api/broadcast/status' && req.method === 'GET') {
+    sendJson(res, 200, { active: isTeacherBroadcasting });
+    return;
+  }
+
   sendJson(res, 404, { error: 'Not Found' });
 });
 
@@ -451,7 +478,7 @@ function setSpotlightMachine(machineId) {
   });
 }
 
-// 7. WebSocket Handshake thủ công cho Web LMS
+// 7. WebSocket Handshake thủ công & Xử lý 2 chiều cho Web LMS
 webServer.on('upgrade', (req, socket, head) => {
   const key = req.headers['sec-websocket-key'];
   if (!key) {
@@ -479,6 +506,7 @@ webServer.on('upgrade', (req, socket, head) => {
     type: 'INIT_STATE',
     epoch: SESSION_EPOCH_ID,
     activeSpotlight: activeSpotlightMachine,
+    isTeacherBroadcasting,
     seats: Object.values(SEATS).map(s => ({
       id: s.id,
       seatIndex: s.seatIndex,
@@ -490,9 +518,111 @@ webServer.on('upgrade', (req, socket, head) => {
   });
   sendWsText(socket, initMsg);
 
+  // Buffer phân tích khung WebSocket từ client
+  let wsBuffer = Buffer.alloc(0);
+  socket.on('data', (chunk) => {
+    wsBuffer = Buffer.concat([wsBuffer, chunk]);
+    while (wsBuffer.length >= 2) {
+      const firstByte = wsBuffer[0];
+      const secondByte = wsBuffer[1];
+      const opcode = firstByte & 0x0f;
+      const isMasked = (secondByte & 0x80) !== 0;
+      let payloadLen = secondByte & 0x7f;
+      let offset = 2;
+
+      if (payloadLen === 126) {
+        if (wsBuffer.length < offset + 2) break;
+        payloadLen = wsBuffer.readUInt16BE(offset);
+        offset += 2;
+      } else if (payloadLen === 127) {
+        if (wsBuffer.length < offset + 8) break;
+        payloadLen = Number(wsBuffer.readBigUInt64BE(offset));
+        offset += 8;
+      }
+
+      let maskKey = null;
+      if (isMasked) {
+        if (wsBuffer.length < offset + 4) break;
+        maskKey = wsBuffer.slice(offset, offset + 4);
+        offset += 4;
+      }
+
+      if (wsBuffer.length < offset + payloadLen) break;
+
+      const payload = wsBuffer.slice(offset, offset + payloadLen);
+      wsBuffer = wsBuffer.slice(offset + payloadLen);
+
+      if (isMasked && maskKey) {
+        for (let i = 0; i < payload.length; i++) {
+          payload[i] ^= maskKey[i % 4];
+        }
+      }
+
+      // Xử lý theo RFC 6455 Opcodes
+      if (opcode === 0x8) {
+        socket.end();
+        break;
+      } else if (opcode === 0x9) {
+        const pong = Buffer.alloc(2);
+        pong[0] = 0x8a;
+        pong[1] = 0x00;
+        socket.write(pong);
+      } else if (opcode === 0x1) {
+        try {
+          const text = payload.toString('utf8');
+          const data = JSON.parse(text);
+          handleWebLmsMessage(data);
+        } catch (e) {
+          console.warn('[Web LMS WS Message Error]:', e.message);
+        }
+      } else if (opcode === 0x2) {
+        // Binary JPEG frame
+        broadcastTeacherFrame(payload);
+      }
+    }
+  });
+
   socket.on('close', () => { webSockets.delete(socket); });
   socket.on('error', () => { webSockets.delete(socket); });
 });
+
+function handleWebLmsMessage(data) {
+  if (data.type === 'START_TEACHER_BROADCAST') {
+    isTeacherBroadcasting = true;
+    const title = data.title || 'Thầy đang trình chiếu bài giảng';
+    sendCommandToAgents('ALL', 'START_TEACHER_BROADCAST', { title });
+    broadcastWebLms({ type: 'TEACHER_BROADCAST_STATUS', active: true });
+    console.log('📡 [WebSocket] Bắt đầu trình chiếu màn hình giáo viên xuống 18 máy học sinh!');
+  } else if (data.type === 'STOP_TEACHER_BROADCAST') {
+    isTeacherBroadcasting = false;
+    sendCommandToAgents('ALL', 'STOP_TEACHER_BROADCAST', {});
+    broadcastWebLms({ type: 'TEACHER_BROADCAST_STATUS', active: false });
+    console.log('🛑 [WebSocket] Đã dừng trình chiếu màn hình giáo viên.');
+  } else if (data.type === 'TEACHER_BROADCAST_FRAME') {
+    if (data.jpegBase64) {
+      const buf = Buffer.from(data.jpegBase64, 'base64');
+      broadcastTeacherFrame(buf);
+    }
+  }
+}
+
+function broadcastTeacherFrame(jpegBuffer) {
+  if (!jpegBuffer || jpegBuffer.length === 0) return;
+  const header = Buffer.alloc(8);
+  header.writeUInt32BE(0x43564243, 0); // 'CVBC'
+  header.writeUInt32BE(jpegBuffer.length, 4);
+  const packet = Buffer.concat([header, jpegBuffer]);
+
+  for (const seat of Object.values(SEATS)) {
+    if (seat.socket && seat.online) {
+      try {
+        seat.socket.write(packet);
+      } catch (e) {
+        // bỏ qua lỗi tạm thời trên socket từng máy
+      }
+    }
+  }
+}
 
 function sendWsText(socket, text) {
   try {

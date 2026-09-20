@@ -19,6 +19,11 @@
     csrfToken: '',
     sessionEpochId: '',
     activeSpotlight: null,
+    isBroadcasting: false,
+    broadcastStream: null,
+    broadcastTimer: null,
+    broadcastVideo: null,
+    broadcastCanvas: null,
     seats: {}, // 'MAY-01' -> { id, seatIndex, online, screenState, currentApp, isSpotlight, fps, frameCount, lastTs }
     imagesCache: {} // Reusable Image objects to avoid GC pressure
   };
@@ -102,6 +107,9 @@
       case 'INIT_STATE':
         STATE.sessionEpochId = msg.epoch;
         STATE.activeSpotlight = msg.activeSpotlight;
+        if (typeof msg.isTeacherBroadcasting === 'boolean') {
+          updateBroadcastButtonsUI(msg.isTeacherBroadcasting);
+        }
         if (Array.isArray(msg.seats)) {
           msg.seats.forEach(s => {
             if (STATE.seats[s.id]) {
@@ -130,6 +138,16 @@
       case 'SPOTLIGHT_CHANGED':
         STATE.activeSpotlight = msg.activeSpotlight;
         updateSpotlightUI();
+        break;
+
+      case 'TEACHER_BROADCAST_STATUS':
+        if (typeof msg.active === 'boolean') {
+          if (!msg.active && STATE.isBroadcasting) {
+            stopTeacherBroadcast(false);
+          } else {
+            updateBroadcastButtonsUI(msg.active);
+          }
+        }
         break;
 
       case 'SUBMISSION_COMMITTED':
@@ -499,6 +517,157 @@
     }
   }
 
+  // ==========================================================================
+  // 5.1. TRÌNH CHIẾU MÀN HÌNH GIÁO VIÊN (POWERPOINT/DESKTOP) & KHÓA PHÍM/CHUỘT
+  // ==========================================================================
+  async function startTeacherBroadcast() {
+    if (STATE.isBroadcasting) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      showNotificationToast('Không hỗ trợ', 'Trình duyệt không hỗ trợ chức năng chia sẻ màn hình getDisplayMedia!', 'error');
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: 'always',
+          frameRate: { ideal: 15, max: 20 },
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 }
+        },
+        audio: false
+      });
+
+      STATE.broadcastStream = stream;
+      STATE.isBroadcasting = true;
+
+      // Video element ẩn để đọc frames
+      const video = document.createElement('video');
+      video.autoplay = true;
+      video.muted = true;
+      video.playsInline = true;
+      video.srcObject = stream;
+      await video.play();
+      STATE.broadcastVideo = video;
+
+      // Offscreen canvas để nén JPEG
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      STATE.broadcastCanvas = canvas;
+
+      // Lắng nghe khi giáo viên bấm "Dừng chia sẻ" từ thanh công cụ của trình duyệt
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.onended = () => {
+          stopTeacherBroadcast(true);
+        };
+      }
+
+      // Phát lệnh khóa chuột/phím học sinh và bật cửa sổ chiếu Fullscreen TopMost
+      await callGatewayApi('/api/broadcast/start', { title: 'Thầy đang trình chiếu bài giảng' });
+      if (STATE.socket && STATE.socket.readyState === WebSocket.OPEN) {
+        STATE.socket.send(JSON.stringify({ type: 'START_TEACHER_BROADCAST', title: 'Thầy đang trình chiếu bài giảng' }));
+      }
+
+      updateBroadcastButtonsUI(true);
+      showNotificationToast(
+        '📡 Đang trình chiếu bài giảng',
+        'Màn hình Thầy đang chiếu tới 18 máy. Toàn bộ chuột và bàn phím học sinh đã bị khóa cứng!',
+        'success'
+      );
+
+      // Kích thước chuẩn HD để truyền mượt mà không trễ
+      const targetWidth = 1280;
+      const targetHeight = 720;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      let isFrameBusy = false;
+      STATE.broadcastTimer = setInterval(() => {
+        if (!STATE.isBroadcasting || isFrameBusy) return;
+        if (!video.videoWidth || !video.videoHeight) return;
+
+        isFrameBusy = true;
+        try {
+          ctx.drawImage(video, 0, 0, targetWidth, targetHeight);
+          canvas.toBlob((blob) => {
+            if (blob && STATE.isBroadcasting) {
+              blob.arrayBuffer().then((buf) => {
+                if (STATE.socket && STATE.socket.readyState === WebSocket.OPEN) {
+                  STATE.socket.send(buf);
+                }
+                isFrameBusy = false;
+              }).catch(() => { isFrameBusy = false; });
+            } else {
+              isFrameBusy = false;
+            }
+          }, 'image/jpeg', 0.72);
+        } catch (e) {
+          isFrameBusy = false;
+        }
+      }, 66); // ~15 FPS
+
+    } catch (err) {
+      if (err.name !== 'NotAllowedError') {
+        console.warn('[LiveMonitor] Lỗi kích hoạt trình chiếu:', err);
+        showNotificationToast('Lỗi trình chiếu', err.message, 'error');
+      }
+      stopTeacherBroadcast(false);
+    }
+  }
+
+  async function stopTeacherBroadcast(notifyGateway = true) {
+    if (STATE.broadcastTimer) {
+      clearInterval(STATE.broadcastTimer);
+      STATE.broadcastTimer = null;
+    }
+
+    if (STATE.broadcastStream) {
+      STATE.broadcastStream.getTracks().forEach(track => {
+        try { track.stop(); } catch (e) { /* ignore */ }
+      });
+      STATE.broadcastStream = null;
+    }
+
+    if (STATE.broadcastVideo) {
+      STATE.broadcastVideo.srcObject = null;
+      STATE.broadcastVideo = null;
+    }
+    STATE.broadcastCanvas = null;
+
+    const wasBroadcasting = STATE.isBroadcasting;
+    STATE.isBroadcasting = false;
+
+    updateBroadcastButtonsUI(false);
+
+    if (notifyGateway && wasBroadcasting) {
+      await callGatewayApi('/api/broadcast/stop', {});
+      if (STATE.socket && STATE.socket.readyState === WebSocket.OPEN) {
+        STATE.socket.send(JSON.stringify({ type: 'STOP_TEACHER_BROADCAST' }));
+      }
+      showNotificationToast(
+        '🛑 Đã dừng trình chiếu',
+        'Đã mở khóa chuột và bàn phím cho 18 máy học sinh ngay lập tức!',
+        'info'
+      );
+    }
+  }
+
+  function updateBroadcastButtonsUI(isBroadcasting) {
+    const btnStart = document.getElementById('btn-mon-broadcast-start');
+    const btnStop = document.getElementById('btn-mon-broadcast-stop');
+    if (btnStart && btnStop) {
+      if (isBroadcasting) {
+        btnStart.style.display = 'none';
+        btnStop.style.display = 'inline-flex';
+      } else {
+        btnStart.style.display = 'inline-flex';
+        btnStop.style.display = 'none';
+      }
+    }
+  }
+
   function handleSubmissionCommitted(sub) {
     if (!sub) return;
     showNotificationToast(
@@ -669,6 +838,12 @@
   }
 
   function bindToolbarEvents() {
+    const btnBroadcastStart = document.getElementById('btn-mon-broadcast-start');
+    if (btnBroadcastStart) btnBroadcastStart.onclick = () => startTeacherBroadcast();
+
+    const btnBroadcastStop = document.getElementById('btn-mon-broadcast-stop');
+    if (btnBroadcastStop) btnBroadcastStop.onclick = () => stopTeacherBroadcast(true);
+
     const btnWolAll = document.getElementById('btn-mon-wol-all');
     if (btnWolAll) btnWolAll.onclick = () => wakeOnLan('ALL');
 
@@ -734,7 +909,9 @@
     unlockMachine,
     toggleSpotlight,
     collectFiles,
-    shutdownMachine
+    shutdownMachine,
+    startTeacherBroadcast,
+    stopTeacherBroadcast
   };
 
   // Tự động khởi tạo sau khi DOM sẵn sàng

@@ -126,14 +126,16 @@ async function runLiveMonitorUITest() {
 
       // 4. Kiểm tra các nút tác vụ Toolbar
       const toolbarReady = await page.evaluate(() => {
+        const broadcastStart = document.getElementById('btn-mon-broadcast-start');
+        const broadcastStop = document.getElementById('btn-mon-broadcast-stop');
         const wol = document.getElementById('btn-mon-wol-all');
         const lock = document.getElementById('btn-mon-lock-all');
         const unlock = document.getElementById('btn-mon-unlock-all');
         const collect = document.getElementById('btn-mon-collect-all');
         const shutdown = document.getElementById('btn-mon-shutdown-all');
-        return Boolean(wol && lock && unlock && collect && shutdown);
+        return Boolean(broadcastStart && broadcastStop && wol && lock && unlock && collect && shutdown);
       });
-      console.log(`  - Bộ nút điều khiển tập thể (WOL, Lock, Unlock, Thu bài, Tắt máy): ${toolbarReady ? 'PASS (Đầy đủ)' : 'FAIL'}`);
+      console.log(`  - Bộ nút điều khiển tập thể (Chiếu màn hình Thầy, Dừng chiếu, WOL, Lock, Unlock, Thu bài, Tắt máy): ${toolbarReady ? 'PASS (Đầy đủ)' : 'FAIL'}`);
       if (!toolbarReady) throw new Error('Thiếu nút trong Toolbar điều khiển!');
 
       // 5. Kiểm tra bẫy tràn ngang (scrollWidth === clientWidth)

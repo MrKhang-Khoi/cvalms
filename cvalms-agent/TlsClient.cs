@@ -176,6 +176,16 @@ public class AgentTlsClient
                     var jsonStr = Encoding.UTF8.GetString(jsonBytes);
                     ProcessCommand(jsonStr);
                 }
+                else if (magic == 0x43564243) // 'CVBC' Teacher Broadcast Frame
+                {
+                    uint len = (uint)((memoryBuffer[4] << 24) | (memoryBuffer[5] << 16) | (memoryBuffer[6] << 8) | memoryBuffer[7]);
+                    if (memoryBuffer.Count < 8 + len) break;
+
+                    var jpegBytes = memoryBuffer.Skip(8).Take((int)len).ToArray();
+                    memoryBuffer.RemoveRange(0, 8 + (int)len);
+
+                    TeacherBroadcastManager.UpdateBroadcastFrame(jpegBytes);
+                }
                 else
                 {
                     memoryBuffer.RemoveAt(0);
@@ -236,6 +246,19 @@ public class AgentTlsClient
                 else if (action == "CLASSROOM_FOCUS_UNLOCK")
                 {
                     ClassroomFocusLockManager.Unlock();
+                }
+                else if (action == "START_TEACHER_BROADCAST")
+                {
+                    var title = "Thầy đang trình chiếu bài giảng";
+                    if (root.TryGetProperty("payload", out var p) && p.TryGetProperty("title", out var t))
+                    {
+                        title = t.GetString() ?? title;
+                    }
+                    TeacherBroadcastManager.StartBroadcast(title);
+                }
+                else if (action == "STOP_TEACHER_BROADCAST")
+                {
+                    TeacherBroadcastManager.StopBroadcast();
                 }
                 else if (action == "PREPARE_COLLECT")
                 {

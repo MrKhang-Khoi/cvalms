@@ -5,5 +5,7 @@ Thumbs.db
 .gitnexus/
 cvalms-agent/bin/
 cvalms-agent/obj/
+*.pdb
+deploy/*.pdb
 
 
