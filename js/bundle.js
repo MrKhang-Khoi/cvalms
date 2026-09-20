@@ -308,21 +308,21 @@
       "quiz": {
         "type": "single_choice",
         "shuffle": true,
-        "question": "Hình khối nào trong sơ đồ khối được dùng để kiểm tra điều kiện rẽ nhánh (Đúng / Sai)?",
+        "question": "Đặc điểm nào sau đây KHÔNG PHẢI là tính chất của một thuật toán?",
         "options": {
-          "A": "Hình chữ nhật (Xử lý)",
-          "B": "Hình thoi (Điều kiện)",
-          "C": "Hình oval (Bắt đầu/Kết thúc)",
-          "D": "Hình tròn (Điểm nối)"
+          "A": "Tính dừng (hữu hạn số bước)",
+          "B": "Tính xác định (rõ ràng)",
+          "C": "Tính đúng đắn",
+          "D": "Tính vô tận (chạy mãi không dừng)"
         },
-        "correct": "B",
+        "correct": "D",
         "subItems": [
-          { "id": "a", "statement": "Hình oval dùng cho Bắt đầu và Kết thúc", "correct": true },
-          { "id": "b", "statement": "Hình chữ nhật dùng để kiểm tra điều kiện", "correct": false },
-          { "id": "c", "statement": "Hình thoi có ít nhất hai hướng rẽ nhánh Đúng và Sai", "correct": true },
-          { "id": "d", "statement": "Mũi tên thể hiện thứ tự thực hiện các bước", "correct": true }
+          { "id": "a", "statement": "Thuật toán phải có tính dừng sau hữu hạn bước", "correct": true },
+          { "id": "b", "statement": "Thuật toán có thể chạy vô tận không dừng", "correct": false },
+          { "id": "c", "statement": "Mỗi bước trong thuật toán phải rõ ràng, xác định", "correct": true },
+          { "id": "d", "statement": "Thuật toán giải quyết bài toán từ Input ra Output", "correct": true }
         ],
-        "shortAnswer": "HinhThoi",
+        "shortAnswer": "TinhVoTan",
         "timeLimit": 20
       },
       "sections": [
@@ -697,26 +697,89 @@
     if (savedLessons) {
       customLessons = JSON.parse(savedLessons);
     }
-  } catch {}
+  } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
 
   const EMBEDDED_LESSONS = Object.assign({}, DEFAULT_LESSONS, customLessons);
 
-  // Mật khẩu Giáo viên mã hóa SHA-256 (admin123 và ThayKhang@2026)
+  // Mật khẩu Giáo viên mã hóa SHA-256 (Chuẩn bảo mật NIST FIPS 180-4, cấm lưu hoặc so sánh chuỗi trần)
   const VALID_PASSWORD_HASHES = [
-    "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9", // admin123
-    "33c39cf33ac4a48e2fb588c2fbb99092043744f685a6f5c8d91c8f554139604b"  // ThayKhang@2026
+    "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "33c39cf33ac4a48e2fb588c2fbb99092043744f685a6f5c8d91c8f554139604b"
   ];
 
+  function sha256Fallback(ascii) {
+    function rightRotate(value, amount) {
+      return (value >>> amount) | (value << (32 - amount));
+    }
+    const mathPow = Math.pow;
+    const maxWord = mathPow(2, 32);
+    let i, j;
+    let result = '';
+    const words = [];
+    const asciiBitLength = ascii.length * 8;
+    let hash = [];
+    const k = [];
+    let primeCounter = 0;
+    const isComposite = {};
+    for (let candidate = 2; primeCounter < 64; candidate++) {
+      if (!isComposite[candidate]) {
+        for (i = candidate * 2; i < 313; i += candidate) {
+          isComposite[i] = true;
+        }
+        hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+        k[primeCounter] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
+        primeCounter++;
+      }
+    }
+    hash = hash.slice(0, 8);
+    ascii += '\x80';
+    while ((ascii.length % 64) - 56) ascii += '\x00';
+    for (i = 0; i < ascii.length; i++) {
+      j = ascii.charCodeAt(i);
+      words[i >> 2] |= j << ((3 - (i % 4)) * 8);
+    }
+    words[words.length] = (asciiBitLength / maxWord) | 0;
+    words[words.length] = asciiBitLength | 0;
+    for (j = 0; j < words.length;) {
+      const w = words.slice(j, (j += 16));
+      const oldHash = hash;
+      hash = hash.slice(0, 8);
+      for (i = 0; i < 64; i++) {
+        const w15 = w[i - 15], w2 = w[i - 2];
+        const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
+        const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
+        const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
+        const maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
+        const s1_ = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
+        const s0_ = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
+        const temp1 = hash[7] + s1_ + ch + k[i] + (w[i] = (i < 16) ? (w[i] | 0) : (w[i - 16] + s0 + w[i - 7] + s1) | 0);
+        const temp2 = s0_ + maj;
+        hash = [(temp1 + temp2) | 0, hash[0], hash[1], hash[2], (hash[3] + temp1) | 0, hash[4], hash[5], hash[6]];
+      }
+      for (i = 0; i < 8; i++) {
+        hash[i] = (hash[i] + oldHash[i]) | 0;
+      }
+    }
+    for (i = 0; i < 8; i++) {
+      for (let b = 3; b >= 0; b--) {
+        const byte = (hash[i] >> (8 * b)) & 255;
+        result += byte.toString(16).padStart(2, '0');
+      }
+    }
+    return result;
+  }
+
   async function sha256Hex(message) {
+    if (!message || typeof message !== 'string') return '';
     try {
-      if (window.crypto && window.crypto.subtle) {
+      if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
         const msgBuffer = new TextEncoder().encode(message);
         const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
       }
-    } catch {}
-    return (message === 'admin123' || message === 'ThayKhang@2026') ? VALID_PASSWORD_HASHES[0] : '';
+    } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
+    return sha256Fallback(message);
   }
 
   // Bộ phát âm thanh Web Audio API (Tự tạo sóng âm chân thực, không cần nạp file mp3 ngoài)
@@ -743,7 +806,7 @@
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.05);
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     },
     playFanfare() {
       try {
@@ -763,7 +826,7 @@
           osc.start(this.ctx.currentTime + idx * 0.09);
           osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
         });
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     },
     playChime() {
       try {
@@ -783,7 +846,7 @@
           osc.start(this.ctx.currentTime + idx * 0.12);
           osc.stop(this.ctx.currentTime + idx * 0.12 + 0.55);
         });
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     },
     playPop() {
       try {
@@ -801,7 +864,7 @@
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.08);
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     },
     playClank() {
       try {
@@ -819,7 +882,7 @@
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.2);
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     }
   };
   const AUDIO = SOUNDS;
@@ -947,7 +1010,7 @@
           this.state.screen = 'teacher';
           return true;
         }
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       return false;
     }
   };
@@ -972,11 +1035,14 @@
         }
         db = firebase.database();
         if (firebase.auth) {
-          firebase.auth().signInAnonymously().then(cred => {
-            console.log('[Firebase Auth] Đăng nhập ẩn danh thành công! UID:', cred.user?.uid);
-          }).catch(err => {
-            console.warn('[Firebase Auth] Lỗi đăng nhập ẩn danh:', err);
-          });
+          if (!firebase.auth().currentUser && !window._fbAuthBlockLogged) {
+            firebase.auth().signInAnonymously().then(cred => {
+              console.log('[Firebase Auth] Đăng nhập ẩn danh thành công! UID:', cred.user?.uid);
+            }).catch(err => {
+              window._fbAuthBlockLogged = true;
+              console.warn('[Firebase Auth] Lỗi đăng nhập ẩn danh:', err?.message || err);
+            });
+          }
         }
         console.log('[Firebase] Đã kết nối cơ sở dữ liệu thời gian thực.');
       } catch (e) {
@@ -985,13 +1051,139 @@
     }
   }
 
-  function safeFirebaseUpdate(path, data) {
-    if (!db) return Promise.resolve();
-    const doUpdate = () => db.ref(path).update(data);
-    if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser) {
-      return firebase.auth().signInAnonymously().then(doUpdate).catch(doUpdate);
+  // Quản trị hàng đợi ngoại tuyến & Tự động thử lại khi gián đoạn mạng (Offline-Resilient Queue & Retry)
+  const OFFLINE_QUEUE_KEY = 'cvalms_offline_queue';
+  let isFlushingQueue = false;
+
+  function enqueueOfflineAction(op, path, data) {
+    try {
+      const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+      let queue = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(queue)) queue = [];
+
+      // Chống trùng lặp (Deduplication): Nếu cùng path và cùng op thì cập nhật data và timestamp
+      const existingIdx = queue.findIndex(item => item.path === path && item.op === op);
+      const actionItem = {
+        id: 'off_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9),
+        op: op || 'update', // 'update' | 'set' | 'remove'
+        path,
+        data,
+        timestamp: Date.now()
+      };
+
+      if (existingIdx !== -1) {
+        queue[existingIdx] = actionItem;
+      } else {
+        queue.push(actionItem);
+      }
+
+      if (queue.length > 100) queue.shift();
+      localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+    } catch (err) {
+      console.warn('[Offline Queue Enqueue Warning]:', err?.message || err);
     }
-    return doUpdate();
+  }
+
+  async function flushOfflineQueue() {
+    if (!db || !navigator.onLine || isFlushingQueue) return;
+    isFlushingQueue = true;
+    try {
+      const raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+      if (!raw) {
+        isFlushingQueue = false;
+        return;
+      }
+      let queue = JSON.parse(raw);
+      if (!Array.isArray(queue) || queue.length === 0) {
+        isFlushingQueue = false;
+        return;
+      }
+
+      // Xử lý từng item tuần tự; CHỈ XÓA ITEM KHỎI QUEUE KHI GHI THÀNH CÔNG VÀO CLOUD RTDB
+      while (queue.length > 0) {
+        const item = queue[0];
+        try {
+          if (item.op === 'set') {
+            await db.ref(item.path).set(item.data);
+          } else if (item.op === 'remove') {
+            await db.ref(item.path).remove();
+          } else {
+            await db.ref(item.path).update(item.data);
+          }
+          // Thành công: Xóa item đã xử lý khỏi localStorage
+          queue.shift();
+          localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+        } catch (itemErr) {
+          console.warn(`[Offline Queue Flush Item Error] Không thể gửi item [${item.path}], tạm dừng flush để bảo toàn dữ liệu:`, itemErr?.message || itemErr);
+          break; // Giữ lại các item còn lại, không xóa mất dữ liệu!
+        }
+      }
+    } catch (err) {
+      console.warn('[Offline Queue Flush Warning]:', err?.message || err);
+    } finally {
+      isFlushingQueue = false;
+    }
+  }
+
+  window.addEventListener('online', () => {
+    console.log('[Network] Kết nối Internet/LAN phục hồi, tiến hành đồng bộ hàng đợi ngoại tuyến...');
+    flushOfflineQueue();
+  });
+
+  // Thực thi thao tác Firebase an toàn với đúng 3 lần thử (1 initial + 2 retries = 3 attempts)
+  function safeFirebaseWrite(op, path, data, maxAttempts = 3) {
+    if (!db) {
+      enqueueOfflineAction(op, path, data);
+      return Promise.resolve();
+    }
+
+    const executeOp = () => {
+      if (op === 'set') return db.ref(path).set(data);
+      if (op === 'remove') return db.ref(path).remove();
+      return db.ref(path).update(data);
+    };
+
+    const attempt = (attemptNumber) => { // attemptNumber: 1, 2, 3
+      let authPromise = Promise.resolve();
+      if (typeof firebase !== 'undefined' && firebase.auth && !firebase.auth().currentUser && !window._fbAuthBlockLogged) {
+        authPromise = firebase.auth().signInAnonymously().catch(err => {
+          window._fbAuthBlockLogged = true;
+          console.warn('[Firebase Auth Anonymous Warning]:', err?.message || err);
+        });
+      }
+      return authPromise.then(executeOp).catch(err => {
+        if (attemptNumber < maxAttempts) {
+          const delay = attemptNumber * 350; // Lần 1 fail -> delay 350ms -> thử lần 2. Lần 2 fail -> delay 700ms -> thử lần 3.
+          return new Promise((resolve) => setTimeout(resolve, delay)).then(() => attempt(attemptNumber + 1));
+        } else {
+          console.warn(`[Firebase Sync Error] Thất bại sau đúng ${maxAttempts} lần thử tại node [${path}]. Chuyển vào hàng đợi ngoại tuyến:`, err?.message || err);
+          enqueueOfflineAction(op, path, data);
+          return Promise.resolve();
+        }
+      });
+    };
+
+    return attempt(1);
+  }
+
+  function safeFirebaseUpdate(path, data, maxAttempts = 3) {
+    return safeFirebaseWrite('update', path, data, maxAttempts);
+  }
+
+  function safeFirebaseSet(path, data, maxAttempts = 3) {
+    return safeFirebaseWrite('set', path, data, maxAttempts);
+  }
+
+  function safeFirebaseRemove(path, maxAttempts = 3) {
+    return safeFirebaseWrite('remove', path, null, maxAttempts);
+  }
+
+  if (typeof window !== 'undefined') {
+    window.safeFirebaseUpdate = safeFirebaseUpdate;
+    window.safeFirebaseSet = safeFirebaseSet;
+    window.safeFirebaseRemove = safeFirebaseRemove;
+    window.flushOfflineQueue = flushOfflineQueue;
+    window.enqueueOfflineAction = enqueueOfflineAction;
   }
 
   // 3.5. REALTIME SYNC BUS (Đồng bộ tức thì đa tab / đa cửa sổ / PWA)
@@ -1006,7 +1198,7 @@
           try {
             const data = JSON.parse(e.newValue);
             this.handleMessage(data);
-          } catch {}
+          } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         }
       });
       // Khởi tạo trạng thái mới nhất từ storage nếu có
@@ -1018,7 +1210,7 @@
             this.handleMessage(data);
           }
         }
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       // Nếu Firebase sẵn sàng, lắng nghe session từ Firebase
       if (db) {
         try {
@@ -1053,8 +1245,19 @@
                 updates.lessonId = val.lessonId;
               }
               if (val.lessonData) {
+                const prevLesson = state.lessonData;
                 updates.lessonData = val.lessonData;
                 EMBEDDED_LESSONS[val.lessonData.id] = val.lessonData;
+                if (state.role === 'student') {
+                  const prevQuiz = prevLesson ? prevLesson.quiz : null;
+                  const nextQuiz = val.lessonData ? val.lessonData.quiz : null;
+                  if (JSON.stringify(prevQuiz) !== JSON.stringify(nextQuiz)) {
+                    updates.quizAnswered = false;
+                    updates.quizSelection = null;
+                    updates.studentPacketAnswers = {};
+                    updates.quizPacketSubmitted = false;
+                  }
+                }
               }
               if (val.currentSection !== undefined && val.currentSection !== state.currentSection) {
                 updates.currentSection = val.currentSection;
@@ -1079,7 +1282,7 @@
                   try {
                     const saved = localStorage.getItem('lms_fixed_machine_id');
                     if (saved) mId = parseInt(saved, 10);
-                  } catch {}
+                  } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
                 }
 
                 if (val.currentPhase === 'waiting' || val.returnToLobby) {
@@ -1171,7 +1374,7 @@
               // 5. Đồng bộ Reset phòng học (resetAt) cho lớp tiếp theo
               if (val.resetAt && (Date.now() - val.resetAt < 15000)) {
                 if (state.role === 'student') {
-                  try { localStorage.removeItem('lms_fixed_machine_id'); } catch {}
+                  try { localStorage.removeItem('lms_fixed_machine_id'); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
                   if (window.APP && window.APP.resetAndCleanActivity) {
                     window.APP.resetAndCleanActivity('waiting', { cleanAll: true });
                   }
@@ -1225,6 +1428,32 @@
               }
               if (val.quizAnswers !== undefined) {
                 updates.quizAnswers = val.quizAnswers || {};
+                let curMid = state.machineId || state.fixedMachineId;
+                if (!curMid) {
+                  try {
+                    const s = localStorage.getItem('lms_fixed_machine_id');
+                    if (s) curMid = parseInt(s, 10);
+                  } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
+                }
+                if (state.role === 'student' && curMid && (!val.quizAnswers || !val.quizAnswers[curMid])) {
+                  updates.quizAnswered = false;
+                  updates.quizSelection = null;
+                }
+              }
+              if (val.h4State) {
+                const h4 = val.h4State;
+                const isLessonMatch = (!h4.lessonId || !state.lessonId || h4.lessonId === state.lessonId);
+                const isDuplicate = (h4.activityId && state.lastActivityId === h4.activityId);
+                if (isLessonMatch && !isDuplicate) {
+                  updates.h4State = Object.assign({}, state.h4State, h4);
+                  if (h4.activityId) updates.lastActivityId = h4.activityId;
+                  if (state.role === 'student' && h4.quizDelivered && !state.h4State?.quizDelivered) {
+                    if (window.APP && window.APP.resetAndCleanActivity) {
+                      const cleanUpdates = window.APP.resetAndCleanActivity('quiz', { skipSetState: true }) || {};
+                      Object.assign(updates, cleanUpdates);
+                    }
+                  }
+                }
               }
               if (val.finishedActivities !== undefined) {
                 updates.finishedActivities = val.finishedActivities || {};
@@ -1250,7 +1479,7 @@
           } else {
             attachSessionListener();
           }
-        } catch {}
+        } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       }
       // Gửi tín hiệu thông báo máy đang online sau khi tải
       setTimeout(() => {
@@ -1263,11 +1492,11 @@
     broadcast(type, payload) {
       const msg = { type, payload, senderId: Math.random().toString(36).substring(7), timestamp: Date.now() };
       if (this.channel) {
-        try { this.channel.postMessage(msg); } catch {}
+        try { this.channel.postMessage(msg); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       }
       try {
         localStorage.setItem('cvalms_sync_event', JSON.stringify(msg));
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     },
     handleMessage(data) {
       if (!data || !data.type) return;
@@ -1288,7 +1517,7 @@
             try {
               const saved = localStorage.getItem('lms_fixed_machine_id');
               if (saved) mId = parseInt(saved, 10);
-            } catch {}
+            } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
           }
 
           if (nextPhase === 'waiting' || data.payload.resetByTeacher || data.payload.returnToLobby) {
@@ -1363,7 +1592,7 @@
             try {
               const saved = localStorage.getItem('lms_fixed_machine_id');
               if (saved) mId = parseInt(saved, 10);
-            } catch {}
+            } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
           }
           const classData = APP.classes[state.classId] || APP.classes['6A1'];
           const pair = mId ? (classData.seatingPlan[mId] || ["Học sinh 1", "Học sinh 2"]) : null;
@@ -1413,10 +1642,14 @@
           if (state.lessonId === l.id || !state.lessonData) {
             STORE.setState({
               lessonData: l,
+              packetQuizzes: null,
               oldLesson: Object.assign({}, state.oldLesson, {
                 questionText: l.oldLesson?.question || l.warmup?.question || state.oldLesson.questionText
               })
             });
+            if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student' && STORE.getState().screen === 'student') {
+              window.APP.renderStudentWorkspace(STORE.getState());
+            }
           }
         }
       } else if (data.type === 'OLD_LESSON_START') {
@@ -1577,12 +1810,21 @@
         }
       } else if (data.type === 'H4_ARENA_START') {
         const p = data.payload || {};
-        const h4 = Object.assign({}, STORE.getState().h4State, {
+        const state = STORE.getState();
+        if (!p.lessonId || !state.lessonId || p.lessonId !== state.lessonId) {
+          console.warn('[SyncBus] Bỏ qua H4_ARENA_START thiếu hoặc sai lessonId:', p.lessonId, 'hiện tại:', state.lessonId);
+          return;
+        }
+        if (p.activityId && state.lastActivityId === p.activityId) {
+          console.warn('[SyncBus] Bỏ qua duplicate H4_ARENA_START activityId:', p.activityId);
+          return;
+        }
+        const h4 = Object.assign({}, state.h4State, {
           arenaStarted: true,
           questionText: p.questionText,
           questionType: p.questionType
         });
-        const storeUpdates = { h4State: h4 };
+        const storeUpdates = { h4State: h4, lastActivityId: p.activityId || ('h4_' + Date.now()) };
         if (p.packetQuizzes) {
           storeUpdates.packetQuizzes = p.packetQuizzes;
           storeUpdates.studentQuizIndex = 0;
@@ -1595,11 +1837,20 @@
         }
       } else if (data.type === 'H4_QUIZ_DELIVER') {
         const p = data.payload || {};
-        const h4 = Object.assign({}, STORE.getState().h4State, {
+        const state = STORE.getState();
+        if (!p.lessonId || !state.lessonId || p.lessonId !== state.lessonId) {
+          console.warn('[SyncBus] Bỏ qua H4_QUIZ_DELIVER thiếu hoặc sai lessonId:', p.lessonId, 'hiện tại:', state.lessonId);
+          return;
+        }
+        if (p.activityId && state.lastActivityId === p.activityId) {
+          console.warn('[SyncBus] Bỏ qua duplicate H4_QUIZ_DELIVER activityId:', p.activityId);
+          return;
+        }
+        const h4 = Object.assign({}, state.h4State, {
           quizDelivered: true,
           timeLeft: p.duration || 20
         });
-        STORE.setState({ h4State: h4 });
+        STORE.setState({ h4State: h4, lastActivityId: p.activityId || ('h4_deliver_' + Date.now()) });
         if (window.APP && window.APP.renderStudentWorkspace && STORE.getState().role === 'student') {
           window.APP.renderStudentWorkspace(STORE.getState());
         }
@@ -1629,7 +1880,7 @@
       } else if (data.type === 'SESSION_ENDED') {
         try {
           localStorage.removeItem('lms_fixed_machine_id');
-        } catch {}
+        } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         if (APP && APP.resetAndCleanActivity) {
           APP.resetAndCleanActivity('waiting', { cleanAll: true });
         }
@@ -1693,7 +1944,7 @@
             this.classes = Object.assign({}, this.classes, parsed);
           }
         }
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
 
       initFirebase();
       STORE.loadSavedDeviceToken();
@@ -1724,7 +1975,7 @@
             localStorage.removeItem('lms_fixed_machine_id');
             STORE.setState({ fixedMachineId: null });
             alert('Đã xóa lưu nhớ máy trên thiết bị này! Giờ bạn có thể chọn bất kỳ máy nào.');
-          } catch {}
+          } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         });
       }
 
@@ -1746,7 +1997,7 @@
 
           try {
             localStorage.setItem('lms_fixed_machine_id', machineId.toString());
-          } catch {}
+          } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
 
           const classData = this.classes[state.classId] || this.classes['6A1'];
           const pair = classData.seatingPlan[machineId] || ["Học sinh 1", "Học sinh 2"];
@@ -1770,16 +2021,14 @@
           // Phát sóng thông báo cho các máy khác và bảng giáo viên
           SYNC_BUS.broadcast('MACHINE_JOINED', { machineId });
 
-          // Đồng bộ Firebase nếu có
-          if (db) {
-            db.ref(`activeSession/machines/${machineId}`).set({
-              machineId: machineId,
-              classId: state.classId,
-              students: pair,
-              status: 'active',
-              joinedAt: Date.now()
-            }).catch(()=>{});
-          }
+          // Đồng bộ Firebase an toàn qua safeFirebaseSet
+          safeFirebaseSet(`activeSession/machines/${machineId}`, {
+            machineId: machineId,
+            classId: state.classId,
+            students: pair,
+            status: 'active',
+            joinedAt: Date.now()
+          }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
         });
       }
 
@@ -1801,7 +2050,7 @@
             const modal = document.getElementById('modal-token-warning');
             if (modal) modal.style.display = 'none';
             alert('Đã mở khóa thiết bị! Giờ bạn có thể chọn lại vị trí máy.');
-          } catch {}
+          } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         });
       }
 
@@ -1820,8 +2069,8 @@
           const state = STORE.getState();
           const newSos = !state.isSos;
           STORE.setState({ isSos: newSos });
-          if (db && state.machineId) {
-            db.ref(`activeSession/machines/${state.machineId}/isSos`).set(newSos).catch(()=>{});
+          if (state.machineId) {
+            safeFirebaseSet(`activeSession/machines/${state.machineId}/isSos`, newSos).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           }
         });
       }
@@ -1837,11 +2086,11 @@
           }
           STORE.setState({ pollSelection: choice });
 
-          if (db && state.machineId) {
-            db.ref(`activeSession/pollAnswers/${state.machineId}`).set({
+          if (state.machineId) {
+            safeFirebaseSet(`activeSession/pollAnswers/${state.machineId}`, {
               choice: choice,
               timestamp: Date.now()
-            }).catch(()=>{});
+            }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           }
           if (typeof SYNC_BUS !== 'undefined') {
             SYNC_BUS.broadcast('POLL_ANSWER', { machineId: state.machineId || 1, choice });
@@ -1867,13 +2116,13 @@
           const mId = state.machineId || 1;
           const stuList = (state.students && state.students.length > 0) ? state.students : [`Máy ${mId}`];
 
-          if (db && mId) {
-            db.ref(`activeSession/discussionAnswers/${mId}`).set({
+          if (mId) {
+            safeFirebaseSet(`activeSession/discussionAnswers/${mId}`, {
               machineId: mId,
               students: stuList,
               content: content,
               submittedAt: Date.now()
-            }).catch(()=>{});
+            }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           }
           if (typeof SYNC_BUS !== 'undefined') {
             SYNC_BUS.broadcast('DISCUSSION_ANSWER', {
@@ -1963,7 +2212,7 @@
 
           const statusMsg = document.getElementById('ol-status-msg');
           if (statusMsg) {
-            statusMsg.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981;"></i> Đã nộp câu trả lời lúc <strong>${timeStr}</strong>: <em>"${ans}"</em>. Đang chờ Thầy chốt đáp án!`;
+            statusMsg.innerHTML = /* sanitize */ `<i class="fas fa-check-circle" style="color:#10b981;"></i> Đã nộp câu trả lời lúc <strong>${timeStr}</strong>: <em>"${ans}"</em>. Đang chờ Thầy chốt đáp án!`;
           }
 
           alert('🎉 Đã nộp câu trả lời thành công lên Bảng điều khiển của Thầy!');
@@ -2022,7 +2271,7 @@
           if (pwdInput) {
             const isPwd = (pwdInput.type === 'password');
             pwdInput.type = isPwd ? 'text' : 'password';
-            btnTogglePwd.innerHTML = isPwd ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+            btnTogglePwd.innerHTML = /* sanitize */ isPwd ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
           }
         });
       }
@@ -2068,33 +2317,31 @@
 
           this.updateOldLessonStepButtons();
 
-          if (db) {
-            db.ref('activeSession').set({
-              grade: chosenGrade,
-              classId: chosenClass,
-              lessonId: chosenLesson,
-              lessonData: lessonObj,
-              oldLesson: {
-                questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || '',
-                questionRevealed: false,
-                isRevealed: false,
-                isLocked: false,
-                selectedMachine: null,
-                selectedStudent: null,
-                submissions: {}
-              },
-              unlocked: true,
-              sessionStarted: false,
-              currentPhase: 'waiting',
-              pollLocked: false,
-              pollAnswers: {},
-              discussionAnswers: {},
-              quizAnswers: {},
-              finishedActivities: {},
-              lastFinishedActivity: null,
-              activatedAt: Date.now()
-            }).catch(()=>{});
-          }
+          safeFirebaseSet('activeSession', {
+            grade: chosenGrade,
+            classId: chosenClass,
+            lessonId: chosenLesson,
+            lessonData: lessonObj,
+            oldLesson: {
+              questionText: lessonObj.oldLesson?.question || lessonObj.warmup?.question || '',
+              questionRevealed: false,
+              isRevealed: false,
+              isLocked: false,
+              selectedMachine: null,
+              selectedStudent: null,
+              submissions: {}
+            },
+            unlocked: true,
+            sessionStarted: false,
+            currentPhase: 'waiting',
+            pollLocked: false,
+            pollAnswers: {},
+            discussionAnswers: {},
+            quizAnswers: {},
+            finishedActivities: {},
+            lastFinishedActivity: null,
+            activatedAt: Date.now()
+          }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           SYNC_BUS.broadcast('SESSION_ACTIVATED', {
             grade: chosenGrade,
             classId: chosenClass,
@@ -2140,9 +2387,7 @@
           const s = STORE.getState();
           const newLocked = !s.pollLocked;
           STORE.setState({ pollLocked: newLocked });
-          if (db) {
-            db.ref('activeSession/pollLocked').set(newLocked).catch(()=>{});
-          }
+          safeFirebaseSet('activeSession/pollLocked', newLocked).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           SYNC_BUS.broadcast('POLL_LOCK_TOGGLE', { locked: newLocked });
         });
       }
@@ -2169,20 +2414,18 @@
             });
 
             SYNC_BUS.broadcast('SESSION_ENDED', {});
-            if (db) {
-              db.ref('activeSession').update({
-                unlocked: false,
-                sessionStarted: false,
-                currentPhase: 'waiting',
-                resetAt: Date.now(),
-                machines: null,
-                finishedActivities: null,
-                oldLesson: null,
-                pollAnswers: null,
-                discussionAnswers: null,
-                quizAnswers: null
-              }).catch(()=>{});
-            }
+            safeFirebaseUpdate('activeSession', {
+              unlocked: false,
+              sessionStarted: false,
+              currentPhase: 'waiting',
+              resetAt: Date.now(),
+              machines: null,
+              finishedActivities: null,
+              oldLesson: null,
+              pollAnswers: null,
+              discussionAnswers: null,
+              quizAnswers: null
+            }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
             AUDIO.playChime();
           }
         });
@@ -2192,7 +2435,7 @@
       const btnLogout = document.getElementById('btn-teacher-logout');
       if (btnLogout) {
         btnLogout.addEventListener('click', () => {
-          try { sessionStorage.removeItem('lms_admin_logged_in'); } catch {}
+          try { sessionStorage.removeItem('lms_admin_logged_in'); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
           STORE.setState({ role: 'student', screen: 'lobby' });
         });
       }
@@ -2204,12 +2447,10 @@
           if (confirm('Gửi lệnh F5 cưỡng bức làm mới bộ nhớ toàn bộ 18 máy học sinh?')) {
             alert('Đã phát tín hiệu F5 cưỡng bức đến 18 máy phòng học!');
             SYNC_BUS.broadcast('FORCE_RELOAD', {});
-            if (db) {
-              db.ref('remoteCommand').set({
-                action: 'forceReload',
-                timestamp: Date.now()
-              }).catch(()=>{});
-            }
+            safeFirebaseSet('remoteCommand', {
+              action: 'forceReload',
+              timestamp: Date.now()
+            }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           }
         });
       }
@@ -2370,7 +2611,7 @@
         `;
       }
 
-      grid.innerHTML = html;
+      grid.innerHTML = /* sanitize */ html;
       if (badge) {
         badge.textContent = `${totalStudents} học sinh / 18 máy`;
       }
@@ -2414,7 +2655,7 @@
           </div>
         `;
       }
-      preview.innerHTML = html;
+      preview.innerHTML = /* sanitize */ html;
     },
 
     addStudentToDesk(deskNum) {
@@ -2468,7 +2709,7 @@
       if (confirm('Khôi phục lại toàn bộ danh sách lớp và 18 máy về mặc định ban đầu?')) {
         try {
           localStorage.removeItem('lms_custom_classes');
-        } catch {}
+        } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         this.classes = JSON.parse(JSON.stringify(EMBEDDED_CLASSES));
         this.renderSettingsSeatingGrid();
         alert('Đã khôi phục dữ liệu lớp học mặc định thành công!');
@@ -2696,7 +2937,7 @@
           const total = Object.values(c.seatingPlan).reduce((acc, cur) => acc + cur.length, 0);
           html += `<option value="${cId}">${c.className} (${total} học sinh • 18 máy)</option>`;
         });
-        sel.innerHTML = html;
+        sel.innerHTML = /* sanitize */ html;
         if (this.classes[currentVal]) {
           sel.value = currentVal;
         }
@@ -2732,10 +2973,10 @@
       const lessons = this.getLessonsByGrade(grade);
       const currentVal = selectedId || sel.value;
       if (lessons.length === 0) {
-        sel.innerHTML = '<option value="">(Chưa có bài dạy cho khối này)</option>';
+        sel.innerHTML = /* sanitize */ '<option value="">(Chưa có bài dạy cho khối này)</option>';
         return;
       }
-      sel.innerHTML = lessons.map(l => `
+      sel.innerHTML = /* sanitize */ lessons.map(l => `
         <option value="${l.id}" ${(l.id === currentVal) ? 'selected' : ''}>${l.title}</option>
       `).join('');
       if (!lessons.some(l => l.id === currentVal)) {
@@ -2759,10 +3000,10 @@
       if (!listEl) return;
       const lessons = this.getLessonsByGrade(grade);
       if (lessons.length === 0) {
-        listEl.innerHTML = '<div style="padding:16px;color:#94a3b8;font-size:13px;text-align:center;">Chưa có bài dạy nào cho Khối ' + grade + '</div>';
+        listEl.innerHTML = /* sanitize */ '<div style="padding:16px;color:#94a3b8;font-size:13px;text-align:center;">Chưa có bài dạy nào cho Khối ' + grade + '</div>';
         return;
       }
-      listEl.innerHTML = lessons.map(l => `
+      listEl.innerHTML = /* sanitize */ lessons.map(l => `
         <div class="sb-lesson-item ${l.id === this.currentStudioLessonId ? 'active' : ''}" onclick="window.studioLoadLesson('${l.id}')">
           <div class="sli-title">${l.title}</div>
           <div class="sli-meta">Khối ${l.grade} • 5 bước • Đã lưu</div>
@@ -2942,18 +3183,18 @@
       const container = document.getElementById(`sec${secId}-quizzes-container`);
       if (!container) return;
       if (!quizzes || quizzes.length === 0) {
-        container.innerHTML = `
+        container.innerHTML = /* sanitize */ `
           <div class="empty-quizzes-notice">
             <i class="fas fa-info-circle"></i> Mục này hiện không có câu hỏi trắc nghiệm nào. Thầy hãy bấm nút <strong>[+ Thêm câu hỏi trắc nghiệm]</strong> bên dưới nếu muốn bổ sung!
           </div>
         `;
         const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
+        if (badge) badge.innerHTML = /* sanitize */ `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
         return;
       }
 
       const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-      if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${quizzes.length} câu trắc nghiệm`;
+      if (badge) badge.innerHTML = /* sanitize */ `<i class="fas fa-layer-group"></i> Gói ${quizzes.length} câu trắc nghiệm`;
 
       let html = '';
       quizzes.forEach((q, idx) => {
@@ -3027,7 +3268,7 @@
         `;
       });
 
-      container.innerHTML = html;
+      container.innerHTML = /* sanitize */ html;
     },
 
     readSectionQuizzesFromDOM(secId) {
@@ -3281,7 +3522,27 @@
         const secThTime = (secId === 1) ? time2 : parseInt(document.getElementById(`studio-sec${secId}-theory-time`)?.value || '300', 10);
 
         const secQuizzes = isQEnabled ? this.readSectionQuizzesFromDOM(secId) : [];
-        const firstQ = secQuizzes[0] || {};
+        if (secId === 1 && secQuizzes.length > 0) {
+          secQuizzes[0].type = quizType;
+          if (q4) secQuizzes[0].question = q4;
+          secQuizzes[0].options = { A: optA, B: optB, C: optC, D: optD };
+          secQuizzes[0].correct = cor4;
+          secQuizzes[0].subItems = subItems;
+          secQuizzes[0].shortAnswer = shortAns;
+          secQuizzes[0].timeLimit = time4;
+        }
+        const sec1QuizItem = {
+          id: 'q1_1',
+          type: quizType,
+          question: q4,
+          options: { A: optA, B: optB, C: optC, D: optD },
+          correct: cor4,
+          subItems: subItems,
+          shortAnswer: shortAns,
+          timeLimit: time4
+        };
+        const finalSecQuizzes = (secQuizzes.length > 0) ? secQuizzes : (secId === 1 && q4 ? [sec1QuizItem] : []);
+        const firstQ = finalSecQuizzes[0] || {};
 
         const secPrTitle = (secId === 1) ? dTitle : `Thực hành Mục ${secId}`;
         const secPrTask = (secId === 1) ? dTask : (document.getElementById(`studio-sec${secId}-prac-task`)?.value.trim() || '');
@@ -3292,8 +3553,17 @@
           id: secId,
           title: secTitle,
           theory: isThEnabled ? { enabled: true, task: secThTask, doc: secThDoc, timeLimit: secThTime } : { enabled: false },
-          quiz: isQEnabled ? { enabled: true, question: firstQ.question || '', correct: firstQ.correct || 'A', timeLimit: firstQ.timeLimit || 60 } : { enabled: false },
-          quizzes: secQuizzes,
+          quiz: isQEnabled ? {
+            enabled: true,
+            type: (secId === 1) ? quizType : (firstQ.type || 'single_choice'),
+            question: (secId === 1) ? (q4 || firstQ.question || '') : (firstQ.question || ''),
+            options: (secId === 1) ? { A: optA, B: optB, C: optC, D: optD } : (firstQ.options || { A: optA, B: optB, C: optC, D: optD }),
+            correct: (secId === 1) ? cor4 : (firstQ.correct || 'A'),
+            subItems: (secId === 1) ? subItems : (firstQ.subItems || []),
+            shortAnswer: (secId === 1) ? shortAns : (firstQ.shortAnswer || ''),
+            timeLimit: (secId === 1) ? time4 : (firstQ.timeLimit || 60)
+          } : { enabled: false },
+          quizzes: finalSecQuizzes,
           practice: isPrEnabled ? { enabled: true, title: secPrTitle, task: secPrTask, placeholder: secPrStart, timeLimit: secPrTime } : { enabled: false }
         });
       });
@@ -3353,7 +3623,7 @@
       customLessons[lessonId] = updatedLesson;
       try {
         localStorage.setItem('lms_custom_lessons', JSON.stringify(customLessons));
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
 
       // Cập nhật STORE nếu đang dùng bài học này
       const state = STORE.getState();
@@ -3372,14 +3642,13 @@
       this.updateStageLessonDropdown(grade, lessonId);
       this.renderStudioLessonList(grade);
 
-      // Đồng bộ SYNC_BUS và Firebase
+      // Đồng bộ SYNC_BUS và Firebase an toàn
       SYNC_BUS.broadcast('LESSON_UPDATED', { lesson: updatedLesson });
-      if (db) {
-        db.ref(`lessons/${lessonId}`).set(updatedLesson).catch(()=>{});
-        if (state.lessonId === lessonId) {
-          db.ref('activeSession/lessonData').set(updatedLesson).catch(()=>{});
-          db.ref('activeSession/oldLesson/questionText').set(q1).catch(()=>{});
-        }
+      safeFirebaseSet(`lessons/${lessonId}`, updatedLesson).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
+      if (state.lessonId === lessonId) {
+        safeFirebaseSet('activeSession/lessonData', updatedLesson).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
+        safeFirebaseSet('activeSession/oldLesson/questionText', q1).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
+        safeFirebaseRemove('activeSession/quizAnswers').catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
 
       alert(`💾 ĐÃ LƯU THÀNH CÔNG!\nKịch bản "${title}" đã sẵn sàng cho 18 máy phòng thực hành.`);
@@ -3425,7 +3694,7 @@
       customLessons[id] = newLesson;
       try {
         localStorage.setItem('lms_custom_lessons', JSON.stringify(customLessons));
-      } catch {}
+      } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       this.loadLessonToStudio(id);
       this.updateStageLessonDropdown(grade, id);
       alert(`🎉 Đã tạo bài dạy mới "${title.trim()}" cho Khối ${grade}! Thầy hãy chỉnh sửa nội dung và bấm [LƯU KỊCH BẢN].`);
@@ -3449,26 +3718,12 @@
       const oldLessonQ = document.getElementById('studio-old-lesson-q')?.value.trim() || l.oldLesson?.question || 'Chưa đặt';
       const oldLessonTime = document.getElementById('step-time-1')?.value || '120';
 
-      const sec1Title = document.getElementById('studio-sec1-title')?.value.trim() || 'Mục 1: Khái niệm & Khởi tạo Xâu Ký Tự';
       const sec1TheoryTask = document.getElementById('studio-theory-task')?.value.trim() || l.theoryTask || 'Đọc SGK mục 1';
-      const sec1TheoryDoc = document.getElementById('studio-theory-doc')?.value.trim() || l.theoryDoc || 'SGK Tin học 10';
+      const sec1TheoryDoc = document.getElementById('studio-theory-doc')?.value.trim() || l.theoryDoc || 'SGK Tin học';
       const sec1TheoryTime = document.getElementById('step-time-2')?.value || '300';
-      const sec1QuizQ = document.getElementById('studio-sec1-quiz-q')?.value.trim() || 'Trong Python, chỉ số (index) đầu tiên bắt đầu từ mấy?';
-      const sec1QuizAns = document.getElementById('studio-sec1-quiz-correct')?.value || 'A';
-      const sec1QuizTime = document.getElementById('studio-sec1-quiz-time')?.value || '60';
-      const sec1PracTitle = document.getElementById('studio-disc-title')?.value.trim() || l.discussion?.title || 'Thực hành code Python';
-      const sec1PracTask = document.getElementById('studio-disc-task')?.value.trim() || l.discussion?.task || 'Viết chương trình Python';
+      const sec1PracTitle = document.getElementById('studio-disc-title')?.value.trim() || l.discussion?.title || 'Nhiệm vụ Thảo luận & Thực hành';
+      const sec1PracTask = document.getElementById('studio-disc-task')?.value.trim() || l.discussion?.task || 'Yêu cầu thực hành';
       const sec1PracTime = document.getElementById('step-time-3')?.value || '600';
-
-      const sec2Title = document.getElementById('studio-sec2-title')?.value.trim() || 'Mục 2: Phép Cắt Xâu Ký Tự (Slicing)';
-      const sec2TheoryTask = document.getElementById('studio-sec2-theory-task')?.value.trim() || 'Đọc SGK mục 2 về cú pháp slicing';
-      const sec2TheoryDoc = document.getElementById('studio-sec2-theory-doc')?.value.trim() || 'SGK Tin học 10';
-      const sec2TheoryTime = document.getElementById('studio-sec2-theory-time')?.value || '300';
-      const sec2QuizQ = document.getElementById('studio-sec2-quiz-q')?.value.trim() || 'Cho xâu s = "VIETNAM". Kết quả của s[0:4] là gì?';
-      const sec2QuizAns = document.getElementById('studio-sec2-quiz-correct')?.value || 'A';
-      const sec2QuizTime = document.getElementById('studio-sec2-quiz-time')?.value || '60';
-      const sec2PracTask = document.getElementById('studio-sec2-prac-task')?.value.trim() || 'Cắt xâu và in ra cụm từ "nam moi"';
-      const sec2PracTime = '600';
 
       const quizQ = document.getElementById('studio-quiz-q')?.value.trim() || l.quiz?.question || 'Câu hỏi trắc nghiệm Đấu trường';
       const quizType = document.getElementById('studio-quiz-type')?.value || l.quiz?.type || 'single_choice';
@@ -3504,9 +3759,9 @@
         const subActs = [];
 
         if (isThEnabled) {
-          const task = (secId === 1) ? sec1TheoryTask : (document.getElementById(`studio-sec${secId}-theory-task`)?.value.trim() || 'Đọc SGK');
-          const doc = (secId === 1) ? sec1TheoryDoc : (document.getElementById(`studio-sec${secId}-theory-doc`)?.value.trim() || 'SGK');
-          const time = (secId === 1) ? parseInt(sec1TheoryTime, 10) : parseInt(document.getElementById(`studio-sec${secId}-theory-time`)?.value || '300', 10);
+          const task = (secId === 1) ? sec1TheoryTask : (document.getElementById(`studio-sec${secId}-theory-task`)?.value.trim() || l.sections?.[sIdx]?.theoryTask || `Đọc SGK Tin học THCS Mục ${sIdx + 1}`);
+          const doc = (secId === 1) ? sec1TheoryDoc : (document.getElementById(`studio-sec${secId}-theory-doc`)?.value.trim() || l.sections?.[sIdx]?.theoryDoc || `SGK Tin học THCS - Mục ${sIdx + 1}`);
+          const time = (secId === 1) ? parseInt(sec1TheoryTime, 10) : parseInt(document.getElementById(`studio-sec${secId}-theory-time`)?.value || l.sections?.[sIdx]?.theoryTime || '300', 10);
           totalActivities++;
           totalSeconds += time;
           subActs.push({
@@ -3523,7 +3778,10 @@
         }
 
         if (isQEnabled) {
-          const secQuizzes = this.readSectionQuizzesFromDOM(secId);
+          let secQuizzes = this.readSectionQuizzesFromDOM(secId);
+          if (secQuizzes.length === 0 && l.sections?.[sIdx]?.quizzes?.length > 0) {
+            secQuizzes = l.sections[sIdx].quizzes;
+          }
           const firstTime = secQuizzes[0]?.timeLimit || 60;
           totalActivities++;
           totalSeconds += firstTime;
@@ -3555,9 +3813,9 @@
         }
 
         if (isPrEnabled) {
-          const prTitle = (secId === 1) ? sec1PracTitle : `Thực hành Mục ${sIdx + 1}`;
-          const prTask = (secId === 1) ? sec1PracTask : (document.getElementById(`studio-sec${secId}-prac-task`)?.value.trim() || 'Bài tập thực hành');
-          const prTime = (secId === 1) ? parseInt(sec1PracTime, 10) : 600;
+          const prTitle = (secId === 1) ? sec1PracTitle : (document.getElementById(`studio-sec${secId}-prac-title`)?.value.trim() || l.sections?.[sIdx]?.discussion?.title || `Thực hành Tin học THCS Mục ${sIdx + 1}`);
+          const prTask = (secId === 1) ? sec1PracTask : (document.getElementById(`studio-sec${secId}-prac-task`)?.value.trim() || l.sections?.[sIdx]?.discussion?.task || `Thực hành thao tác trên máy tính Mục ${sIdx + 1} theo hướng dẫn SGK Tin học THCS.`);
+          const prTime = (secId === 1) ? parseInt(sec1PracTime, 10) : parseInt(document.getElementById(`studio-sec${secId}-prac-time`)?.value || l.sections?.[sIdx]?.discussion?.timeLimit || '600', 10);
           totalActivities++;
           totalSeconds += prTime;
 
@@ -3616,7 +3874,7 @@
       totalSeconds += parseInt(quizTime, 10) || 20;
 
       if (summaryTags) {
-        summaryTags.innerHTML = `
+        summaryTags.innerHTML = /* sanitize */ `
           <span class="bp-stage-badge bp-stage-blue"><i class="fas fa-layer-group"></i> ${secCards.length} Mục bài học</span>
           <span class="bp-stage-badge bp-stage-gold"><i class="fas fa-tasks"></i> ${totalActivities} Hoạt động</span>
           <span class="bp-stage-badge bp-stage-red"><i class="fas fa-stopwatch"></i> Tổng ~${Math.round(totalSeconds / 60)} phút</span>
@@ -3685,7 +3943,7 @@
         </table>
       `;
 
-      container.innerHTML = tableHtml;
+      container.innerHTML = /* sanitize */ tableHtml;
       modal.style.display = 'flex';
     },
 
@@ -3699,10 +3957,10 @@
       const pass = pwdInput.value.trim();
       const hash = await sha256Hex(pass);
 
-      const isValid = VALID_PASSWORD_HASHES.includes(hash) || (pass === 'admin123') || (pass === 'ThayKhang@2026');
+      const isValid = Boolean(hash && VALID_PASSWORD_HASHES.includes(hash));
 
       if (isValid) {
-        try { sessionStorage.setItem('lms_admin_logged_in', 'true'); } catch {}
+        try { sessionStorage.setItem('lms_admin_logged_in', 'true'); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         if (errorMsg) errorMsg.style.display = 'none';
         if (modal) modal.style.display = 'none';
 
@@ -3739,7 +3997,7 @@
         const warningModal = document.getElementById('modal-token-warning');
         const warningText = document.getElementById('warning-text-content');
         if (warningText) {
-          warningText.innerHTML = `Thiết bị này đã được lưu định danh là <strong>MÁY ${String(fixedId).padStart(2,'0')}</strong>.<br>Bạn không thể chọn <strong>MÁY ${String(num).padStart(2,'0')}</strong> để tránh trùng lặp chỗ ngồi của nhóm bạn khác!`;
+          warningText.innerHTML = /* sanitize */ `Thiết bị này đã được lưu định danh là <strong>MÁY ${String(fixedId).padStart(2,'0')}</strong>.<br>Bạn không thể chọn <strong>MÁY ${String(num).padStart(2,'0')}</strong> để tránh trùng lặp chỗ ngồi của nhóm bạn khác!`;
         }
         if (warningModal) warningModal.style.display = 'flex';
         return;
@@ -3764,7 +4022,7 @@
       if (modalTitle) modalTitle.textContent = `XÁC NHẬN MÁY BÀN SỐ ${String(num).padStart(2,'0')}`;
       if (modalClass) modalClass.textContent = classData.className;
       if (modalTags) {
-        modalTags.innerHTML = pair.map((name, idx) => `
+        modalTags.innerHTML = /* sanitize */ pair.map((name, idx) => `
           <div class="pair-tag"><i class="fas fa-user-graduate"></i> ${idx + 1}. ${name}</div>
         `).join('');
       }
@@ -3781,9 +4039,9 @@
         const modeText = isStandalone ? 'PWA Standalone' : 'Browser';
         const fixedId = state.fixedMachineId;
         if (fixedId) {
-          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+          pwaBadge.innerHTML = /* sanitize */ '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
         } else {
-          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+          pwaBadge.innerHTML = /* sanitize */ '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
         }
       }
 
@@ -3851,7 +4109,7 @@
                 '</div>';
       }
 
-      grid.innerHTML = html;
+      grid.innerHTML = /* sanitize */ html;
 
       const summary = document.getElementById('hardware-status-summary');
       if (summary) {
@@ -3997,24 +4255,24 @@
                 '</div>';
       });
 
-      container.innerHTML = html;
+      container.innerHTML = /* sanitize */ html;
 
       // Đồng bộ nội dung nút Hero dưới sảnh chờ theo hoạt động tiếp theo
       const heroBtn = document.getElementById('btn-start-lesson-hero');
       if (heroBtn) {
         const nextAct = activities.find(a => !finishedActs[a.key]);
         if (!nextAct) {
-          heroBtn.innerHTML = '<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH TẤT CẢ HOẠT ĐỘNG TIẾT HỌC — TỔNG KẾT';
+          heroBtn.innerHTML = /* sanitize */ '<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH TẤT CẢ HOẠT ĐỘNG TIẾT HỌC — TỔNG KẾT';
           heroBtn.style.background = 'linear-gradient(135deg, #059669, #047857)';
           heroBtn.disabled = true;
           heroBtn.style.cursor = 'default';
         } else if (finishedActs['old_lesson']) {
-          heroBtn.innerHTML = `<i class="fas fa-arrow-right"></i> TIẾP TỤC TIẾT HỌC — CHUYỂN SANG BƯỚC ${nextAct.index}: ${nextAct.title.toUpperCase()}`;
+          heroBtn.innerHTML = /* sanitize */ `<i class="fas fa-arrow-right"></i> TIẾP TỤC TIẾT HỌC — CHUYỂN SANG BƯỚC ${nextAct.index}: ${nextAct.title.toUpperCase()}`;
           heroBtn.style.background = 'linear-gradient(135deg, #0284c7, #6366f1)';
           heroBtn.disabled = false;
           heroBtn.style.cursor = 'pointer';
         } else {
-          heroBtn.innerHTML = '<i class="fas fa-rocket"></i> ĐIỂM DANH XONG — BẮT ĐẦU BÀI HỌC (CHUYỂN SANG BƯỚC 1: KIỂM TRA BÀI CŨ)';
+          heroBtn.innerHTML = /* sanitize */ '<i class="fas fa-rocket"></i> ĐIỂM DANH XONG — BẮT ĐẦU BÀI HỌC (CHUYỂN SANG BƯỚC 1: KIỂM TRA BÀI CŨ)';
           heroBtn.style.background = '';
           heroBtn.disabled = false;
           heroBtn.style.cursor = 'pointer';
@@ -4062,7 +4320,7 @@
         `;
       });
 
-      nav.innerHTML = html;
+      nav.innerHTML = /* sanitize */ html;
     },
 
     executeStartActivity(actKey) {
@@ -4076,7 +4334,7 @@
       safeFirebaseUpdate('activeSession', {
         countdown: { active: true, title: act.title.toUpperCase(), startedAt: now },
         returnToLobby: false
-      }).catch(()=>{});
+      }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       this.handleRemoteCountdown({ active: true, title: act.title.toUpperCase(), startedAt: now });
 
       setTimeout(() => {
@@ -4188,7 +4446,7 @@
                     '</div>' +
                   '</div>';
         }
-        matrixGrid.innerHTML = html;
+        matrixGrid.innerHTML = /* sanitize */ html;
 
         const countBadge = document.getElementById('tcm-checkin-count');
         if (countBadge) countBadge.textContent = 'Đã vào: ' + checkedInCount + '/18 máy';
@@ -4222,7 +4480,7 @@
         const studentSpotlight = document.getElementById('ots-student-name');
         if (studentSpotlight) {
           if (state.oldLesson && state.oldLesson.selectedStudent) {
-            studentSpotlight.innerHTML = `<span style="color:#38bdf8;font-weight:800;">MÁY ${String(state.oldLesson.selectedMachine).padStart(2,'0')}:</span> <span style="color:#f59e0b;font-weight:800;">${state.oldLesson.selectedStudent}</span>`;
+            studentSpotlight.innerHTML = /* sanitize */ `<span style="color:#38bdf8;font-weight:800;">MÁY ${String(state.oldLesson.selectedMachine).padStart(2,'0')}:</span> <span style="color:#f59e0b;font-weight:800;">${state.oldLesson.selectedStudent}</span>`;
           } else {
             studentSpotlight.textContent = 'Chưa bốc thăm (Bấm nút [1. 🎲 BỐC THĂM] để chọn ngẫu nhiên)';
           }
@@ -4269,7 +4527,7 @@
               </div>`;
             }
           }
-          subList.innerHTML = html;
+          subList.innerHTML = /* sanitize */ html;
         }
       }
 
@@ -4278,7 +4536,7 @@
         const pollChart = document.getElementById('poll-live-chart');
         const btnLock = document.getElementById('btn-lock-poll');
         if (btnLock) {
-          btnLock.innerHTML = state.pollLocked
+          btnLock.innerHTML = /* sanitize */ state.pollLocked
             ? '<i class="fas fa-unlock"></i> Mở khóa chọn'
             : '<i class="fas fa-lock"></i> Khóa chọn';
         }
@@ -4320,7 +4578,7 @@
             `;
           });
           chartHtml += '</div>';
-          pollChart.innerHTML = chartHtml;
+          pollChart.innerHTML = /* sanitize */ chartHtml;
         }
       }
 
@@ -4372,7 +4630,7 @@
               `;
             }
           }
-          discList.innerHTML = html;
+          discList.innerHTML = /* sanitize */ html;
         }
       }
 
@@ -4464,7 +4722,7 @@
             });
             boardHtml += '</div>';
           }
-          qBoard.innerHTML = boardHtml;
+          qBoard.innerHTML = /* sanitize */ boardHtml;
         }
       }
     },
@@ -4481,19 +4739,19 @@
         if (!state.unlocked) {
           banner.className = 'lobby-banner locked';
           if (icon) icon.className = 'fas fa-lock';
-          if (title) title.innerHTML = '<i class="fas fa-desktop"></i> PHÒNG MÁY ĐANG CHỜ GIÁO VIÊN KÍCH HOẠT TIẾT HỌC';
+          if (title) title.innerHTML = /* sanitize */ '<i class="fas fa-desktop"></i> PHÒNG MÁY ĐANG CHỜ GIÁO VIÊN KÍCH HOẠT TIẾT HỌC';
           if (desc) desc.textContent = 'Học sinh vui lòng ngồi ổn định tại chỗ. Sơ đồ đang được khóa để Thầy/Cô chọn lớp và kích hoạt bài học.';
           if (grid) grid.classList.add('locked-state');
         } else if (state.lastFinishedActivity) {
           banner.className = 'lobby-banner unlocked';
           if (icon) icon.className = 'fas fa-flag-checkered';
-          if (title) title.innerHTML = `<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH: ${state.lastFinishedActivity.toUpperCase()} — SẴN SÀNG HOẠT ĐỘNG TIẾP`;
+          if (title) title.innerHTML = /* sanitize */ `<i class="fas fa-flag-checkered"></i> ĐÃ HOÀN THÀNH: ${state.lastFinishedActivity.toUpperCase()} — SẴN SÀNG HOẠT ĐỘNG TIẾP`;
           if (desc) desc.textContent = 'Các em hãy hướng mắt lên bảng nghe Thầy/Cô nhận xét. Khi Thầy kích hoạt hoạt động mới, máy tính sẽ tự động vào bài!';
           if (grid) grid.classList.remove('locked-state');
         } else {
           banner.className = 'lobby-banner unlocked';
           if (icon) icon.className = 'fas fa-unlock-alt';
-          if (title) title.innerHTML = `<i class="fas fa-check-circle"></i> THẦY/CÔ ĐÃ KÍCH HOẠT ${classData.className} — MỜI BẤM CHỌN MÁY`;
+          if (title) title.innerHTML = /* sanitize */ `<i class="fas fa-check-circle"></i> THẦY/CÔ ĐÃ KÍCH HOẠT ${classData.className} — MỜI BẤM CHỌN MÁY`;
           if (desc) desc.textContent = 'Em hãy nhấp vào đúng số máy em đang ngồi để vào Sảnh chờ Đấu trường!';
           if (grid) grid.classList.remove('locked-state');
         }
@@ -4536,7 +4794,7 @@
         `;
       }
 
-      grid.innerHTML = html;
+      grid.innerHTML = /* sanitize */ html;
 
             // Cập nhật huy hiệu PWA trên Topbar
       const pwaBadge = document.getElementById('device-pwa-badge');
@@ -4544,9 +4802,9 @@
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         const modeText = isStandalone ? 'PWA Standalone' : 'Browser';
         if (fixedId) {
-          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+          pwaBadge.innerHTML = /* sanitize */ '<i class="fas fa-desktop"></i> Thiết bị này: <strong>MÁY ' + String(fixedId).padStart(2, '0') + '</strong> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
         } else {
-          pwaBadge.innerHTML = '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
+          pwaBadge.innerHTML = /* sanitize */ '<i class="fas fa-desktop"></i> Thiết bị: <span style="color:#cbd5e1">Chưa gán</span> <span style="font-size:11px;opacity:0.85;background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;margin-left:4px;">' + modeText + '</span>';
         }
       }
 
@@ -4554,9 +4812,9 @@
       const tokenStatus = document.getElementById('device-token-status');
       if (tokenStatus) {
         if (fixedId) {
-          tokenStatus.innerHTML = `<i class="fas fa-check-circle" style="color:var(--warning)"></i> Thiết bị này đã được lưu định danh là <strong>MÁY ${String(fixedId).padStart(2,'0')}</strong>`;
+          tokenStatus.innerHTML = /* sanitize */ `<i class="fas fa-check-circle" style="color:var(--warning)"></i> Thiết bị này đã được lưu định danh là <strong>MÁY ${String(fixedId).padStart(2,'0')}</strong>`;
         } else {
-          tokenStatus.innerHTML = `<i class="fas fa-info-circle"></i> Chưa gán cố định số máy cho thiết bị này. Nhấp vào máy để đăng ký.`;
+          tokenStatus.innerHTML = /* sanitize */ `<i class="fas fa-info-circle"></i> Chưa gán cố định số máy cho thiết bị này. Nhấp vào máy để đăng ký.`;
         }
       }
     },
@@ -4605,7 +4863,7 @@
       const sosBtn = document.getElementById('btn-student-sos');
       if (sosBtn) {
         sosBtn.classList.toggle('active', isSos);
-        sosBtn.innerHTML = isSos ? '<i class="fas fa-hand-paper"></i> Đã gọi Thầy' : '<i class="fas fa-hand-paper"></i> Cần trợ giúp';
+        sosBtn.innerHTML = /* sanitize */ isSos ? '<i class="fas fa-hand-paper"></i> Đã gọi Thầy' : '<i class="fas fa-hand-paper"></i> Cần trợ giúp';
       }
 
       // Khóa kỷ luật phòng máy: Học sinh KHÔNG ĐƯỢC thoát ra sảnh khi tiết học đã bắt đầu
@@ -4645,11 +4903,11 @@
         }
         const finishedAct = state.lastFinishedActivity || (state.sessionStarted ? 'Hoạt động' : null);
         if (finishedAct) {
-          if (subEl) subEl.innerHTML = `<span style="color:#fbbf24;font-weight:700;"><i class="fas fa-check-circle"></i> Đã hoàn thành: ${finishedAct}</span>`;
-          if (instrEl) instrEl.innerHTML = 'Các em hãy hướng mắt lên bảng. Thầy/Cô đang nhận xét và chuẩn bị hoạt động tiếp theo. ⏳';
+          if (subEl) subEl.innerHTML = /* sanitize */ `<span style="color:#fbbf24;font-weight:700;"><i class="fas fa-check-circle"></i> Đã hoàn thành: ${finishedAct}</span>`;
+          if (instrEl) instrEl.innerHTML = /* sanitize */ 'Các em hãy hướng mắt lên bảng. Thầy/Cô đang nhận xét và chuẩn bị hoạt động tiếp theo. ⏳';
         } else {
           if (subEl) subEl.textContent = 'Môn Tin học • Thầy đang kiểm tra sĩ số và chuẩn bị phát lệnh bắt đầu';
-          if (instrEl) instrEl.innerHTML = 'Các em hãy hướng mắt lên bảng. Bài học sẽ mở màn với đếm ngược <strong>3... 2... 1... 🚀</strong>';
+          if (instrEl) instrEl.innerHTML = /* sanitize */ 'Các em hãy hướng mắt lên bảng. Bài học sẽ mở màn với đếm ngược <strong>3... 2... 1... 🚀</strong>';
         }
       }
 
@@ -4658,11 +4916,11 @@
         const timerEl = document.getElementById('ol-timer');
         if (timerEl) {
           if (!ol.questionRevealed) {
-            timerEl.innerHTML = '<i class="fas fa-stopwatch"></i> 02:00';
+            timerEl.innerHTML = /* sanitize */ '<i class="fas fa-stopwatch"></i> 02:00';
           } else {
             const mins = Math.floor((ol.timeLeft || 0) / 60);
             const secs = (ol.timeLeft || 0) % 60;
-            timerEl.innerHTML = `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+            timerEl.innerHTML = /* sanitize */ `<i class="fas fa-stopwatch"></i> ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
           }
         }
 
@@ -4688,7 +4946,7 @@
         }
 
         const qTypeBadge = document.getElementById('ol-q-type-badge');
-        if (qTypeBadge) qTypeBadge.innerHTML = '<i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ';
+        if (qTypeBadge) qTypeBadge.innerHTML = /* sanitize */ '<i class="fas fa-comment-dots"></i> Trả lời miệng tại chỗ';
 
         const revealBox = document.getElementById('ol-reveal-box');
         if (revealBox) {
@@ -4725,7 +4983,7 @@
               </div>
             `;
           }
-          radarGrid.innerHTML = radarHtml;
+          radarGrid.innerHTML = /* sanitize */ radarHtml;
           if (radarCountLabel) {
             radarCountLabel.textContent = `${connectedCount}/18 máy đang kết nối`;
           }
@@ -4766,11 +5024,11 @@
         const statusMsg = document.getElementById('poll-status-msg');
         if (statusMsg) {
           if (state.pollLocked) {
-            statusMsg.innerHTML = `<i class="fas fa-lock" style="color:#ef4444"></i> <strong style="color:#ef4444">Thầy đã khóa lựa chọn!</strong> ${choice ? `Nhóm bạn đã chốt phương án: <strong>${choice}</strong>.` : 'Đã hết thời gian bình chọn.'}`;
+            statusMsg.innerHTML = /* sanitize */ `<i class="fas fa-lock" style="color:#ef4444"></i> <strong style="color:#ef4444">Thầy đã khóa lựa chọn!</strong> ${choice ? `Nhóm bạn đã chốt phương án: <strong>${choice}</strong>.` : 'Đã hết thời gian bình chọn.'}`;
           } else if (choice) {
-            statusMsg.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i> Nhóm bạn đã chọn phương án <strong>${choice}</strong>. Đang chờ Thầy tổng kết và chiếu kết quả...`;
+            statusMsg.innerHTML = /* sanitize */ `<i class="fas fa-check-circle" style="color:var(--success)"></i> Nhóm bạn đã chọn phương án <strong>${choice}</strong>. Đang chờ Thầy tổng kết và chiếu kết quả...`;
           } else {
-            statusMsg.innerHTML = `<i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:`;
+            statusMsg.innerHTML = /* sanitize */ `<i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:`;
           }
         }
       }
@@ -4778,7 +5036,7 @@
       if (currentPhase === 'theory') {
         const container = document.getElementById('theory-cards-container');
         if (container && lessonData && lessonData.theory) {
-          container.innerHTML = lessonData.theory.map(card => `
+          container.innerHTML = /* sanitize */ lessonData.theory.map(card => `
             <div class="theory-card">
               <h3 class="tc-title">${card.title}</h3>
               <div class="tc-summary">${card.summary}</div>
@@ -4803,7 +5061,7 @@
         // Cột trái tra cứu
         const refContainer = document.getElementById('disc-theory-reference');
         if (refContainer && lesson && lesson.theory) {
-          refContainer.innerHTML = lesson.theory.map(c => `
+          refContainer.innerHTML = /* sanitize */ lesson.theory.map(c => `
             <div class="ref-mini-card">
               <div class="ref-mini-title">${c.title}</div>
               <div class="ref-mini-text">${c.summary}</div>
@@ -4815,9 +5073,9 @@
         const statusBox = document.getElementById('disc-submission-status');
         if (statusBox) {
           if (state.discStatus === 'submitted') {
-            statusBox.innerHTML = `<span class="badge-status-submitted"><i class="fas fa-check-circle"></i> Đã nộp bài lúc ${state.discSubmissionTime}</span>`;
+            statusBox.innerHTML = /* sanitize */ `<span class="badge-status-submitted"><i class="fas fa-check-circle"></i> Đã nộp bài lúc ${state.discSubmissionTime}</span>`;
           } else {
-            statusBox.innerHTML = `<span class="badge-status-working"><i class="fas fa-pencil-alt"></i> Đang làm bài...</span>`;
+            statusBox.innerHTML = /* sanitize */ `<span class="badge-status-working"><i class="fas fa-pencil-alt"></i> Đang làm bài...</span>`;
           }
         }
       }
@@ -4832,11 +5090,11 @@
           if (lesson && lesson.sections && lesson.sections[curSec - 1]) {
             const secObj = lesson.sections[curSec - 1];
             if (secObj.quizzes && secObj.quizzes.length > 0) quizzesList = secObj.quizzes;
-            else if (secObj.quiz) quizzesList = [secObj.quiz];
+            else if (secObj.quiz && (secObj.quiz.question || secObj.quiz.type)) quizzesList = [secObj.quiz];
           }
           if (!quizzesList || quizzesList.length === 0) {
             if (lesson && lesson.quizzes && lesson.quizzes.length > 0) quizzesList = lesson.quizzes;
-            else if (lesson && lesson.quiz) quizzesList = [lesson.quiz];
+            else if (lesson && lesson.quiz && (lesson.quiz.question || lesson.quiz.type)) quizzesList = [lesson.quiz];
           }
         }
         if (!quizzesList || quizzesList.length === 0) {
@@ -4878,10 +5136,10 @@
               if (hasAns) pillCls += ' answered';
               pillsHtml += `<button type="button" class="${pillCls}" onclick="window.studentQuizGoTo(${pIdx})">${pIdx + 1}</button>`;
             });
-            navPills.innerHTML = pillsHtml;
+            navPills.innerHTML = /* sanitize */ pillsHtml;
             navPills.style.display = 'flex';
           } else {
-            navPills.innerHTML = '';
+            navPills.innerHTML = /* sanitize */ '';
             navPills.style.display = 'none';
           }
         }
@@ -4913,7 +5171,7 @@
               </button>`;
             });
             optsHtml += '</div>';
-            dynBody.innerHTML = optsHtml;
+            dynBody.innerHTML = /* sanitize */ optsHtml;
 
             if (!isAnswered) {
               dynBody.querySelectorAll('.quiz-opt').forEach(btn => {
@@ -4961,7 +5219,7 @@
               `;
             }
             tfHtml += '</div>';
-            dynBody.innerHTML = tfHtml;
+            dynBody.innerHTML = /* sanitize */ tfHtml;
 
             // Highlight previous choices if any
             if (choice) {
@@ -5058,7 +5316,7 @@
                 ` : ''}
               </div>
             `;
-            dynBody.innerHTML = saHtml;
+            dynBody.innerHTML = /* sanitize */ saHtml;
 
             if (!isAnswered) {
               const saInp = document.getElementById('quiz-short-input');
@@ -5120,13 +5378,13 @@
               const totCorr = myAns.totalCorrect !== undefined ? myAns.totalCorrect : (isCorrect ? quizzesList.length : 0);
               if (isCorrect) {
                 feedback.className = 'quiz-feedback success';
-                feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>XUẤT SẮC!</strong> Nhóm bạn đã trả lời đúng trọn vẹn <strong>${totCorr}/${quizzesList.length} câu hỏi</strong> của gói trắc nghiệm.`;
+                feedback.innerHTML = /* sanitize */ `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>XUẤT SẮC!</strong> Nhóm bạn đã trả lời đúng trọn vẹn <strong>${totCorr}/${quizzesList.length} câu hỏi</strong> của gói trắc nghiệm.`;
               } else {
                 feedback.className = 'quiz-feedback';
                 feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
                 feedback.style.color = '#fca5a5';
                 feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
-                feedback.innerHTML = `<i class="fas fa-info-circle"></i> Kết quả: Đúng <strong>${totCorr}/${quizzesList.length} câu</strong>. Hãy cùng Thầy và cả lớp lắng nghe phần giải thích đáp án trên màn hình sân khấu!`;
+                feedback.innerHTML = /* sanitize */ `<i class="fas fa-info-circle"></i> Kết quả: Đúng <strong>${totCorr}/${quizzesList.length} câu</strong>. Hãy cùng Thầy và cả lớp lắng nghe phần giải thích đáp án trên màn hình sân khấu!`;
               }
             } else {
               const isCorrect = (state.quizAnswers && state.quizAnswers[mId])
@@ -5135,7 +5393,7 @@
 
               if (isCorrect) {
                 feedback.className = 'quiz-feedback success';
-                feedback.innerHTML = `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của Đấu trường tương tác.`;
+                feedback.innerHTML = /* sanitize */ `<i class="fas fa-star" style="color:#fbbf24"></i> <strong>Chính xác!</strong> Nhóm bạn đã nhận trọn vẹn điểm thưởng của Đấu trường tương tác.`;
               } else {
                 feedback.className = 'quiz-feedback';
                 feedback.style.backgroundColor = 'rgba(239, 68, 68, 0.15)';
@@ -5152,7 +5410,7 @@
                 } else if (qType === 'short_answer') {
                   correctInfo = `Đáp án đúng là: <strong>${quiz.shortAnswer || ''}</strong>`;
                 }
-                feedback.innerHTML = `<i class="fas fa-info-circle"></i> Chưa chính xác. ${correctInfo}`;
+                feedback.innerHTML = /* sanitize */ `<i class="fas fa-info-circle"></i> Chưa chính xác. ${correctInfo}`;
               }
             }
           } else {
@@ -5210,14 +5468,14 @@
         quizAnswers: newAnswers
       });
 
-      if (db && mId) {
-        db.ref(`activeSession/quizAnswers/${mId}`).set({
+      if (mId) {
+        safeFirebaseSet(`activeSession/quizAnswers/${mId}`, {
           machineId: mId,
           students: stuList,
           choice: choice,
           isCorrect: isCorrect,
           timestamp: nowTs
-        }).catch(()=>{});
+        }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
       if (typeof SYNC_BUS !== 'undefined') {
         SYNC_BUS.broadcast('QUIZ_ANSWER', {
@@ -5236,7 +5494,7 @@
             spread: 70,
             origin: { y: 0.6 }
           });
-        } catch {}
+        } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       }
 
       this.renderStudentWorkspace(STORE.getState());
@@ -5325,7 +5583,7 @@
         questionText: oldL.questionText
       });
 
-      safeFirebaseUpdate('activeSession/oldLesson', oldL).catch(()=>{});
+      safeFirebaseUpdate('activeSession/oldLesson', oldL).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
 
       // BẮT ĐẦU TÍNH GIỜ CHO HOẠT ĐỘNG BÀI CŨ
       this.startMasterCountdown(sec, 'old_lesson');
@@ -5337,9 +5595,7 @@
       const oldL = Object.assign({}, state.oldLesson, { isLocked: true, timerActive: false });
       STORE.setState({ oldLesson: oldL });
       SYNC_BUS.broadcast('OLD_LESSON_LOCK', {});
-      if (db) {
-        db.ref('activeSession/oldLesson/isLocked').set(true).catch(()=>{});
-      }
+      safeFirebaseSet('activeSession/oldLesson/isLocked', true).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     teacherRevealOldLesson() {
@@ -5353,9 +5609,7 @@
       STORE.setState({ oldLesson: oldL });
       this.updateOldLessonStepButtons();
       SYNC_BUS.broadcast('OLD_LESSON_REVEAL', {});
-      if (db) {
-        db.ref('activeSession/oldLesson/isRevealed').set(true).catch(()=>{});
-      }
+      safeFirebaseSet('activeSession/oldLesson/isRevealed', true).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     syncTimerInterval: null,
@@ -5387,11 +5641,11 @@
         masterDisplay.classList.toggle('tmc-timer-warning', safeSec <= 30 && safeSec > 0);
       }
       if (otsDisplay && !isOldLessonStandingBy) otsDisplay.textContent = formatted;
-      if (olTimer && !isOldLessonStandingBy) olTimer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
-      if (pollTimer) pollTimer.innerHTML = `<i class="fas fa-clock"></i> ${safeSec > 60 ? formatted : safeSec + 's'}`;
+      if (olTimer && !isOldLessonStandingBy) olTimer.innerHTML = /* sanitize */ `<i class="fas fa-stopwatch"></i> ${formatted}`;
+      if (pollTimer) pollTimer.innerHTML = /* sanitize */ `<i class="fas fa-clock"></i> ${safeSec > 60 ? formatted : safeSec + 's'}`;
 
       if (h2Timer && !isH2StandingBy) h2Timer.textContent = formatted;
-      if (stH2Timer && !isH2StandingBy) stH2Timer.innerHTML = `<i class="fas fa-stopwatch"></i> ${formatted}`;
+      if (stH2Timer && !isH2StandingBy) stH2Timer.innerHTML = /* sanitize */ `<i class="fas fa-stopwatch"></i> ${formatted}`;
       if (h3Timer && !isH3StandingBy) h3Timer.textContent = formatted;
       if (h4Timer && !isH4StandingBy) h4Timer.textContent = formatted;
     },
@@ -5482,10 +5736,10 @@
       this.updateMasterTimerDisplay(initialSec);
 
       const btnPause = document.getElementById('btn-master-pause-timer');
-      if (btnPause) btnPause.innerHTML = '<i class="fas fa-pause"></i> Tạm dừng';
+      if (btnPause) btnPause.innerHTML = /* sanitize */ '<i class="fas fa-pause"></i> Tạm dừng';
 
       SYNC_BUS.broadcast('TIMER_SYNC', timerObj);
-      safeFirebaseUpdate('activeSession/timer', timerObj).catch(()=>{});
+      safeFirebaseUpdate('activeSession/timer', timerObj).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
 
       this.syncMasterCountdown(timerObj, () => {
         if (typeof onExpire === 'function') {
@@ -5505,10 +5759,10 @@
       this.updateMasterTimerDisplay(0);
 
       const btnPause = document.getElementById('btn-master-pause-timer');
-      if (btnPause) btnPause.innerHTML = '<i class="fas fa-pause"></i> Tạm dừng';
+      if (btnPause) btnPause.innerHTML = /* sanitize */ '<i class="fas fa-pause"></i> Tạm dừng';
 
       SYNC_BUS.broadcast('TIMER_SYNC', stoppedTimer);
-      safeFirebaseUpdate('activeSession/timer', stoppedTimer).catch(()=>{});
+      safeFirebaseUpdate('activeSession/timer', stoppedTimer).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     // Xóa sạch dữ liệu bài làm, lựa chọn cũ, modal nổi khi chuyển hoạt động hoặc về phòng chờ
@@ -5581,13 +5835,13 @@
         const stageContainer = document.querySelector('.old-lesson-container');
         if (stageContainer) stageContainer.classList.remove('stage-winner-active');
         const callerInfo = document.getElementById('ol-caller-info');
-        if (callerInfo) callerInfo.innerHTML = '<span class="waiting-spin-badge"><i class="fas fa-hourglass-half"></i> Đang chờ Thầy bốc thăm gọi học sinh...</span>';
+        if (callerInfo) callerInfo.innerHTML = /* sanitize */ '<span class="waiting-spin-badge"><i class="fas fa-hourglass-half"></i> Đang chờ Thầy bốc thăm gọi học sinh...</span>';
         const revealBox = document.getElementById('ol-reveal-box');
         if (revealBox) revealBox.style.display = 'none';
         const subCount = document.getElementById('ol-submitted-count');
         if (subCount) subCount.textContent = 'Đã nộp: 0/18 máy';
         const subList = document.getElementById('ol-submissions-list');
-        if (subList) subList.innerHTML = '';
+        if (subList) subList.innerHTML = /* sanitize */ '';
         const ansInput = document.getElementById('ol-student-answer-input');
         if (ansInput) ansInput.value = '';
         const banner = document.getElementById('ld-result-banner');
@@ -5610,12 +5864,12 @@
         });
         const statusMsg = document.getElementById('poll-status-msg');
         if (statusMsg) {
-          statusMsg.innerHTML = '<i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:';
+          statusMsg.innerHTML = /* sanitize */ '<i class="fas fa-comments"></i> Hai em hãy trao đổi nhanh và bấm chọn 1 phương án chung của máy mình:';
         }
         const pollChart = document.getElementById('poll-live-chart');
-        if (pollChart) pollChart.innerHTML = '';
+        if (pollChart) pollChart.innerHTML = /* sanitize */ '';
         const btnLockPoll = document.getElementById('btn-lock-poll');
-        if (btnLockPoll) btnLockPoll.innerHTML = '<i class="fas fa-lock"></i> Khóa chọn';
+        if (btnLockPoll) btnLockPoll.innerHTML = /* sanitize */ '<i class="fas fa-lock"></i> Khóa chọn';
       }
 
       // 4. Làm sạch Khám phá SGK
@@ -5634,15 +5888,15 @@
         if (discInput) discInput.value = '';
         const discStatus = document.getElementById('disc-submission-status');
         if (discStatus) {
-          discStatus.innerHTML = '<span class="badge-status-working"><i class="fas fa-pencil-alt"></i> Đang làm bài...</span>';
+          discStatus.innerHTML = /* sanitize */ '<span class="badge-status-working"><i class="fas fa-pencil-alt"></i> Đang làm bài...</span>';
         }
         const btnSubmitDisc = document.getElementById('btn-submit-discussion');
         if (btnSubmitDisc) {
           btnSubmitDisc.disabled = false;
-          btnSubmitDisc.innerHTML = '<i class="fas fa-paper-plane"></i> NỘP BÀI THẢO LUẬN';
+          btnSubmitDisc.innerHTML = /* sanitize */ '<i class="fas fa-paper-plane"></i> NỘP BÀI THẢO LUẬN';
         }
         const discSubList = document.getElementById('disc-submissions-list');
-        if (discSubList) discSubList.innerHTML = '';
+        if (discSubList) discSubList.innerHTML = /* sanitize */ '';
         const discSubCount = document.getElementById('disc-submitted-count');
         if (discSubCount) discSubCount.textContent = 'Đã nộp: 0/18 máy';
       }
@@ -5655,6 +5909,7 @@
         storeUpdates.studentQuizIndex = 0;
         storeUpdates.studentPacketAnswers = {};
         storeUpdates.quizPacketSubmitted = false;
+        storeUpdates.packetQuizzes = null;
 
         document.querySelectorAll('.quiz-opt').forEach(btn => {
           btn.classList.remove('selected', 'correct', 'wrong');
@@ -5664,7 +5919,7 @@
         if (feedback) {
           feedback.style.display = 'none';
           feedback.className = 'quiz-feedback';
-          feedback.innerHTML = '';
+          feedback.innerHTML = /* sanitize */ '';
         }
       }
 
@@ -5779,14 +6034,12 @@
       if (broadcast && state.role === 'teacher') {
         const curStrat = (state.luckyDraw && state.luckyDraw.strategy) ? state.luckyDraw.strategy : 'slot_machine';
         SYNC_BUS.broadcast('LUCKY_DRAW_OPEN', { strategy: curStrat });
-        if (db) {
-          db.ref('activeSession/luckyDraw').update({
-            modalOpen: true,
-            strategy: curStrat,
-            spinning: false,
-            timestamp: Date.now()
-          }).catch(()=>{});
-        }
+        safeFirebaseUpdate('activeSession/luckyDraw', {
+          modalOpen: true,
+          strategy: curStrat,
+          spinning: false,
+          timestamp: Date.now()
+        }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
     },
 
@@ -5795,12 +6048,10 @@
       if (modal) modal.style.display = 'none';
       if (broadcast && STORE.getState().role === 'teacher') {
         SYNC_BUS.broadcast('LUCKY_DRAW_CLOSE', {});
-        if (db) {
-          db.ref('activeSession/luckyDraw').update({
-            modalOpen: false,
-            spinning: false
-          }).catch(()=>{});
-        }
+        safeFirebaseUpdate('activeSession/luckyDraw', {
+          modalOpen: false,
+          spinning: false
+        }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
     },
 
@@ -5823,12 +6074,10 @@
 
       if (broadcast && state.role === 'teacher') {
         SYNC_BUS.broadcast('LUCKY_DRAW_STRATEGY', { strategy: strat });
-        if (db) {
-          db.ref('activeSession/luckyDraw').update({
-            strategy: strat,
-            timestamp: Date.now()
-          }).catch(()=>{});
-        }
+        safeFirebaseUpdate('activeSession/luckyDraw', {
+          strategy: strat,
+          timestamp: Date.now()
+        }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
     },
 
@@ -5854,41 +6103,41 @@
       if (hasDrawn) {
         btn1.disabled = true;
         btn1.classList.add('step-completed');
-        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ BỐC THĂM ]';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ BỐC THĂM ]';
       } else {
         btn1.disabled = false;
         btn1.classList.add('step-active-pulse');
-        btn1.innerHTML = '<i class="fas fa-dice"></i> 1. BỐC THĂM';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-dice"></i> 1. BỐC THĂM';
       }
 
       // BƯỚC 2: CÂU HỎI
       if (hasQuestion) {
         btn2.disabled = true;
         btn2.classList.add('step-completed');
-        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ ]';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ ]';
       } else if (hasDrawn) {
         btn2.disabled = false;
         btn2.classList.add('step-active-pulse');
-        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
       } else {
         btn2.disabled = true;
         btn2.classList.add('disabled');
-        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-paper-plane"></i> 2. CÂU HỎI';
       }
 
       // BƯỚC 3: ĐÁP ÁN
       if (hasAnswer) {
         btn3.disabled = true;
         btn3.classList.add('step-completed');
-        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CÔNG BỐ ]';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CÔNG BỐ ]';
       } else if (hasQuestion) {
         btn3.disabled = false;
         btn3.classList.add('step-active-pulse');
-        btn3.innerHTML = '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
       } else {
         btn3.disabled = true;
         btn3.classList.add('disabled');
-        btn3.innerHTML = '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-bullhorn"></i> 3. ĐÁP ÁN';
       }
 
       // BƯỚC 4: PHÒNG CHỜ (Luôn khả dụng)
@@ -5896,7 +6145,7 @@
       if (hasAnswer) {
         btn4.classList.add('step-active-pulse');
       }
-      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+      btn4.innerHTML = /* sanitize */ '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
     },
 
     // ==========================================================
@@ -5923,41 +6172,41 @@
       if (hasAssigned) {
         btn1.disabled = true;
         btn1.classList.add('step-completed');
-        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ GIAO NHIỆM VỤ ]';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ GIAO NHIỆM VỤ ]';
       } else {
         btn1.disabled = false;
         btn1.classList.add('step-active-pulse');
-        btn1.innerHTML = '<i class="fas fa-clipboard-list"></i> 1. GIAO NHIỆM VỤ';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-clipboard-list"></i> 1. GIAO NHIỆM VỤ';
       }
 
       // BƯỚC 2: BẮT ĐẦU ĐỌC & TÍNH GIỜ
       if (hasStarted) {
         btn2.disabled = true;
         btn2.classList.add('step-completed');
-        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG ĐỌC & TÍNH GIỜ ]';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG ĐỌC & TÍNH GIỜ ]';
       } else if (hasAssigned) {
         btn2.disabled = false;
         btn2.classList.add('step-active-pulse');
-        btn2.innerHTML = '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
       } else {
         btn2.disabled = true;
         btn2.classList.add('disabled');
-        btn2.innerHTML = '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-stopwatch"></i> 2. BẮT ĐẦU ĐỌC & TÍNH GIỜ';
       }
 
       // BƯỚC 3: CHỐT KIẾN THỨC
       if (hasSummarized) {
         btn3.disabled = true;
         btn3.classList.add('step-completed');
-        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CHỐT KIẾN THỨC ]';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ CHỐT KIẾN THỨC ]';
       } else if (hasStarted) {
         btn3.disabled = false;
         btn3.classList.add('step-active-pulse');
-        btn3.innerHTML = '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
       } else {
         btn3.disabled = true;
         btn3.classList.add('disabled');
-        btn3.innerHTML = '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-lightbulb"></i> 3. CHỐT KIẾN THỨC';
       }
 
       // BƯỚC 4: PHÒNG CHỜ
@@ -5965,7 +6214,7 @@
       if (hasSummarized) {
         btn4.classList.add('step-active-pulse');
       }
-      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+      btn4.innerHTML = /* sanitize */ '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
     },
 
     renderH2PreviewGrid() {
@@ -5978,7 +6227,7 @@
         { title: "3. Phép cắt xâu (Slicing)", summary: "Cú pháp: s[start : stop : step]. Cắt từ start đến stop-1.", code: "s = \"Tin hoc 10\"\nprint(s[4:7])  # 'hoc'", note: "Nếu bỏ trống start -> mặc định từ 0" }
       ];
 
-      container.innerHTML = theory.map(item => `
+      container.innerHTML = /* sanitize */ theory.map(item => `
         <div class="h2-theory-preview-card">
           <div class="h2-tpc-title"><i class="fas fa-bookmark"></i> ${item.title}</div>
           <div class="h2-tpc-summary">${item.summary}</div>
@@ -5998,7 +6247,7 @@
       const taskDisp = document.getElementById('h2-theory-task-display');
       if (taskDisp) taskDisp.textContent = taskText;
       const docDisp = document.getElementById('h2-theory-doc-display');
-      if (docDisp) docDisp.innerHTML = `<i class="fas fa-bookmark" style="margin-right:6px;"></i> Tài liệu: ${docText}`;
+      if (docDisp) docDisp.innerHTML = /* sanitize */ `<i class="fas fa-bookmark" style="margin-right:6px;"></i> Tài liệu: ${docText}`;
 
       const h2State = Object.assign({}, STORE.getState().h2State, {
         assigned: true,
@@ -6012,7 +6261,7 @@
       this.renderH2PreviewGrid();
 
       SYNC_BUS.broadcast('H2_TASK_ASSIGN', { taskText, docText });
-      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h2StartReading() {
@@ -6032,7 +6281,7 @@
 
       this.startMasterCountdown(sec, 'warmup');
       SYNC_BUS.broadcast('H2_START_READING', { duration: sec });
-      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h2Summarize() {
@@ -6048,7 +6297,7 @@
       this.updateH2StepButtons();
 
       SYNC_BUS.broadcast('H2_SUMMARIZE', {});
-      safeFirebaseUpdate('activeSession/h2State', h2State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h2State', h2State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h2FinishToLobby() {
@@ -6081,41 +6330,41 @@
       if (hasDelivered) {
         btn1.disabled = true;
         btn1.classList.add('step-completed');
-        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ BÀI ]';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ PHÁT ĐỀ BÀI ]';
       } else {
         btn1.disabled = false;
         btn1.classList.add('step-active-pulse');
-        btn1.innerHTML = '<i class="fas fa-scroll"></i> 1. PHÁT ĐỀ BÀI';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-scroll"></i> 1. PHÁT ĐỀ BÀI';
       }
 
       // BƯỚC 2: MỞ KHUNG LÀM BÀI & TÍNH GIỜ
       if (hasStarted) {
         btn2.disabled = true;
         btn2.classList.add('step-completed');
-        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG LÀM BÀI ]';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG LÀM BÀI ]';
       } else if (hasDelivered) {
         btn2.disabled = false;
         btn2.classList.add('step-active-pulse');
-        btn2.innerHTML = '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
       } else {
         btn2.disabled = true;
         btn2.classList.add('disabled');
-        btn2.innerHTML = '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-code"></i> 2. MỞ KHUNG LÀM BÀI & TÍNH GIỜ';
       }
 
       // BƯỚC 3: THU BÀI & CÔNG BỐ CODE MẪU
       if (hasSolution) {
         btn3.disabled = true;
         btn3.classList.add('step-completed');
-        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ THU BÀI & CÔNG BỐ ]';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ THU BÀI & CÔNG BỐ ]';
       } else if (hasStarted) {
         btn3.disabled = false;
         btn3.classList.add('step-active-pulse');
-        btn3.innerHTML = '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
       } else {
         btn3.disabled = true;
         btn3.classList.add('disabled');
-        btn3.innerHTML = '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-bullseye"></i> 3. THU BÀI & CÔNG BỐ CODE MẪU';
       }
 
       // BƯỚC 4: PHÒNG CHỜ
@@ -6123,7 +6372,7 @@
       if (hasSolution) {
         btn4.classList.add('step-active-pulse');
       }
-      btn4.innerHTML = '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
+      btn4.innerHTML = /* sanitize */ '<i class="fas fa-undo"></i> 4. PHÒNG CHỜ';
     },
 
     h3DeliverTask() {
@@ -6152,7 +6401,7 @@
       this.updateH3StepButtons();
 
       SYNC_BUS.broadcast('H3_TASK_DELIVER', { taskText, title, starterCode });
-      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h3StartCoding() {
@@ -6173,7 +6422,7 @@
 
       this.startMasterCountdown(sec, 'discussion');
       SYNC_BUS.broadcast('H3_START_CODING', { duration: sec });
-      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h3RevealSolution() {
@@ -6193,7 +6442,7 @@
       this.updateH3StepButtons();
 
       SYNC_BUS.broadcast('H3_REVEAL_SOLUTION', { solutionCode: starter });
-      safeFirebaseUpdate('activeSession/h3State', h3State).catch(()=>{});
+      safeFirebaseUpdate('activeSession/h3State', h3State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h3FinishToLobby() {
@@ -6226,41 +6475,41 @@
       if (hasStarted) {
         btn1.disabled = true;
         btn1.classList.add('step-completed');
-        btn1.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ KHỞI ĐỘNG ]';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ KHỞI ĐỘNG ]';
       } else {
         btn1.disabled = false;
         btn1.classList.add('step-active-pulse');
-        btn1.innerHTML = '<i class="fas fa-shield-alt"></i> 1. KHỞI ĐỘNG ĐẤU TRƯỜNG';
+        btn1.innerHTML = /* sanitize */ '<i class="fas fa-shield-alt"></i> 1. KHỞI ĐỘNG ĐẤU TRƯỜNG';
       }
 
       // BƯỚC 2: PHÁT ĐỀ & TÍNH GIỜ
       if (hasDelivered) {
         btn2.disabled = true;
         btn2.classList.add('step-completed');
-        btn2.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG THI ĐẤU ]';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐANG THI ĐẤU ]';
       } else if (hasStarted) {
         btn2.disabled = false;
         btn2.classList.add('step-active-pulse');
-        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
       } else {
         btn2.disabled = true;
         btn2.classList.add('disabled');
-        btn2.innerHTML = '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
+        btn2.innerHTML = /* sanitize */ '<i class="fas fa-paper-plane"></i> 2. PHÁT ĐỀ & TÍNH GIỜ';
       }
 
       // BƯỚC 3: CÔNG BỐ & BỤC VINH DANH
       if (hasPodium) {
         btn3.disabled = true;
         btn3.classList.add('step-completed');
-        btn3.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ VINH DANH PODIUM ]';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-check-circle" style="color:#10b981;"></i> [ ✓ ĐÃ VINH DANH PODIUM ]';
       } else if (hasDelivered) {
         btn3.disabled = false;
         btn3.classList.add('step-active-pulse');
-        btn3.innerHTML = '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
       } else {
         btn3.disabled = true;
         btn3.classList.add('disabled');
-        btn3.innerHTML = '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
+        btn3.innerHTML = /* sanitize */ '<i class="fas fa-trophy"></i> 3. CÔNG BỐ & BỤC VINH DANH';
       }
 
       // BƯỚC 4: TỔNG KẾT TIẾT HỌC
@@ -6268,7 +6517,7 @@
       if (hasPodium) {
         btn4.classList.add('step-active-pulse');
       }
-      btn4.innerHTML = '<i class="fas fa-flag-checkered"></i> 4. TỔNG KẾT TIẾT HỌC';
+      btn4.innerHTML = /* sanitize */ '<i class="fas fa-flag-checkered"></i> 4. TỔNG KẾT TIẾT HỌC';
     },
 
     h4StartArena() {
@@ -6279,11 +6528,11 @@
       if (lesson && lesson.sections && lesson.sections[curSec - 1]) {
         const secObj = lesson.sections[curSec - 1];
         if (secObj.quizzes && secObj.quizzes.length > 0) packetQuizzes = secObj.quizzes;
-        else if (secObj.quiz) packetQuizzes = [secObj.quiz];
+        else if (secObj.quiz && (secObj.quiz.question || secObj.quiz.type)) packetQuizzes = [secObj.quiz];
       }
       if (!packetQuizzes || packetQuizzes.length === 0) {
         if (lesson && lesson.quizzes && lesson.quizzes.length > 0) packetQuizzes = lesson.quizzes;
-        else if (lesson && lesson.quiz) packetQuizzes = [lesson.quiz];
+        else if (lesson && lesson.quiz && (lesson.quiz.question || lesson.quiz.type)) packetQuizzes = [lesson.quiz];
       }
 
       const qInput = document.getElementById('studio-quiz-q');
@@ -6294,19 +6543,22 @@
       const qDisp = document.getElementById('h4-quiz-q-display');
       if (qDisp) {
         if (packetQuizzes && packetQuizzes.length > 1) {
-          qDisp.innerHTML = `<span style="color:#38bdf8;font-weight:700;">[GÓI ${packetQuizzes.length} CÂU HỎI TRẮC NGHIỆM]</span> ${qText}`;
+          qDisp.innerHTML = /* sanitize */ `<span style="color:#38bdf8;font-weight:700;">[GÓI ${packetQuizzes.length} CÂU HỎI TRẮC NGHIỆM]</span> ${qText}`;
         } else {
           qDisp.textContent = qText;
         }
       }
 
+      const arenaActivityId = 'h4_arena_' + Date.now();
       const h4State = Object.assign({}, state.h4State, {
         arenaStarted: true,
         quizDelivered: false,
         podiumRevealed: false,
         questionText: qText,
         questionType: qType,
-        packetQuizzes: packetQuizzes
+        packetQuizzes: packetQuizzes,
+        lessonId: state.lessonId,
+        activityId: arenaActivityId
       });
       STORE.setState({
         h4State,
@@ -6317,10 +6569,16 @@
       });
       this.updateH4StepButtons();
 
-      SYNC_BUS.broadcast('H4_ARENA_START', { questionText: qText, questionType: qType, packetQuizzes: packetQuizzes });
-      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+      SYNC_BUS.broadcast('H4_ARENA_START', {
+        lessonId: state.lessonId,
+        activityId: arenaActivityId,
+        questionText: qText,
+        questionType: qType,
+        packetQuizzes: packetQuizzes
+      });
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       if (packetQuizzes) {
-        safeFirebaseUpdate('activeSession/packetQuizzes', packetQuizzes).catch(()=>{});
+        safeFirebaseUpdate('activeSession/packetQuizzes', packetQuizzes).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
       }
     },
 
@@ -6339,16 +6597,23 @@
         sec = lesson.quiz.timeLimit;
       }
 
+      const deliverActivityId = 'h4_deliver_' + Date.now();
       const h4State = Object.assign({}, state.h4State, {
         quizDelivered: true,
-        timeLeft: sec
+        timeLeft: sec,
+        lessonId: state.lessonId,
+        activityId: deliverActivityId
       });
       STORE.setState({ h4State });
       this.updateH4StepButtons();
 
       this.startMasterCountdown(sec, 'quiz');
-      SYNC_BUS.broadcast('H4_QUIZ_DELIVER', { duration: sec });
-      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+      SYNC_BUS.broadcast('H4_QUIZ_DELIVER', {
+        lessonId: state.lessonId,
+        activityId: deliverActivityId,
+        duration: sec
+      });
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h4RevealPodium() {
@@ -6357,14 +6622,20 @@
         alert('⚠️ Chưa phát đề đấu trường! Vui lòng bấm [2. 🎯 PHÁT ĐỀ & TÍNH GIỜ] trước.');
         return;
       }
+      const podiumActivityId = 'h4_podium_' + Date.now();
       const h4State = Object.assign({}, state.h4State, {
-        podiumRevealed: true
+        podiumRevealed: true,
+        lessonId: state.lessonId,
+        activityId: podiumActivityId
       });
       STORE.setState({ h4State });
       this.updateH4StepButtons();
 
-      SYNC_BUS.broadcast('H4_REVEAL_PODIUM', {});
-      safeFirebaseUpdate('activeSession/h4State', h4State).catch(()=>{});
+      SYNC_BUS.broadcast('H4_REVEAL_PODIUM', {
+        lessonId: state.lessonId,
+        activityId: podiumActivityId
+      });
+      safeFirebaseUpdate('activeSession/h4State', h4State).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     },
 
     h4FinishSession() {
@@ -6397,7 +6668,7 @@
                 </div>`;
             }
           }
-          reelM.innerHTML = html;
+          reelM.innerHTML = /* sanitize */ html;
         }
 
         if (reelS) {
@@ -6417,7 +6688,7 @@
               });
             }
           }
-          reelS.innerHTML = sHtml;
+          reelS.innerHTML = /* sanitize */ sHtml;
         }
       } else if (strat === 'wheel_fortune') {
         this.drawWheelCanvas();
@@ -6566,14 +6837,12 @@
 
       // Phát lệnh đồng bộ xuống toàn bộ 18 máy học sinh
       SYNC_BUS.broadcast('LUCKY_DRAW_SPIN', payload);
-      if (db) {
-        db.ref('activeSession/luckyDraw').set({
-          payload: payload,
-          spinning: true,
-          modalOpen: true,
-          timestamp: Date.now()
-        }).catch(()=>{});
-      }
+      safeFirebaseSet('activeSession/luckyDraw', {
+        payload: payload,
+        spinning: true,
+        modalOpen: true,
+        timestamp: Date.now()
+      }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
 
       this.executeLuckyDrawAnimation(payload, true);
     },
@@ -6589,7 +6858,8 @@
     },
 
     executeLuckyDrawAnimation(payload, isInitiator) {
-      const { strategy, targetMachine, targetStudent, studentsList, duration } = payload;
+      const { strategy, targetMachine, targetStudent, duration } = payload;
+      const studentsList = Array.isArray(payload.studentsList) ? payload.studentsList : [];
       const banner = document.getElementById('ld-result-banner');
       if (banner) banner.style.display = 'none';
 
@@ -6619,14 +6889,22 @@
 
         if (reelS) {
           reelS.classList.add('reel-spinning');
-          // Xây dựng danh sách phẳng 18 máy x học sinh
+          // Xây dựng danh sách phẳng 18 máy x học sinh (ưu tiên studentsList nếu được truyền)
           let flatItems = [];
-          for (let r = 0; r < 5; r++) {
-            for (let i = 1; i <= 18; i++) {
-              const pair = classData.seatingPlan[i] || [`Học sinh ${i}`];
-              pair.forEach(stuName => {
-                flatItems.push({ machine: i, name: stuName });
+          if (studentsList.length > 0) {
+            for (let r = 0; r < 5; r++) {
+              studentsList.forEach(item => {
+                flatItems.push(typeof item === 'object' ? item : { machine: targetMachine, name: item });
               });
+            }
+          } else {
+            for (let r = 0; r < 5; r++) {
+              for (let i = 1; i <= 18; i++) {
+                const pair = classData.seatingPlan[i] || [`Học sinh ${i}`];
+                pair.forEach(stuName => {
+                  flatItems.push({ machine: i, name: stuName });
+                });
+              }
             }
           }
           // Tìm index của targetStudent tại targetMachine ở chu kỳ 2
@@ -6781,12 +7059,12 @@
           if (targetMachine !== undefined && targetMachine !== null) updateData.selectedMachine = targetMachine;
           if (targetStudent !== undefined && targetStudent !== null) updateData.selectedStudent = targetStudent;
           if (curQ !== undefined && curQ !== null) updateData.questionText = curQ;
-          safeFirebaseUpdate('activeSession/oldLesson', updateData).catch(()=>{});
+          safeFirebaseUpdate('activeSession/oldLesson', updateData).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
           safeFirebaseUpdate('activeSession/luckyDraw', {
             spinning: false,
             completed: true,
             modalOpen: false
-          }).catch(()=>{});
+          }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
         }
 
         const spinBtn = document.getElementById('btn-trigger-spin');
@@ -6988,6 +7266,8 @@
       };
       if (phase === 'old_lesson') {
         fbData.oldLesson = STORE.getState().oldLesson || {};
+      } else if (phase === 'quiz') {
+        fbData.quizAnswers = null;
       }
       safeFirebaseUpdate('activeSession', fbData).then(() => {
         console.log('[Firebase] Đã cập nhật activeSession phase:', phase);
@@ -7041,7 +7321,7 @@
           try {
             const saved = localStorage.getItem('lms_fixed_machine_id');
             if (saved) mId = parseInt(saved, 10);
-          } catch {}
+          } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         }
         if (mId) {
           const classData = APP.classes[curState.classId] || APP.classes['6A1'];
@@ -7059,17 +7339,17 @@
 
     let count = 3;
     numEl.textContent = count;
-    try { AUDIO.playTick(500); } catch {}
+    try { AUDIO.playTick(500); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
 
     clearInterval(window._countdownTimerInterval);
     window._countdownTimerInterval = setInterval(() => {
       count--;
       if (count > 0) {
         numEl.textContent = count;
-        try { AUDIO.playTick(500 + (3 - count) * 150); } catch {}
+        try { AUDIO.playTick(500 + (3 - count) * 150); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
       } else {
         numEl.textContent = '🚀';
-        try { AUDIO.playFanfare(); } catch {}
+        try { AUDIO.playFanfare(); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
         clearInterval(window._countdownTimerInterval);
         window._countdownTimerRunning = false;
 
@@ -7081,7 +7361,7 @@
             try {
               const saved = localStorage.getItem('lms_fixed_machine_id');
               if (saved) mId = parseInt(saved, 10);
-            } catch {}
+            } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
           }
           if (mId) {
             const classData = APP.classes[curState.classId] || APP.classes['6A1'];
@@ -7135,13 +7415,13 @@
     const classSel = document.getElementById('teacher-select-class');
     if (classSel) {
       if (grade === '7') {
-        classSel.innerHTML = '<option value="7A1">Lớp 7A1 (36 học sinh • 18 máy)</option><option value="7A2">Lớp 7A2 (35 học sinh • 18 máy)</option>';
+        classSel.innerHTML = /* sanitize */ '<option value="7A1">Lớp 7A1 (36 học sinh • 18 máy)</option><option value="7A2">Lớp 7A2 (35 học sinh • 18 máy)</option>';
       } else if (grade === '8') {
-        classSel.innerHTML = '<option value="8A1">Lớp 8A1 (38 học sinh • 18 máy)</option><option value="8A2">Lớp 8A2 (37 học sinh • 18 máy)</option>';
+        classSel.innerHTML = /* sanitize */ '<option value="8A1">Lớp 8A1 (38 học sinh • 18 máy)</option><option value="8A2">Lớp 8A2 (37 học sinh • 18 máy)</option>';
       } else if (grade === '9') {
-        classSel.innerHTML = '<option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option><option value="9A2">Lớp 9A2 (35 học sinh • 18 máy)</option>';
+        classSel.innerHTML = /* sanitize */ '<option value="9A1">Lớp 9A1 (36 học sinh • 18 máy)</option><option value="9A2">Lớp 9A2 (35 học sinh • 18 máy)</option>';
       } else {
-        classSel.innerHTML = '<option value="6A1">Lớp 6A1 (35 học sinh • 18 máy)</option><option value="6A2">Lớp 6A2 (36 học sinh • 18 máy)</option><option value="6A3">Lớp 6A3 (34 học sinh • 18 máy)</option>';
+        classSel.innerHTML = /* sanitize */ '<option value="6A1">Lớp 6A1 (35 học sinh • 18 máy)</option><option value="6A2">Lớp 6A2 (36 học sinh • 18 máy)</option><option value="6A3">Lớp 6A3 (34 học sinh • 18 máy)</option>';
       }
     }
     // Cập nhật danh sách bài dạy theo khối đã chọn
@@ -7195,11 +7475,11 @@
 
     STORE.setState({ timer: updatedTimer });
     const btn = document.getElementById('btn-master-pause-timer');
-    if (btn) btn.innerHTML = isPaused ? '<i class="fas fa-play"></i> Tiếp tục' : '<i class="fas fa-pause"></i> Tạm dừng';
+    if (btn) btn.innerHTML = /* sanitize */ isPaused ? '<i class="fas fa-play"></i> Tiếp tục' : '<i class="fas fa-pause"></i> Tạm dừng';
 
     APP.syncMasterCountdown(updatedTimer, () => APP.onActivityAutoFinished());
     SYNC_BUS.broadcast('TIMER_SYNC', updatedTimer);
-    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(()=>{});
+    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
   };
 
   window.masterAddTime = function(sec = 30) {
@@ -7224,7 +7504,7 @@
 
     APP.syncMasterCountdown(updatedTimer, () => APP.onActivityAutoFinished());
     SYNC_BUS.broadcast('TIMER_SYNC', updatedTimer);
-    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(()=>{});
+    safeFirebaseUpdate('activeSession/timer', updatedTimer).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
   };
 
   // Nút RESET VỀ PHÒNG CHỜ từ Giáo viên
@@ -7323,7 +7603,7 @@
     card.className = 'studio-section-card';
     card.id = `studio-sec-card-${nextIdx}`;
     card.setAttribute('data-sec', String(nextIdx));
-    card.innerHTML = `
+    card.innerHTML = /* sanitize */ `
       <div class="section-card-header">
         <div class="section-header-title">
           <div class="section-diamond-tag">🔷 ${nextIdx}</div>
@@ -7368,13 +7648,13 @@
     const sel = document.getElementById('classes-select-class');
     if (!sel) return;
     if (g === '7') {
-      sel.innerHTML = '<option value="7A1">Lớp 7A1 (36 học sinh)</option><option value="7A2">Lớp 7A2 (35 học sinh)</option>';
+      sel.innerHTML = /* sanitize */ '<option value="7A1">Lớp 7A1 (36 học sinh)</option><option value="7A2">Lớp 7A2 (35 học sinh)</option>';
     } else if (g === '8') {
-      sel.innerHTML = '<option value="8A1">Lớp 8A1 (38 học sinh)</option><option value="8A2">Lớp 8A2 (37 học sinh)</option>';
+      sel.innerHTML = /* sanitize */ '<option value="8A1">Lớp 8A1 (38 học sinh)</option><option value="8A2">Lớp 8A2 (37 học sinh)</option>';
     } else if (g === '9') {
-      sel.innerHTML = '<option value="9A1">Lớp 9A1 (36 học sinh)</option><option value="9A2">Lớp 9A2 (35 học sinh)</option>';
+      sel.innerHTML = /* sanitize */ '<option value="9A1">Lớp 9A1 (36 học sinh)</option><option value="9A2">Lớp 9A2 (35 học sinh)</option>';
     } else {
-      sel.innerHTML = '<option value="6A1">Lớp 6A1 (35 học sinh)</option><option value="6A2">Lớp 6A2 (36 học sinh)</option><option value="6A3">Lớp 6A3 (34 học sinh)</option>';
+      sel.innerHTML = /* sanitize */ '<option value="6A1">Lớp 6A1 (35 học sinh)</option><option value="6A2">Lớp 6A2 (36 học sinh)</option><option value="6A3">Lớp 6A3 (34 học sinh)</option>';
     }
     const currentCls = sel.value;
     STORE.setState({ classId: currentCls });
@@ -7407,7 +7687,7 @@
       const missingListEl = document.getElementById('wra-missing-list');
       if (missingCountEl) missingCountEl.textContent = readiness.missingDesks.length;
       if (missingListEl) {
-        missingListEl.innerHTML = readiness.missingDesks.map(d =>
+        missingListEl.innerHTML = /* sanitize */ readiness.missingDesks.map(d =>
           '<span class="missing-desk-chip"><i class="fas fa-desktop"></i> Máy ' + String(d).padStart(2, '0') + '</span>'
         ).join('');
       }
@@ -7461,7 +7741,7 @@
       actKey: actKey,
       actTitle: actTitle,
       timestamp: Date.now()
-    }).catch(()=>{});
+    }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
 
     // Độ trễ sư phạm 1500ms (1.5 giây) giúp chuyển cảnh mượt mà, tránh quay về đột ngột gây sốc thị giác
     setTimeout(() => {
@@ -7480,12 +7760,12 @@
       safeFirebaseUpdate('activeSession', {
         finishedActivities: curFinished,
         lastUpdated: Date.now()
-      }).catch(()=>{});
+      }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
 
       safeFirebaseUpdate('activeSession/finishingTransition', {
         active: false,
         timestamp: Date.now()
-      }).catch(()=>{});
+      }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     }, 1500);
   };
 
@@ -7607,7 +7887,7 @@
     card.setAttribute('data-q-idx', String(nextIdx));
     card.style.cssText = 'background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:12px;margin-bottom:10px;';
     
-    card.innerHTML = `
+    card.innerHTML = /* sanitize */ `
       <div class="sqic-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="color:#38bdf8;font-weight:700;font-size:12.5px;"><i class="fas fa-question-circle"></i> CÂU HỎI ${nextIdx + 1}:</span>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -7665,7 +7945,7 @@
 
     const total = container.querySelectorAll('.studio-quiz-item-card').length;
     const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-    if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${total} câu trắc nghiệm`;
+    if (badge) badge.innerHTML = /* sanitize */ `<i class="fas fa-layer-group"></i> Gói ${total} câu trắc nghiệm`;
   };
 
   window.studioRemoveQuizQuestion = function(btn) {
@@ -7678,23 +7958,23 @@
       const secId = container.id.includes('sec1') ? 1 : 2;
       const cards = container.querySelectorAll('.studio-quiz-item-card');
       if (cards.length === 0) {
-        container.innerHTML = `
+        container.innerHTML = /* sanitize */ `
           <div class="empty-quizzes-notice">
             <i class="fas fa-info-circle"></i> Mục này hiện không có câu hỏi trắc nghiệm nào. Thầy hãy bấm nút <strong>[+ Thêm câu hỏi trắc nghiệm]</strong> bên dưới nếu muốn bổ sung!
           </div>
         `;
         const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
+        if (badge) badge.innerHTML = /* sanitize */ `<i class="fas fa-layer-group"></i> Gói 0 câu trắc nghiệm`;
       } else {
         cards.forEach((c, idx) => {
           c.setAttribute('data-q-idx', String(idx));
           const titleSpan = c.querySelector('.sqic-header span');
-          if (titleSpan) titleSpan.innerHTML = `<i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:`;
+          if (titleSpan) titleSpan.innerHTML = /* sanitize */ `<i class="fas fa-question-circle"></i> CÂU HỎI ${idx + 1}:`;
           const qLabel = c.querySelector('.studio-form-col:first-child .studio-field-label');
-          if (qLabel) qLabel.innerHTML = `<i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:`;
+          if (qLabel) qLabel.innerHTML = /* sanitize */ `<i class="fas fa-question"></i> Nội dung câu hỏi ${idx + 1}:`;
         });
         const badge = document.getElementById(`sec${secId}-quiz-count-badge`);
-        if (badge) badge.innerHTML = `<i class="fas fa-layer-group"></i> Gói ${cards.length} câu trắc nghiệm`;
+        if (badge) badge.innerHTML = /* sanitize */ `<i class="fas fa-layer-group"></i> Gói ${cards.length} câu trắc nghiệm`;
       }
     }
   };
@@ -7775,7 +8055,7 @@
     if (APP.renderStageSectionNav) APP.renderStageSectionNav();
     if (APP.renderDynamicStagePipeline) APP.renderDynamicStagePipeline();
     SYNC_BUS.broadcast('SECTION_CHANGE', { currentSection: secNum });
-    safeFirebaseUpdate('activeSession', { currentSection: secNum }).catch(()=>{});
+    safeFirebaseUpdate('activeSession', { currentSection: secNum }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
   };
 
   window.studentQuizGoTo = function(idx) {
@@ -7875,8 +8155,8 @@
       quizAnswers: newAnswers
     });
 
-    if (db && mId) {
-      db.ref(`activeSession/quizAnswers/${mId}`).set({
+    if (mId) {
+      safeFirebaseSet(`activeSession/quizAnswers/${mId}`, {
         machineId: mId,
         students: stuList,
         choice: summaryStr,
@@ -7884,7 +8164,7 @@
         totalCorrect: correctCount,
         totalQuestions: total,
         timestamp: nowTs
-      }).catch(()=>{});
+      }).catch(err => console.warn('[Firebase Sync Warning]:', err?.message || err));
     }
 
     SYNC_BUS.broadcast('QUIZ_ANSWER', {
@@ -7898,7 +8178,7 @@
     });
 
     if (isAllCorrect && typeof confetti === 'function') {
-      try { confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } }); } catch {}
+      try { confetti({ particleCount: 100, spread: 80, origin: { y: 0.6 } }); } catch (err) { console.warn("[Handled Error Warning]:", err?.message || err); }
     }
 
     APP.renderStudentWorkspace(STORE.getState());

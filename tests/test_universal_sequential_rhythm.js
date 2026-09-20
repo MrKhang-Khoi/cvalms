@@ -18,6 +18,12 @@ function startStaticServer() {
         filePath = path.join(ROOT_DIR, 'index.html');
       }
 
+      if (req.url === '/favicon.ico') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       const ext = path.extname(filePath);
       const mimeTypes = {
         '.html': 'text/html; charset=utf-8',
@@ -64,8 +70,11 @@ async function runUniversalSequentialRhythmTest() {
   const consoleErrors = [];
   [teacherPage, studentPage].forEach((page, idx) => {
     page.on('console', msg => {
-      if (msg.type() === 'error' && !msg.text().includes('favicon')) {
+      if (msg.type() === 'error') {
+        console.log(`[${idx === 0 ? 'Teacher' : 'Student'} Console Error]:`, msg.text());
         consoleErrors.push({ page: idx === 0 ? 'Teacher' : 'Student', text: msg.text() });
+      } else if (msg.type() === 'warning' || msg.text().includes('Firebase') || msg.text().includes('LMS')) {
+        console.log(`[${idx === 0 ? 'Teacher' : 'Student'} Console Info]:`, msg.text());
       }
     });
     page.on('pageerror', err => {
@@ -78,15 +87,36 @@ async function runUniversalSequentialRhythmTest() {
     await dialog.accept();
   });
 
+  studentPage.on('dialog', async dialog => {
+    console.log(`   [Student Dialog]:`, dialog.message());
+    await dialog.accept();
+  });
+
   try {
     console.log('[Setup] Dọn dẹp Firebase activeSession sang trạng thái chuẩn...');
     try {
+      const os = require('os');
+      const cachePath = path.join(os.tmpdir(), 'cvalms_fb_token_cache.json');
+      // Dọn sạch file cache cũ trên đĩa nếu còn tồn tại
+      try { if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath); } catch (e) { /* ignore */ }
+
+      // Cấp phát token ẩn danh an toàn trong bộ nhớ RAM, tuyệt đối không lưu plaintext ra đĩa
       const authRes = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCC2tCURXYAMpdN687kcjY537K7zUhh_Fg', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ returnSecureToken: true })
       }).then(r => r.json());
-      await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=' + authRes.idToken, {
+      const idToken = authRes.idToken || '';
+
+      // Kiểm tra tính hợp lực thực tế qua probe.ok (HTTP 200-299)
+      if (idToken) {
+        const probe = await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/.json?auth=' + idToken + '&shallow=true');
+        if (!probe.ok) {
+          throw new Error(`Firebase token probe failed with HTTP status ${probe.status}`);
+        }
+      }
+
+      await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=' + idToken, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -121,17 +151,15 @@ async function runUniversalSequentialRhythmTest() {
     await teacherPage.waitForSelector('#screen-teacher.active', { timeout: 5000 });
     console.log('   -> Giáo viên đăng nhập thành công!');
 
-    // Reset sạch toàn bộ phòng máy về trạng thái ban đầu
-    await teacherPage.evaluate(() => {
-      if (typeof window.teacherResetAllToLobby === 'function') {
-        window.teacherResetAllToLobby();
-      }
-    });
-    await teacherPage.waitForTimeout(600);
+    // Mở Tab Sân khấu và kích hoạt lớp học để mở khóa toàn bộ 18 máy phòng thực hành
+    await teacherPage.click('#btn-tnav-stage');
+    await teacherPage.waitForTimeout(300);
 
-    // Kích hoạt lớp 10A1 và mở khóa máy
-    await teacherPage.click('#btn-start-class-session');
-    await teacherPage.waitForTimeout(600);
+    const isStartVisible = await teacherPage.isVisible('#btn-start-class-session');
+    if (isStartVisible) {
+      await teacherPage.click('#btn-start-class-session');
+      await teacherPage.waitForTimeout(600);
+    }
 
     // Học sinh vào máy 01
     console.log('   -> Học sinh Máy 01 tham gia phòng học...');
@@ -140,7 +168,9 @@ async function runUniversalSequentialRhythmTest() {
     await studentPage.reload({ waitUntil: 'networkidle' });
     await studentPage.waitForTimeout(400);
 
-    await studentPage.waitForSelector('#computers-grid', { timeout: 5000 });
+    // Chờ sảnh học sinh nhận trạng thái mở khóa thực tế từ Firebase RTDB
+    await studentPage.waitForSelector('#computers-grid:not(.locked-state)', { timeout: 15000 });
+
     await studentPage.locator('#computers-grid .computer-card').nth(0).click();
     await studentPage.waitForTimeout(300);
     await studentPage.click('#btn-modal-confirm');
@@ -196,7 +226,12 @@ async function runUniversalSequentialRhythmTest() {
     await teacherPage.click('#btn-ol-step-1-draw');
     await teacherPage.waitForSelector('#modal-lucky-draw', { state: 'visible' });
     await teacherPage.click('#btn-trigger-spin');
-    await teacherPage.waitForTimeout(4600);
+
+    // Chờ vòng quay bốc thăm hoàn tất và Nút 2 mở khóa
+    await teacherPage.waitForFunction(() => {
+      const btn2 = document.getElementById('btn-ol-step-2-question');
+      return btn2 && !btn2.disabled;
+    }, { timeout: 15000 });
 
     if (await teacherPage.isVisible('#btn-close-lucky-draw')) {
       await teacherPage.click('#btn-close-lucky-draw');
@@ -451,6 +486,13 @@ async function runUniversalSequentialRhythmTest() {
     console.log('🎉 TẤT CẢ 4 HOẠT ĐỘNG ĐỀU TUÂN THỦ CHUẨN XÁC 100% QUY TRÌNH 4 NÚT TUẦN TỰ!');
     console.log('================================================================');
   } finally {
+    try {
+      const os = require('os');
+      const cachePath = path.join(os.tmpdir(), 'cvalms_fb_token_cache.json');
+      if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+    } catch (err) {
+      console.warn('[Cache Cleanup Warning]:', err?.message || err);
+    }
     await browser.close();
     server.close();
   }

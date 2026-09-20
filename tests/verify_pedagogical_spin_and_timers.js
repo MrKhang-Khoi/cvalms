@@ -142,31 +142,31 @@ async function runVerification() {
     });
     await teacherPage.waitForTimeout(500);
 
-    // Chọn Khối 12
-    await teacherPage.selectOption('#teacher-select-grade', '12');
+    // Chọn Khối 8 (THCS)
+    await teacherPage.selectOption('#teacher-select-grade', '8');
     await teacherPage.evaluate(() => {
       window.teacherOnGradeChange();
     });
     await teacherPage.waitForTimeout(400);
 
-    // Kiểm tra danh sách lớp có 12A2
-    const class12A2Option = await teacherPage.evaluate(() => {
+    // Kiểm tra danh sách lớp có 8A2
+    const class8A2Option = await teacherPage.evaluate(() => {
       const sel = document.getElementById('teacher-select-class');
-      return sel ? !!sel.querySelector('option[value="12A2"]') : false;
+      return sel ? !!sel.querySelector('option[value="8A2"]') : false;
     });
-    console.log('  [PASS] Danh sách lớp có Lớp 12A2:', class12A2Option);
-    if (!class12A2Option) throw new Error('LỖI: Thiếu lớp 12A2 trong dropdown chọn lớp!');
+    console.log('  [PASS] Danh sách lớp có Lớp 8A2:', class8A2Option);
+    if (!class8A2Option) throw new Error('LỖI: Thiếu lớp 8A2 trong dropdown chọn lớp!');
 
-    await teacherPage.selectOption('#teacher-select-class', '12A2');
+    await teacherPage.selectOption('#teacher-select-class', '8A2');
 
-    // Kiểm tra câu hỏi tự động nạp theo bài AI
+    // Kiểm tra câu hỏi tự động nạp theo bài Tin học 8
     const qInputValue = await teacherPage.evaluate(() => {
       const qIn = document.getElementById('otc-question-input');
       return qIn ? qIn.value.trim() : '';
     });
     console.log('  [PASS] Ô câu hỏi bài cũ (#otc-question-input) tự động nạp:', qInputValue);
-    if (!qInputValue.includes('Trí tuệ nhân tạo') && !qInputValue.includes('Narrow AI')) {
-      throw new Error('LỖI: Ô câu hỏi chưa nạp đúng câu hỏi Tin học 12 (giá trị hiện tại: ' + qInputValue + ')');
+    if (!qInputValue.includes('máy tính') && !qInputValue.includes('linh kiện') && !qInputValue.includes('Tin học')) {
+      throw new Error('LỖI: Ô câu hỏi chưa nạp đúng câu hỏi Tin học 8 (giá trị hiện tại: ' + qInputValue + ')');
     }
 
     // Bấm kích hoạt lớp học
@@ -211,17 +211,17 @@ async function runVerification() {
       };
     });
 
-    // Học sinh nhận diện lớp 12A2
+    // Học sinh nhận diện lớp 8A2
     await studentPage.evaluate(() => {
       window.STORE.setState({
         unlocked: true,
-        classId: '12A2',
-        grade: '12'
+        classId: '8A2',
+        grade: '8'
       });
     });
     await studentPage.waitForTimeout(400);
 
-    // Chọn Máy 01 (ở 12A2 là Nguyễn Thái Học • Trần Thị Dung)
+    // Chọn Máy 01 (ở 8A2 là Nguyễn Thái Học • Trần Thị Dung)
     await studentPage.evaluate(() => {
       window.onSelectDesk(1);
     });
@@ -230,7 +230,7 @@ async function runVerification() {
     if (confirmBtn) await confirmBtn.click();
     await studentPage.waitForTimeout(600);
 
-    // Kiểm tra Topbar học sinh hiện đúng Lớp 12A2
+    // Kiểm tra Topbar học sinh hiện đúng Lớp 8A2
     const studentHeaderData = await studentPage.evaluate(() => {
       const classLabel = document.getElementById('sh-class-label');
       const studentsLabel = document.getElementById('sh-students-label');
@@ -240,8 +240,8 @@ async function runVerification() {
       };
     });
     console.log('  [PASS] Topbar học sinh hiển thị:', studentHeaderData);
-    if (!studentHeaderData.classText.includes('12A2')) {
-      throw new Error('LỖI: Topbar học sinh không hiện đúng Lớp 12A2 (' + studentHeaderData.classText + ')');
+    if (!studentHeaderData.classText.includes('8A2')) {
+      throw new Error('LỖI: Topbar học sinh không hiện đúng Lớp 8A2 (' + studentHeaderData.classText + ')');
     }
     if (!studentHeaderData.studentsText.includes('Nguyễn Thái Học')) {
       throw new Error('LỖI: Danh sách học sinh máy 01 rơi về lớp khác (' + studentHeaderData.studentsText + ')');
@@ -317,8 +317,8 @@ async function runVerification() {
       throw new Error('LỖI SƯ PHẠM: Nút 3 (Đáp án) chưa bị khóa khi chưa phát câu hỏi!');
     }
 
-    // Thầy bấm Nút 1: Bốc thăm ngẫu nhiên học sinh lớp 12A2 (Máy 01: Nguyễn Thái Học)
-    console.log('\n--- BƯỚC 1: BỐC THĂM ĐÍCH DANH HỌC SINH LỚP 12A2 ---');
+    // Thầy bấm Nút 1: Bốc thăm ngẫu nhiên học sinh lớp 8A2 (Máy 01: Nguyễn Thái Học)
+    console.log('\n--- BƯỚC 1: BỐC THĂM ĐÍCH DANH HỌC SINH LỚP 8A2 ---');
     await teacherPage.evaluate(() => {
       const payload = {
         strategy: 'slot_machine',

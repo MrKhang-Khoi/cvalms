@@ -18,6 +18,12 @@ function startStaticServer() {
         filePath = path.join(ROOT_DIR, 'index.html');
       }
 
+      if (req.url === '/favicon.ico') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       const ext = path.extname(filePath);
       const mimeTypes = {
         '.html': 'text/html; charset=utf-8',
@@ -70,7 +76,11 @@ async function runVisualResponsivenessTest() {
 
       const context = await browser.newContext({ viewport: { width: res.width, height: res.height } });
       const page = await context.newPage();
-      page.on('console', msg => { if (msg.type() === 'error') errors.push(`[Console Error ${res.name}]: ${msg.text()}`); });
+      page.on('console', msg => {
+        if (msg.type() === 'error') {
+          errors.push(`[Console Error ${res.name}]: ${msg.text()}`);
+        }
+      });
       page.on('dialog', async d => { await d.accept(); });
 
       // 1. Kiểm tra Màn hình Giáo viên (Teacher Dashboard)

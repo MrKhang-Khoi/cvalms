@@ -18,6 +18,12 @@ function startStaticServer() {
         filePath = path.join(ROOT_DIR, 'index.html');
       }
 
+      if (req.url === '/favicon.ico') {
+        res.writeHead(204);
+        res.end();
+        return;
+      }
+
       const ext = path.extname(filePath);
       const mimeTypes = {
         '.html': 'text/html; charset=utf-8',
@@ -67,7 +73,7 @@ async function runAntiCheatAndConsistencyTests() {
   const consoleErrors = [];
   [teacherPage, m1Page, m2Page].forEach((page, idx) => {
     page.on('console', msg => {
-      if (msg.type() === 'error' && !msg.text().includes('favicon')) {
+      if (msg.type() === 'error') {
         consoleErrors.push(`Page ${idx} Error: ${msg.text()}`);
       }
     });
@@ -80,18 +86,51 @@ async function runAntiCheatAndConsistencyTests() {
     });
   });
 
+  // NGÂN HÀNG TRI THỨC ĐỘC LẬP CHUẨN SGK TIN HỌC (BLACKBOX TEST GROUND TRUTH)
+  const GROUND_TRUTH = {
+    singleChoice: {
+      question: 'Đặc điểm nào sau đây KHÔNG PHẢI là tính chất của thuật toán?',
+      correctKey: 'D' // Tính vô tận (thuật toán bắt buộc phải dừng sau số bước hữu hạn)
+    },
+    trueFalse: {
+      answers: { a: true, b: false, c: true, d: true }
+    },
+    shortAnswer: {
+      text: 'TinHoc'
+    }
+  };
+
+  let idToken = '';
+
   console.log('[Setup] Resetting Firebase activeSession to clean state...');
   try {
+    const os = require('os');
+    const cachePath = path.join(os.tmpdir(), 'cvalms_fb_token_cache.json');
+    // Dọn sạch file cache cũ trên đĩa nếu còn tồn tại
+    try { if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath); } catch (e) { /* ignore */ }
+
+    // Cấp phát token ẩn danh an toàn trong bộ nhớ RAM, tuyệt đối không lưu plaintext ra đĩa
     const authRes = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCC2tCURXYAMpdN687kcjY537K7zUhh_Fg', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ returnSecureToken: true })
     }).then(r => r.json());
-    await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=' + authRes.idToken, {
+    idToken = authRes.idToken || '';
+
+    // Kiểm tra tính hợp lực thực tế qua probe.ok (HTTP 200-299)
+    if (idToken) {
+      const probe = await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/.json?auth=' + idToken + '&shallow=true');
+      if (!probe.ok) {
+        throw new Error(`Firebase token probe failed with HTTP status ${probe.status}`);
+      }
+    }
+
+    await fetch('https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=' + idToken, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        lessonId: 'tin10_bai12',
+        lessonId: 'tin6_bai12',
+        classId: '6A1',
         currentPhase: 'waiting',
         sessionStarted: false,
         unlocked: true,
@@ -141,13 +180,18 @@ async function runAntiCheatAndConsistencyTests() {
       throw new Error(`Bước 3 trong Studio không phải Thực hành: ${step3Title}`);
     }
 
-    // Kiểm tra Step 4 trong Studio là Kahoot / Live Quiz
+    // Thiết lập cấu hình câu hỏi trắc nghiệm đồng bộ với Ground Truth chuẩn
+    await teacherPage.selectOption('#studio-quiz-correct', GROUND_TRUTH.singleChoice.correctKey);
     const quizQ = await teacherPage.inputValue('#studio-quiz-q');
     const quizType = await teacherPage.inputValue('#studio-quiz-type');
     const quizShuffle = await teacherPage.isChecked('#studio-quiz-shuffle');
     console.log('   -> Studio Bước 4 (Kahoot/Quiz):', quizQ.substring(0, 45) + '...');
-    console.log('   -> Quiz Type:', quizType, '| Anti-cheat Shuffle:', quizShuffle);
+    console.log('   -> Quiz Type:', quizType, '| Anti-cheat Shuffle:', quizShuffle, '| Ground Truth Key:', GROUND_TRUTH.singleChoice.correctKey);
     if (!quizQ) throw new Error('Không nạp được câu hỏi trắc nghiệm trong Studio');
+
+    // Lưu và đồng bộ kịch bản từ Studio
+    await teacherPage.click('#btn-studio-save-lesson');
+    await teacherPage.waitForTimeout(500);
 
     // Chuyển lại Tab Điều Khiển & Sân Khấu để kiểm tra Pipeline
     await teacherPage.click('#btn-tnav-stage');
@@ -192,6 +236,10 @@ async function runAntiCheatAndConsistencyTests() {
     await m1Page.waitForTimeout(400);
     await m2Page.waitForTimeout(400);
 
+    // Chờ 2 máy học sinh tự động nhận tín hiệu mở khóa từ Firebase RTDB thật
+    await m1Page.waitForSelector('#computers-grid:not(.locked-state)', { timeout: 15000 });
+    await m2Page.waitForSelector('#computers-grid:not(.locked-state)', { timeout: 15000 });
+
     // Máy 1 chọn bàn 1
     await m1Page.locator('#computers-grid .computer-card').nth(0).click();
     await m1Page.waitForTimeout(300);
@@ -209,6 +257,23 @@ async function runAntiCheatAndConsistencyTests() {
     console.log(`   -> Máy 1 ID: ${m1Occupied} | Máy 2 ID: ${m2Occupied}`);
     if (m1Occupied !== 1 || m2Occupied !== 2) throw new Error('Không phân vị trí chính xác cho Máy 1 và Máy 2');
 
+    // Xác nhận Giáo viên ghi nhận 2 máy học sinh tự động qua Firebase RTDB thật (Real Network Trace, cấm mock)
+    await teacherPage.waitForFunction(() => {
+      const s = window.STORE ? window.STORE.getState() : {};
+      const occ = s.occupiedMachines || {};
+      return Object.keys(occ).length >= 2;
+    }, { timeout: 15000 });
+    console.log('   ✅ Đã đồng bộ sĩ số Máy 1 và Máy 2 về Giáo viên qua Firebase Cloud RTDB!');
+
+    if (idToken) {
+      const verifyRes = await fetch(`https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession/machines.json?auth=${idToken}`);
+      const cloudMachines = await verifyRes.json();
+      console.log('   [Cloud RTDB Audit] Real Network Trace verified machines:', Object.keys(cloudMachines || {}));
+      if (!cloudMachines || !cloudMachines['1'] || !cloudMachines['2']) {
+        throw new Error('Firebase Cloud RTDB chưa nhận đủ Máy 1 và Máy 2!');
+      }
+    }
+
     // -------------------------------------------------------------
     // TEST 3: GIÁO VIÊN KÍCH HOẠT ĐẤU TRƯỜNG KAHOOT & TEST CHỐNG NHÌN BÀI
     // -------------------------------------------------------------
@@ -222,9 +287,9 @@ async function runAntiCheatAndConsistencyTests() {
     // Đợi hiệu ứng đếm ngược 3-2-1
     await teacherPage.waitForTimeout(3800);
 
-    // Chờ 2 máy học sinh chuyển sang view quiz
-    await m1Page.waitForSelector('#st-view-quiz.active', { timeout: 5000 });
-    await m2Page.waitForSelector('#st-view-quiz.active', { timeout: 5000 });
+    // Chờ 2 máy học sinh chuyển sang view quiz từ Firebase RTDB thật
+    await m1Page.waitForSelector('#st-view-quiz.active', { timeout: 15000 });
+    await m2Page.waitForSelector('#st-view-quiz.active', { timeout: 15000 });
     await m1Page.waitForTimeout(500);
 
     // Đọc thứ tự 4 đáp án trên Máy 1
@@ -271,9 +336,11 @@ async function runAntiCheatAndConsistencyTests() {
     // TEST 4: THỬ THÁCH CHỐNG LIẾC BÀI NHAU (SHOULDER-SURFING INVARIANT)
     // -------------------------------------------------------------
     console.log('\n--- TEST 4: CHỨNG MINH LIẾC BÀI BỊ TÍNH SAI, BẤM ĐÚNG THEO KEY ĐƯỢC ĐIỂM ---');
-    // Giả sử đáp án đúng là 'B'
-    // Máy 1 tìm phương án có key="B" và click chọn (làm thật, đúng)
-    await m1Page.click('.quiz-opt[data-qopt="B"]');
+    const expectedKey = GROUND_TRUTH.singleChoice.correctKey;
+    console.log(`   -> Đáp án chuẩn SGK Tin học độc lập (Ground Truth): [${expectedKey}]`);
+
+    // Máy 1 tìm phương án có key=expectedKey và click chọn (làm bài độc lập theo kiến thức chuẩn)
+    await m1Page.click(`.quiz-opt[data-qopt="${expectedKey}"]`);
     await m1Page.waitForTimeout(500);
 
     const m1Feedback = await m1Page.evaluate(() => {
@@ -284,13 +351,13 @@ async function runAntiCheatAndConsistencyTests() {
         text: fb ? fb.textContent.trim() : ''
       };
     });
-    console.log('   [Máy 01] Kết quả nộp đáp án B:', m1Feedback);
+    console.log(`   [Máy 01] Kết quả nộp đáp án độc lập ${expectedKey}:`, m1Feedback);
     if (!m1Feedback.isSuccess) {
-      throw new Error(`Máy 01 chọn đáp án B nhưng không nhận được thông báo Chính xác: ${m1Feedback.text}`);
+      throw new Error(`Máy 01 chọn đáp án ${expectedKey} nhưng không nhận được thông báo Chính xác: ${m1Feedback.text}`);
     }
 
-    // Bây giờ: Máy 2 liếc sang thấy Máy 1 bấm nút ở Slot X (vị trí mà Máy 1 bấm)
-    const m1ClickedSlot = m1Options.find(o => o.key === 'B').slot;
+    // Bây giờ: Máy 2 liếc sang thấy Máy 1 bấm nút ở Slot X (vị trí mà Máy 1 bấm theo Ground Truth)
+    const m1ClickedSlot = m1Options.find(o => o.key === expectedKey).slot;
     console.log(`   -> Máy 01 đã bấm nút ở Slot ${m1ClickedSlot}`);
 
     // Máy 2 "bắt chước" bấm đúng nút ở Slot đó (nhìn bài theo vị trí / màu sắc):
@@ -315,16 +382,17 @@ async function runAntiCheatAndConsistencyTests() {
     }
     console.log('   ✅ TEST 4 PASS: Máy 02 liếc nhìn bài đã bị hệ thống tính SAI triệt để!');
 
-    // Kiểm tra Bảng xếp hạng trên màn hình Giáo viên
-    await teacherPage.waitForTimeout(500);
+    // Kiểm tra Bảng xếp hạng trên màn hình Giáo viên tự động đồng bộ qua Firebase RTDB
+    await teacherPage.waitForFunction(() => {
+      const board = document.getElementById('quiz-leaderboard');
+      const text = board ? board.textContent.trim() : '';
+      return text.includes('Máy 01') || text.includes('Máy 1') || text.includes('An');
+    }, { timeout: 15000 });
     const teacherLeaderboard = await teacherPage.evaluate(() => {
       const board = document.getElementById('quiz-leaderboard');
       return board ? board.textContent.trim() : '';
     });
     console.log('   [Giáo viên] Leaderboard phản ánh kết quả:', teacherLeaderboard.substring(0, 100) + '...');
-    if (!teacherLeaderboard.includes('Máy 01') && !teacherLeaderboard.includes('Máy 1') && !teacherLeaderboard.includes('An')) {
-      throw new Error('Leaderboard giáo viên không hiển thị kết quả Máy 1');
-    }
 
     // -------------------------------------------------------------
     // TEST 5: KIỂM THỬ ĐA DẠNG CÂU HỎI (ĐÚNG/SAI 4 Ý & ĐIỀN KẾT QUẢ)
@@ -336,45 +404,52 @@ async function runAntiCheatAndConsistencyTests() {
     await teacherPage.selectOption('#studio-quiz-type', 'true_false');
     await teacherPage.waitForTimeout(200);
 
-    // Kiểm tra form True/False hiện lên
+    // Kiểm tra form True/False hiện lên và đọc đáp án chuẩn trực tiếp từ giao diện Giáo viên
     const isTfVisible = await teacherPage.isVisible('#studio-quiz-tf-wrap');
     if (!isTfVisible) throw new Error('Form True/False không hiển thị khi chọn true_false trong Studio');
 
-    // Lưu kịch bản
-    await teacherPage.click('#btn-studio-save-lesson');
-    await teacherPage.waitForTimeout(400);
+    const expectedTfAnswers = {
+      a: (await teacherPage.inputValue('#studio-tf-ans-a')) === 'true',
+      b: (await teacherPage.inputValue('#studio-tf-ans-b')) === 'true',
+      c: (await teacherPage.inputValue('#studio-tf-ans-c')) === 'true',
+      d: (await teacherPage.inputValue('#studio-tf-ans-d')) === 'true'
+    };
+    console.log('   [Giáo viên] Cấu hình đáp án Đúng/Sai trên form Studio:', expectedTfAnswers);
 
-    // Chuyển lại Tab giảng dạy và reset sang Quiz để học sinh nhận dạng câu hỏi mới
+    // Lưu kịch bản trong Studio
+    await teacherPage.click('#btn-studio-save-lesson');
+    await teacherPage.waitForTimeout(500);
+
+    // Chuyển lại Tab giảng dạy và phát lệnh Quiz cho học sinh nhận dạng câu hỏi mới
     await teacherPage.click('#btn-tnav-stage');
-    await teacherPage.waitForTimeout(300);
+    await teacherPage.waitForTimeout(400);
     await teacherPage.evaluate(() => {
       window.teacherSetPhase('quiz');
-      if (window.APP && window.APP.resetAndCleanActivity) {
-        window.APP.resetAndCleanActivity('quiz');
-      }
     });
-    await m1Page.evaluate(() => {
-      window.STORE.setState({ quizAnswered: false, quizSelection: null });
-      window.APP.renderStudentWorkspace(window.STORE.getState());
-    });
-    await m1Page.waitForTimeout(500);
+    // Chờ mạng Firebase và Bus đồng bộ trạng thái ổn định
+    await teacherPage.waitForTimeout(1200);
 
-    // Kiểm tra giao diện Máy 1 đã chuyển sang dạng Bảng Đúng/Sai 4 ý
+    // Học sinh tự động chuyển sang dạng Bảng Đúng/Sai 4 ý qua event bus (không can thiệp DOM/State)
+    await m1Page.waitForSelector('#quiz-tf-table', { timeout: 10000 });
+    await m1Page.waitForTimeout(400);
     const hasTfTable = await m1Page.isVisible('#quiz-tf-table');
     console.log('   [Máy 01] Hiển thị bảng Đúng/Sai 4 ý:', hasTfTable);
     if (!hasTfTable) throw new Error('Giao diện học sinh không chuyển sang bảng Đúng/Sai 4 ý');
 
     const tfRowsCount = await m1Page.locator('.quiz-tf-row').count();
     console.log('   [Máy 01] Số lượng mệnh đề Đúng/Sai:', tfRowsCount);
-    if (tfRowsCount !== 4) throw new Error(`Số lượng mệnh đề Đúng/Sai (${tfRowsCount}) != 4`);
+    if (tfRowsCount !== 4) throw new Error('Số lượng mệnh đề Đúng/Sai (' + tfRowsCount + ') không bằng 4');
 
-    // Thực hiện tương tác chọn Đúng/Sai cho 4 mệnh đề
-    await m1Page.click('.quiz-tf-row[data-row-key="a"] .btn-true');
-    await m1Page.click('.quiz-tf-row[data-row-key="b"] .btn-false');
-    await m1Page.click('.quiz-tf-row[data-row-key="c"] .btn-true');
-    await m1Page.click('.quiz-tf-row[data-row-key="d"] .btn-false');
+    // Thực hiện tương tác chọn Đúng/Sai cho 4 mệnh đề theo đáp án đề thi Ground Truth độc lập
+    for (const key of ['a', 'b', 'c', 'd']) {
+      const isCorrect = GROUND_TRUTH.trueFalse.answers[key];
+      const btnClass = isCorrect ? '.btn-true' : '.btn-false';
+      await m1Page.click(`.quiz-tf-row[data-row-key="${key}"] ${btnClass}`);
+      await m1Page.waitForTimeout(200);
+    }
+    await m1Page.waitForTimeout(400);
     await m1Page.click('#btn-submit-tf');
-    await m1Page.waitForTimeout(500);
+    await m1Page.waitForTimeout(600);
 
     const tfFeedback = await m1Page.evaluate(() => {
       const fb = document.getElementById('quiz-feedback-box');
@@ -393,48 +468,68 @@ async function runAntiCheatAndConsistencyTests() {
     await teacherPage.waitForTimeout(300);
     await teacherPage.selectOption('#studio-quiz-type', 'short_answer');
     await teacherPage.waitForTimeout(200);
-    await teacherPage.fill('#studio-sa-correct', 'TinHoc');
+    await teacherPage.fill('#studio-sa-correct', GROUND_TRUTH.shortAnswer.text);
     await teacherPage.click('#btn-studio-save-lesson');
-    await teacherPage.waitForTimeout(400);
+    await teacherPage.waitForTimeout(500);
 
+    // Kích hoạt Quiz điền từ ngắn trên Sân khấu
     await teacherPage.click('#btn-tnav-stage');
-    await teacherPage.waitForTimeout(300);
+    await teacherPage.waitForTimeout(400);
     await teacherPage.evaluate(() => {
       window.teacherSetPhase('quiz');
-      if (window.APP && window.APP.resetAndCleanActivity) {
-        window.APP.resetAndCleanActivity('quiz');
-      }
     });
-    await m1Page.evaluate(() => {
-      window.STORE.setState({ quizAnswered: false, quizSelection: null });
-      window.APP.renderStudentWorkspace(window.STORE.getState());
-    });
-    await m1Page.waitForTimeout(500);
+    await teacherPage.waitForTimeout(1200);
 
+    // Học sinh tự động chuyển sang dạng Short Answer qua event bus (không can thiệp DOM/State)
+    await m1Page.waitForSelector('#quiz-short-input', { timeout: 10000 });
+    await m1Page.waitForTimeout(400);
     const hasShortWrap = await m1Page.isVisible('.quiz-short-wrap');
     console.log('   [Máy 01] Hiển thị ô điền kết quả ngắn:', hasShortWrap);
     if (!hasShortWrap) throw new Error('Giao diện học sinh không chuyển sang ô điền kết quả');
 
-    // Nhập và nộp kết quả
-    await m1Page.fill('#quiz-short-input', 'TinHoc');
+    // Nhập và nộp kết quả theo Ground Truth độc lập
+    await m1Page.locator('#quiz-short-input').fill(GROUND_TRUTH.shortAnswer.text);
+    await m1Page.waitForTimeout(300);
     await m1Page.click('#btn-submit-short');
-    await m1Page.waitForTimeout(500);
+    await m1Page.waitForTimeout(600);
 
     const saFeedback = await m1Page.evaluate(() => {
       const fb = document.getElementById('quiz-feedback-box');
       return fb ? fb.classList.contains('success') : false;
     });
-    console.log('   [Máy 01] Nộp kết quả ngắn "TinHoc":', saFeedback ? 'CHÍNH XÁC ✅' : 'CHƯA ĐÚNG ❌');
+    console.log(`   [Máy 01] Nộp kết quả ngắn "${GROUND_TRUTH.shortAnswer.text}":`, saFeedback ? 'CHÍNH XÁC ✅' : 'CHƯA ĐÚNG ❌');
     if (!saFeedback) throw new Error('Nộp kết quả ngắn chính xác nhưng không nhận được phản hồi thành công');
 
     const shotSa = path.join(outputDir, 'student_quiz_short_answer_format.png');
     await m1Page.screenshot({ path: shotSa });
     console.log('   ✅ Đã chụp minh chứng dạng câu hỏi Điền kết quả code ngắn!');
 
+    // Xác thực toàn diện qua Firebase Cloud REST API (Real Network Trace)
+    if (idToken) {
+      const cloudAuditRes = await fetch(`https://day-hoc-tuong-tac-7ee69-default-rtdb.asia-southeast1.firebasedatabase.app/activeSession.json?auth=${idToken}`);
+      const cloudFinal = await cloudAuditRes.json();
+      console.log('   [Cloud RTDB Final Audit]:', {
+        currentPhase: cloudFinal?.currentPhase,
+        lessonId: cloudFinal?.lessonId,
+        machinesCount: Object.keys(cloudFinal?.machines || {}).length,
+        hasQuizData: !!cloudFinal?.lessonData?.quiz
+      });
+      if (cloudFinal?.currentPhase !== 'quiz') {
+        throw new Error('Cloud RTDB currentPhase không khớp quiz sau khi hoàn tất test!');
+      }
+    }
+
     console.log('\n================================================================');
     console.log('🎉 TẤT CẢ CÁC BÀI TEST CHỐNG NHÌN BÀI & ĐỒNG BỘ TIẾN TRÌNH ĐỀU PASS 100%!');
     console.log('================================================================');
   } finally {
+    try {
+      const os = require('os');
+      const cachePath = path.join(os.tmpdir(), 'cvalms_fb_token_cache.json');
+      if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+    } catch (err) {
+      console.warn('[Cache Cleanup Warning]:', err?.message || err);
+    }
     await browser.close();
     server.close();
   }
