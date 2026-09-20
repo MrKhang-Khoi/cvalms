@@ -71,7 +71,8 @@ if not "%~2"=="" (
 )
 if "%GATEWAY_IP%"=="" set "GATEWAY_IP=127.0.0.1"
 
-:: 6. Tao file script khoi chay run_agent.vbs (chay an khong hien cua so den cmd)
+:: 6. Tao file config.json va script khoi chay run_silent.vbs (chay an khong hien cua so den cmd)
+echo {"machineId":"%MACHINE_ID%","gatewayHost":"%GATEWAY_IP%","gatewayPort":49152} > "%INSTALL_DIR%\config.json"
 echo Set WshShell = CreateObject("WScript.Shell") > "%INSTALL_DIR%\run_silent.vbs"
 echo WshShell.Run """%INSTALL_DIR%\CvaLmsAgent.exe"" --machine %MACHINE_ID% --gateway %GATEWAY_IP% --port 49152 --cert ""%INSTALL_DIR%\certs\agent.pfx""", 0, False >> "%INSTALL_DIR%\run_silent.vbs"
 

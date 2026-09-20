@@ -417,12 +417,47 @@ const webServer = http.createServer((req, res) => {
     return;
   }
 
-  if (url.pathname === '/api/broadcast/status' && req.method === 'GET') {
-    sendJson(res, 200, { active: isTeacherBroadcasting });
+  // Phục vụ toàn bộ giao diện Web LMS trực tiếp tại cổng 49150
+  const rootDir = path.resolve(__dirname, '..');
+  let relPath = decodeURIComponent(url.pathname);
+  if (relPath === '/' || relPath === '') {
+    relPath = '/index.html';
+  }
+
+  const safePath = path.normalize(path.join(rootDir, relPath));
+  if (!safePath.startsWith(rootDir)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('403 Forbidden');
     return;
   }
 
-  sendJson(res, 404, { error: 'Not Found' });
+  fs.stat(safePath, (err, stats) => {
+    if (err || !stats.isFile()) {
+      sendJson(res, 404, { error: 'Not Found' });
+      return;
+    }
+
+    const ext = path.extname(safePath).toLowerCase();
+    const mimeMap = {
+      '.html': 'text/html; charset=utf-8',
+      '.css': 'text/css; charset=utf-8',
+      '.js': 'application/javascript; charset=utf-8',
+      '.json': 'application/json; charset=utf-8',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.woff': 'font/woff',
+      '.woff2': 'font/woff2',
+      '.ttf': 'font/ttf',
+      '.mp3': 'audio/mpeg'
+    };
+
+    const contentType = mimeMap[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    fs.createReadStream(safePath).pipe(res);
+  });
 });
 
 function sendJson(res, code, data) {
@@ -684,8 +719,8 @@ agentServer.listen(AGENT_MTLS_PORT, '0.0.0.0', () => {
   console.log(`🔒 [mTLS Agent Port] Đang lắng nghe trên 0.0.0.0:${AGENT_MTLS_PORT}`);
 });
 
-webServer.listen(WEB_PORT, '127.0.0.1', () => {
-  console.log(`🌐 [Web LMS Loopback] Đang lắng nghe trên 127.0.0.1:${WEB_PORT}`);
+webServer.listen(WEB_PORT, '0.0.0.0', () => {
+  console.log(`🌐 [Web LMS Server] Đang lắng nghe trên http://127.0.0.1:${WEB_PORT} và http://0.0.0.0:${WEB_PORT}`);
 });
 
 module.exports = { agentServer, webServer, SEATS, SESSION_EPOCH_ID };
