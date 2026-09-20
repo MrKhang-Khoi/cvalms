@@ -7402,6 +7402,10 @@
       APP.loadLessonToStudio(APP.currentStudioLessonId || STORE.getState().lessonId || 'tin6_bai12');
     } else if (tab === 'stage') {
       APP.renderDynamicStagePipeline();
+    } else if (tab === 'monitor') {
+      if (window.LIVE_MONITOR && typeof window.LIVE_MONITOR.onTabOpen === 'function') {
+        window.LIVE_MONITOR.onTabOpen();
+      }
     }
   };
 
@@ -7665,6 +7669,9 @@
     if (c) STORE.setState({ classId: c });
     APP.renderSettingsSeatingGrid();
     APP.renderClassesSeatingPreview();
+    if (window.LIVE_MONITOR && typeof window.LIVE_MONITOR.refreshStudents === 'function') {
+      window.LIVE_MONITOR.refreshStudents();
+    }
   };
 
   // ĐIỀU KHIỂN HOẠT ĐỘNG SÂN KHẤU ĐỘNG (DYNAMIC STAGE ACTIVITY CONTROLS)

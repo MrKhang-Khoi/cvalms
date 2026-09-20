@@ -748,6 +748,9 @@ print(s[4:])</code></pre>
           <button type="button" class="tnt-btn active" id="btn-tnav-stage" onclick="window.teacherSwitchTab('stage')">
             <i class="fas fa-play-circle"></i> 3. Bàn Điều Khiển Sân Khấu
           </button>
+          <button type="button" class="tnt-btn" id="btn-tnav-monitor" onclick="window.teacherSwitchTab('monitor')">
+            <i class="fas fa-desktop"></i> 4. Giám Sát Phòng Máy (18 Máy)
+          </button>
         </div>
       </div>
       <div class="th-right">
@@ -1743,6 +1746,67 @@ print("2. Cắt xâu:", s[10:17])</textarea>
           </div>
         </div>
       </section>
+    </section>
+
+      <!-- ===================================================
+           PHÂN HỆ 4: GIÁM SÁT PHÒNG MÁY THỜI GIAN THỰC (TAB MONITOR)
+      ==================================================== -->
+      <section id="teacher-panel-monitor" class="teacher-panel" style="display:none;">
+        <div class="panel-monitor-container">
+          <!-- Toolbar Điều Khiển Phòng Máy -->
+          <div class="mon-toolbar">
+            <div class="mon-toolbar-left">
+              <div class="mon-gateway-badge">
+                <span class="gateway-dot offline" id="mon-gateway-dot"></span>
+                <span class="gateway-label" id="mon-gateway-label">Đang kết nối Gateway Local...</span>
+                <button type="button" class="btn-mon-reconnect" id="btn-mon-reconnect" title="Thử kết nối lại Gateway">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+              <div class="mon-stats-group">
+                <div class="mon-stat-item">
+                  <span class="stat-label">Tổng máy:</span>
+                  <span class="stat-value">18</span>
+                </div>
+                <div class="mon-stat-item stat-online">
+                  <span class="stat-label">Online:</span>
+                  <span class="stat-value" id="mon-stat-online">0</span>
+                </div>
+                <div class="mon-stat-item stat-locked">
+                  <span class="stat-label">Đang khóa:</span>
+                  <span class="stat-value" id="mon-stat-locked">0</span>
+                </div>
+                <div class="mon-stat-item stat-uac">
+                  <span class="stat-label">Bảo mật UAC:</span>
+                  <span class="stat-value" id="mon-stat-uac">0</span>
+                </div>
+              </div>
+            </div>
+            <div class="mon-toolbar-right">
+              <button type="button" class="btn-mon-action btn-mon-wol" id="btn-mon-wol-all" title="Bật nguồn toàn bộ máy trạm bằng chuẩn IEEE 802.3 Wake-on-LAN">
+                <i class="fas fa-power-off"></i> Bật 18 máy (WOL)
+              </button>
+              <button type="button" class="btn-mon-action btn-mon-lock" id="btn-mon-lock-all" title="Khóa màn hình và bàn phím 18 máy trạm để học sinh tập trung nghe giảng">
+                <i class="fas fa-lock"></i> Khóa tập trung (18 máy)
+              </button>
+              <button type="button" class="btn-mon-action btn-mon-unlock" id="btn-mon-unlock-all" title="Mở khóa màn hình 18 máy để học sinh thực hành">
+                <i class="fas fa-unlock"></i> Mở khóa toàn bộ
+              </button>
+              <button type="button" class="btn-mon-action btn-mon-collect" id="btn-mon-collect-all" title="Thu gom toàn bộ file bài tập từ thư mục Desktop học sinh">
+                <i class="fas fa-file-download"></i> Thu bài tập (18 máy)
+              </button>
+              <button type="button" class="btn-mon-action btn-mon-shutdown" id="btn-mon-shutdown-all" title="Tắt an toàn toàn bộ 18 máy trạm khi tan học">
+                <i class="fas fa-ban"></i> Tắt 18 máy
+              </button>
+            </div>
+          </div>
+
+          <!-- Lưới 18 Màn Hình Máy Trạm -->
+          <div class="monitor-grid-container" id="monitor-grid-container">
+            <!-- Render động 18 thẻ card bởi live_monitor.js -->
+          </div>
+        </div>
+      </section>
 
     </main>
   </section>
@@ -2084,6 +2148,28 @@ print("2. Cắt xâu:", s[10:17])</textarea>
     </div>
   </div>
 
+  <!-- MODAL: CHIẾU MÀN HÌNH SPOTLIGHT FULL HD LÊN BẢNG / MÁY CHIẾU -->
+  <div class="modal-overlay modal-spotlight-overlay" id="modal-monitor-spotlight" style="display:none;">
+    <div class="modal-card spotlight-card">
+      <div class="spotlight-header">
+        <div class="spotlight-title-group">
+          <div class="spotlight-badge"><i class="fas fa-bullhorn"></i> SPOTLIGHT STAGE</div>
+          <h3 id="spotlight-modal-title">CHIẾU MÀN HÌNH HỌC SINH</h3>
+          <p id="spotlight-modal-sub">Học sinh: Đang nạp... • Độ phân giải: 1280x720 15 FPS</p>
+        </div>
+        <div class="spotlight-actions">
+          <button type="button" class="btn-tool" id="btn-spotlight-lock" title="Khóa máy này"><i class="fas fa-lock"></i> Khóa máy</button>
+          <button type="button" class="btn-tool" id="btn-spotlight-unlock" title="Mở khóa máy này"><i class="fas fa-unlock"></i> Mở khóa</button>
+          <button type="button" class="btn-tool" id="btn-spotlight-collect" title="Thu bài máy này"><i class="fas fa-file-download"></i> Thu bài</button>
+          <button type="button" class="btn-tool btn-tool-danger" id="btn-close-spotlight-modal" title="Thoát chế độ Spotlight"><i class="fas fa-times"></i> Đóng</button>
+        </div>
+      </div>
+      <div class="spotlight-body">
+        <canvas id="modal-spotlight-canvas" class="spotlight-canvas" width="1280" height="720"></canvas>
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST: CHUYỂN CẢNH SƯ PHẠM MƯỢT MÀ 1.5S (FADE-OUT TRÁNH VỀ ĐỘT NGỘT) -->
   <div id="activity-finishing-toast" class="activity-finishing-toast" style="display:none;">
     <div class="aft-content">
@@ -2105,6 +2191,9 @@ print("2. Cắt xâu:", s[10:17])</textarea>
 
   <!-- Standalone Script Chạy Độc Lập Chống Lỗi CORS (v3.2.0 Cache-Busted) -->
   <script src="js/bundle.js?v=3.2.0"></script>
+
+  <!-- Live Lab Monitor (Giám Sát Phòng Máy 18 Máy) -->
+  <script src="js/live_monitor.js?v=1.0.0"></script>
 </body>
 </html>
 

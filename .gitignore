@@ -3,5 +3,7 @@ node_modules/
 Thumbs.db
 .codegraph/
 .gitnexus/
+cvalms-agent/bin/
+cvalms-agent/obj/
 
 

@@ -6502,4 +6502,484 @@ input:checked + .slider:before {
   margin-bottom: 10px;
 }
 
+/* ==========================================================
+ * PHÂN HỆ 4: GIÁM SÁT PHÒNG MÁY (TAB MONITOR - HYBRID AGENT)
+ * ========================================================== */
+.panel-monitor-container {
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Toolbar Điều Khiển Phòng Máy */
+.mon-toolbar {
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.mon-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mon-gateway-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(30, 41, 59, 0.7);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+.gateway-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.gateway-dot.online {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.gateway-dot.offline {
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+}
+
+.btn-mon-reconnect {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.btn-mon-reconnect:hover {
+  color: #3b82f6;
+  transform: rotate(180deg);
+}
+
+.mon-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(11, 17, 32, 0.6);
+  padding: 5px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mon-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #94a3b8;
+}
+
+.mon-stat-item .stat-value {
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.mon-stat-item.stat-online .stat-value {
+  color: #10b981;
+}
+
+.mon-stat-item.stat-locked .stat-value {
+  color: #f59e0b;
+}
+
+.mon-stat-item.stat-uac .stat-value {
+  color: #fbbf24;
+}
+
+.mon-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-mon-action {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.btn-mon-wol {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+.btn-mon-wol:hover {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.btn-mon-lock {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+.btn-mon-lock:hover {
+  background: #f59e0b;
+  color: #0b1120;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.btn-mon-unlock {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+}
+.btn-mon-unlock:hover {
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-mon-collect {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #a78bfa;
+}
+.btn-mon-collect:hover {
+  background: #8b5cf6;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.btn-mon-shutdown {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+.btn-mon-shutdown:hover {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Lưới 18 Màn Hình Máy Trạm */
+.monitor-grid-container {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 14px;
+  padding-bottom: 24px;
+}
+
+@media (max-width: 1600px) {
+  .monitor-grid-container {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .monitor-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .monitor-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Thẻ Máy Trạm */
+.mon-card {
+  background: rgba(30, 41, 59, 0.65);
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mon-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.mon-card.spotlight-active {
+  border-color: #fbbf24;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.55);
+}
+
+.mon-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(15, 23, 42, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.mon-card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.mon-card-title {
+  font-weight: 800;
+  font-size: 13px;
+  color: #f8fafc;
+  letter-spacing: 0.5px;
+}
+
+.mon-card-students {
+  font-size: 11px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.mon-card-badge {
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.badge-offline {
+  background: rgba(100, 116, 139, 0.25);
+  color: #94a3b8;
+  border: 1px solid rgba(100, 116, 139, 0.4);
+}
+
+.badge-online {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.badge-locked {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-uac {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.mon-card-body {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #090d16;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mon-screen-canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.mon-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mon-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  overflow: hidden;
+}
+
+.mon-card-app-name {
+  color: #38bdf8;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.mon-card-fps {
+  color: #64748b;
+  font-family: var(--font-code);
+  font-size: 10px;
+}
+
+.mon-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mon-btn-mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.07);
+  color: #cbd5e1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: all 0.15s;
+}
+
+.mon-btn-mini:hover {
+  background: #3b82f6;
+  color: #ffffff;
+}
+
+.mon-btn-mini.btn-lock:hover {
+  background: #f59e0b;
+  color: #000000;
+}
+
+.mon-btn-mini.btn-collect:hover {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.mon-btn-mini.btn-power:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* Spotlight Modal Full HD */
+.modal-spotlight-overlay {
+  background: rgba(9, 13, 22, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+
+.spotlight-card {
+  width: 92vw;
+  max-width: 1360px;
+  height: 90vh;
+  background: #0b1120;
+  border: 1.5px solid rgba(251, 191, 36, 0.4);
+  box-shadow: 0 0 35px rgba(251, 191, 36, 0.3);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.spotlight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.spotlight-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.spotlight-badge {
+  background: #fbbf24;
+  color: #090d16;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+}
+
+.spotlight-title-group h3 {
+  font-size: 17px;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.spotlight-title-group p {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spotlight-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000000;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.spotlight-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+  border-radius: 8px;
+}
+
+
 
